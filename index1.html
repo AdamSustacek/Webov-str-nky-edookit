@@ -1,0 +1,195 @@
+-- index.html --
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Edookit hlavní panel</title>
+  <link rel="stylesheet" href="index1.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="brand">edookit</div>
+    <nav>
+      <a href="index.html" class="active">Hlavní panel</a>
+      <a href="timetable.html">Rozvrh</a>
+      <a href="assignments.html">Písemky / úkoly</a>
+      <a href="notes.html">Poznámky</a>
+      <a href="lessons.html">Učivo v hodinách</a>
+      <a href="#">Nastavení</a>
+    </nav>
+  </div>
+  <main class="main">
+    <section class="cards">
+      <div class="card">
+        <h3>Domácí ukoli</h3>
+        <ul>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>Nadcházející</h3>
+        <ul>
+          <li></li>
+          <li></li>
+        </ul>
+      </div>
+    </section>
+    <section class="timetable-preview card">
+      <h3>Rozvrh hodin</h3>
+      <table class="mini">
+        <thead><tr><th>Hodina</th><th>1.</th><th>2.</th><th>3.</th><th>4.</th><th>5.</th><th>6.</th></tr></thead>
+        <tbody>
+          <tr><th>PONDĚLÍ</th><td>ČJ</td><td>M</td><td>AJ</td><td>PŘ</td><td>VL</td><td>PL</td></tr>
+          <tr><th>ÚTERÝ</th><td>ČJ</td><td>VL</td><td>PŘ</td><td>AJ</td><td>PČ</td><td>TV</td></tr>
+          <tr><th>STŘEDA</th><td>ČJ</td><td>M</td><td>PŘ</td><td>VV</td><td>VV</td><td></td></tr>
+          <tr><th>ČTVRTEK</th><td>M</td><td>ČJ</td><td>VL</td><td>AJ</td><td></td><td></td></tr>
+          <tr><th>PÁTEK</th><td>INF</td><td>AJ</td><td>ČJ</td><td>M</td><td>AJ</td><td>AJ</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="script.js"></script>
+  <!-- Added client-side routing fix -->
+  <script>
+    // Basic client-side router so pages won't show "stránka neexistuje"
+    const links = document.querySelectorAll('a[data-nav]');
+    links.forEach(link => {
+      link.addEventListener('click', e => {
+        e.preventDefault();
+        const page = e.target.getAttribute('data-nav');
+        fetch(page)
+          .then(res => res.text())
+          .then(html => {
+            document.querySelector('#main-content').innerHTML = html;
+            history.pushState({}, '', page);
+          })
+          .catch(() => {
+            document.querySelector('#main-content').innerHTML = '<h2>Stránka neexistuje</h2>';
+          });
+      });
+    });
+
+    // Handle back/forward browser buttons
+    window.addEventListener('popstate', () => {
+      fetch(location.pathname)
+        .then(res => res.text())
+        .then(html => document.querySelector('#main-content').innerHTML = html);
+    });
+  </script>
+</body>
+</html
+-- timetable.html --
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Rozvrh</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="sidebar">
+    <div class="brand">edookit</div>
+    <nav>
+      <a href="index.html">Hlavní panel</a>
+      <a href="timetable.html" class="active">Rozvrh</a>
+      <a href="assignments.html">Písemky</a>
+      <a href="notes.html">Poznámky</a>
+    </nav>
+  </div>
+  <header class="topbar"><div class="search">Hledat…</div><div class="user">Uživatel</div></header>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
+<!DOCTYPE html>
+<html lang="cs">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Písemky</title><link rel="stylesheet" href="style.css"></head>
+<body>
+  <div class="sidebar">
+    <div class="brand">edookit</div>
+    <nav>
+      <a href="index.html">Hlavní panel</a>
+      <a href="timetable.html">Rozvrh</a>
+      <a href="assignments.html" class="active">Písemky / úkoly</a>
+      <a href="notes.html">Poznámky</a>
+    </nav>
+  </div>
+  <header class="topbar"><div class="search">Hledat…</div><div class="user">Uživatel</div></header>
+  <main class="main">
+    <div class="card">
+      <h2>Detaily písemky:</h2>
+      <p></p>
+      <p></p>
+      <p></p>
+    </div>
+  </main>
+  <script src="script.js"></script> 
+    <header class="topbar"><div class="search">Hledat…</div><div class="user">Uživatel</div></header>
+  <main class="main">
+    <div class="card">
+      <h2>Zprávy</h2>
+      <p>Prosím rodiče aby omluvenky na plavání , hodiny a další psali na email. ďekuji za pochopení</p>
+      <p></p>
+      <p></p>
+    </div>
+  </main>
+  <script src="script.js"></script>
+</body>
+</html>
+-- notes.html --
+<!DOCTYPE html>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Poznámky</title><link rel="stylesheet" href="style.css"></head>
+<body>
+  <div class="sidebar">
+    <div class="brand">edookit</div>
+    <nav>
+      <a href="neco.html">Hlavní panel</a>
+      <a href="timetable.html">Rozvrh</a>
+      <a href="assignments.html">Písemky</a>
+      <a href="notes.html" class="active">Poznámky</a>
+    </nav>
+  </div>
+-- lessons.html --
+<!DOCTYPE html>
+<html lang="cs"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Učivo v hodinách</title><link rel="stylesheet" href="style.css"></head>
+<body>
+  <div class="sidebar">
+    <div class="brand">EDOOKIT</div>
+    <nav>
+      <a href="index2.html">Práce v hodině</a>
+      <a href="index3.html"> Docházky </a>
+      <a href="index4.html">Poznámky </a>
+      
+    </nav>
+  </div>
+<div class="vse">
+<div class="attendance-container">
+<h2>Docházka</h2>
+
+  
+  <main class="hdr">
+    <div class="card">
+      <h2>Známky</h2>
+      <p>&nbsp; &nbsp;</p>
+      <p>&nbsp;&nbsp; </p>
+    
+      
+    </div>
+  </main>
+  <script src="script.js"></script>
+
+
+
+
+</body>
+</html>
+
+
+
+

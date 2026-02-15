@@ -1,0 +1,126 @@
+/* Základní nastavení */
+h2   {text-align: center;
+      font-size: 50px;}
+a     {margin-left: 1200px;
+       text-decoration: none;
+        color: black;}
+body { 
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f9f9f9;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+.container {
+  max-width: 960px;
+  margin: 40px auto;
+  padding: 0 20px;
+}
+
+/* Nadpis */
+.attendance h2 {
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: #2c3e50;
+}
+
+/* Box docházky */
+ .attendance {
+  background: #fff;
+  padding: 25px;
+  margin: 40px 80px;   /* 40px nahoře/dole, 80px vlevo/vpravo */
+  border-radius: 10px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+}
+
+/* Řádek s dny */
+.attendance-row {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+/* Jednotlivý den */
+.day {
+  flex: 1 1 140px;
+  background-color: #fdfdfd;
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  padding: 16px;
+  text-align: center;
+  transition: box-shadow 0.2s ease;
+}
+
+.day:hover {
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+/* Ikony */
+.icon {
+  font-size: 28px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+.icon.ok {
+  color: #27ae60;
+}
+
+.icon.question {
+  color: #bdc3c7;
+}
+
+.icon.calendar {
+  color: #6a4bd9;
+}
+
+/* Název dne */
+.day-name {
+  font-size: 16px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+/* Info text */
+.info {
+  font-size: 13px;
+  color: #666;
+}
+
+.info strong {
+  font-size: 15px;
+  color: #000;
+}
+
+/* Statistiky */
+.stats {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+
+.stat {
+  background-color: #fdfdfd;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 14px 20px;
+  flex: 1 1 200px;
+  text-align: center;
+}
+
+.stat .number {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2c3e50;
+}
+
+.stat .text {
+  font-size: 14px;
+  color: #555;
+

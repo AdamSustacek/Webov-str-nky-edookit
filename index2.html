@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Práce na hodině</title>
+  <link rel="stylesheet" type="text/css" href="index2.css">
+  <style>
+   
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Práce v hodině </h1>
+    <h2>Obecně ale i pro chybějící žáky</h2>
+    <a href="index1.html "> zpět na hlavní panel</a> <br>  <br><br>
+
+   
+    <!-- PONDĚLÍ -->
+    <details>
+      <summary>Pondělí</summary>
+      <div class="content">
+        <table class="grid">
+          <thead>
+            <tr>
+      <p></p>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <!-- ÚTERÝ -->
+    <details>
+      <summary>Úterý</summary>
+      <div class="content">
+        <table class="grid">
+          <thead>
+            <tr>
+             <p></p>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <!-- STŘEDA -->
+    <details>
+      <summary>Středa</summary>
+      <div class="content">
+        <table class="grid">
+          <thead>
+            <tr>
+           <p></p>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <!-- ČTVRTEK -->
+    <details>
+      <summary>Čtvrtek</summary>
+      <div class="content">
+        <table class="grid">
+          <thead>
+            <tr>
+           <p></p>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+
+    <!-- PÁTEK -->
+    <details>
+      <summary>Pátek</summary>
+      <div class="content">
+        <table class="grid">
+          <thead>
+            <tr>
+         <p></p>
+         
+  
+
+  <script>
+    // Umožní stáhnout tuto stránku jako rozvrh.html (vytvoří Blob z aktuálního HTML)
+    const downloadLink = document.getElementById('downloadHtml');
+    downloadLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      const htmlContent = document.documentElement.outerHTML;
+      const blob = new Blob([htmlContent], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      downloadLink.href = url;
+      downloadLink.click();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    });
+  </script>
+</body>
+</html>
