@@ -1,88 +1,140 @@
--- style.css --
 *   {color: purple;}
 /* Základní styl pro jednoduchou edookit-like mockup */
 :root{--accent:#6a4bd9;--bg:#f5f6f7}
 *{box-sizing:border-box}
 
-body{margin:0;font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;background:var(--bg);color:#222}
-.sidebar{position:fixed;left:0;top:0;width:230px;height:100vh;background:#fff;border-right:1px solid #e6e6e6;padding:24px}
-.sidebar .brand{font-weight:700;color:var(--accent);font-size:20px;margin-bottom:12px}
-.sidebar nav a{display:block;color:#333;padding:8px 0;text-decoration:none}
-.sidebar nav a.active{color:var(--accent);font-weight:600}
-.topbar{position:fixed;left:230px;right:0;top:0;height:60px;background:#fff;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:flex-end;padding:0 20px}
-.main{margin-left:260px;padding:90px 200px 40px; margin-right: 230px;}
-.card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06);margin-bottom:18px}
-.cards{display:flex;gap:18px}
-.timetable-preview table.mini{width:100%;border-collapse:collapse}
-.mini th,.mini td{border:1px solid #eee;padding:8px;text-align:center}
-table.editable{width:100%;border-collapse:collapse}
-table.editable th, table.editable td{border:1px solid #e9e9e9;padding:12px;text-align:center}
-table.editable td[contenteditable]{min-width:60px}
-.controls{margin-top:12px}
-.controls button{padding:8px 12px;margin-right:8px}
-.muted{color:#777;font-size:13px}
-h1 {
-   margin-left: 1000px;
+body{
+    margin:0;
+    font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;
+    background:var(--bg);
+    color:#222;
 }
-a {margin-left: 1000}
-.mr    {margin-left:1150px;
-        color: black;
-        font-size: 20px;
-        text-decoration: none;
-          }
-  -- script.js --
-// Basic JS to save/load editable timetable and notes to localStorage
-(function(){
-  function saveTimetable(){
-    const rows = document.querySelectorAll('#timetable tbody tr');
-    const data = Array.from(rows).map(r=>Array.from(r.querySelectorAll('td')).map(td=>td.innerText));
-    localStorage.setItem('timetable-data',JSON.stringify(data));
-    alert('Rozvrh uložen.');
-  }
-  function loadTimetable(){
-    const raw = localStorage.getItem('timetable-data');
-    if(!raw) return;
-    const data = JSON.parse(raw);
-    const rows = document.querySelectorAll('#timetable tbody tr');
-    rows.forEach((r,i)=>{
-      const tds = r.querySelectorAll('td');
-      tds.forEach((td,j)=>{ td.innerText = data[i] && data[i][j] ? data[i][j] : '' });
-    });
-    alert('Rozvrh načten.');
-  }
-  function exportCSV(){
-    const rows = document.querySelectorAll('#timetable tbody tr');
-    const lines = Array.from(rows).map(r=>Array.from(r.querySelectorAll('th,td')).map(c=>'"'+c.innerText.replace(/"/g,'""')+'"').join(','));
-    const blob = new Blob([lines.join('
-')],{type:'text/csv'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a'); a.href = url; a.download = 'timetable.csv'; document.body.appendChild(a); a.click(); a.remove();
-  }
-  document.addEventListener('DOMContentLoaded',()=>{
-    const saveBtn = document.getElementById('saveLocal'); if(saveBtn) saveBtn.addEventListener('click',saveTimetable);
-    const loadBtn = document.getElementById('loadLocal'); if(loadBtn) loadBtn.addEventListener('click',loadTimetable);
-    const exportBtn = document.getElementById('exportCSV'); if(exportBtn) exportBtn.addEventListener('click',exportCSV);
 
-    const saveNotes = document.getElementById('saveNotes'); if(saveNotes) saveNotes.addEventListener('click',()=>{
-      const v = document.getElementById('notes').value; localStorage.setItem('class-notes',v); alert('Poznámky uloženy.');
-    });
-    const notesArea = document.getElementById('notes'); if(notesArea){ const v = localStorage.getItem('class-notes'); if(v) notesArea.value = v }
+/* SIDEBAR */
+.sidebar{
+    position:fixed;
+    left:0;
+    top:0;
+    width:230px;
+    height:100vh;
+    background:#fff;
+    border-right:1px solid #e6e6e6;
+    padding:24px;
+}
 
-    // auto load timetable if present
-    loadTimetable();
+.sidebar .brand{
+    font-weight:700;
+    color:var(--accent);
+    font-size:20px;
+    margin-bottom:12px;
+}
 
-    // populate lesson list on lessons.html
-    const lessonList = document.getElementById('lessonList');
-    if(lessonList){
-      const lessons = [
-        {time:'08:00', subj:'PŘ', text:'Houby bez plodnic'},
-        {time:'10:00', subj:'F', text:'Procvičování - rychlost, výpočty'},
-        {time:'10:55', subj:'ČJ', text:'Referát o knize'}
-      ];
-      lessons.forEach(l=>{
-        const d = document.createElement('div'); d.className='lesson'; d.innerHTML=`<strong>${l.time} ${l.subj}</strong><div>${l.text}</div>`; lessonList.appendChild(d);
-      });
-    }
-  });
-})();
+.sidebar nav a{
+    display:block;
+    color:#333;
+    padding:8px 0;
+    text-decoration:none;
+}
 
+.sidebar nav a.active{
+    color:var(--accent);
+    font-weight:600;
+}
+
+/* TOPBAR */
+.topbar{
+    position:fixed;
+    left:230px;
+    right:0;
+    top:0;
+    height:60px;
+    background:#fff;
+    border-bottom:1px solid #eee;
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    padding:0 20px;
+}
+
+/* HLAVNÍ OBSAH – CENTROVANÝ */
+.main{
+    margin-left:260px;
+    margin-right:260px;
+    padding:90px 40px 40px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;     /* vše na střed */
+}
+
+/* KARTA – 5 CM OD LEVÉHO OKRAJE */
+.card{
+    background:#fff;
+    padding:15px;
+    border-radius:8px;
+    box-shadow:0 1px 3px rgba(0,0,0,0.06);
+    margin-bottom:18px;
+    width:100%;
+    max-width:900px;
+    margin-left:5cm;         /* přesně jak chceš */
+}
+
+/* OSTATNÍ */
+.cards{
+    display:flex;
+    gap:18px;
+}
+
+.timetable-preview table.mini{
+    width:100%;
+    border-collapse:collapse;
+}
+
+.mini th,.mini td{
+    border:1px solid #eee;
+    padding:8px;
+    text-align:center;
+}
+
+table.editable{
+    width:100%;
+    border-collapse:collapse;
+}
+
+table.editable th, table.editable td{
+    border:1px solid #e9e9e9;
+    padding:12px;
+    text-align:center;
+}
+
+table.editable td[contenteditable]{
+    min-width:60px;
+}
+
+.controls{
+    margin-top:12px;
+}
+
+.controls button{
+    padding:8px 12px;
+    margin-right:8px;
+}
+
+.muted{
+    color:#777;
+    font-size:13px;
+}
+
+h1{
+    text-align:center;
+}
+
+a{
+    text-align:center;
+}
+
+.mr{
+    margin-left:1150px;
+    color:black;
+    font-size:20px;
+    text-decoration:none;
+}
