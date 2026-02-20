@@ -5,33 +5,32 @@
 *{box-sizing:border-box}
 
 body{margin:0;font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;background:var(--bg);color:#222}
-.sidebar{position:fixed;left:0;top:0;width:230%;height:100vh;background:#fff;border-right:1% solid #e6e6e6;padding:24%}
-.sidebar .brand{font-weight:700;color:var(--accent);font-size:20%;margin-bottom:12%}
-.sidebar nav a{display:block;color:#333;padding:8% 0;text-decoration:none}
+.sidebar{position:fixed;left:0;top:0;width:230px;height:100vh;background:#fff;border-right:1px solid #e6e6e6;padding:24px}
+.sidebar .brand{font-weight:700;color:var(--accent);font-size:20px;margin-bottom:12px}
+.sidebar nav a{display:block;color:#333;padding:8px 0;text-decoration:none}
 .sidebar nav a.active{color:var(--accent);font-weight:600}
-.topbar{position:fixed;left:230%;right:0;top:0;height:60%;background:#fff;border-bottom:1% solid #eee;display:flex;align-items:center;justify-content:flex-end;padding:0 20%}
-.main{margin-left:260%;padding:90% 200% 40%; margin-right: 230%;}
-.card{background:#fff;padding:15%;border-radius:8%;box-shadow:0 1% 3% rgba(0,0,0,0.06);margin-bottom:18%}
-.cards{display:flex;gap:18%}
+.topbar{position:fixed;left:230px;right:0;top:0;height:60px;background:#fff;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:flex-end;padding:0 20px}
+.main{margin-left:260px;padding:90px 200px 40px; margin-right: 230px;}
+.card{background:#fff;padding:15px;border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,0.06);margin-bottom:18px}
+.cards{display:flex;gap:18px}
 .timetable-preview table.mini{width:100%;border-collapse:collapse}
-.mini th,.mini td{border:1% solid #eee;padding:8%;text-align:center}
+.mini th,.mini td{border:1px solid #eee;padding:8px;text-align:center}
 table.editable{width:100%;border-collapse:collapse}
-table.editable th, table.editable td{border:1% solid #e9e9e9;padding:12%;text-align:center}
-table.editable td[contenteditable]{min-width:60%}
-.controls{margin-top:12%}
-.controls button{padding:8% 12%;margin-right:8%}
-.muted{color:#777;font-size:13%}
+table.editable th, table.editable td{border:1px solid #e9e9e9;padding:12px;text-align:center}
+table.editable td[contenteditable]{min-width:60px}
+.controls{margin-top:12px}
+.controls button{padding:8px 12px;margin-right:8px}
+.muted{color:#777;font-size:13px}
 h1 {
-   margin-left: 1100%;
+   margin-left: 1000px;
 }
-a {margin-left: 1100%;}
-.mr    {margin-left:1150%;
+a {margin-left: 1000}
+.mr    {margin-left:1150px;
         color: black;
-        font-size: 20%;
+        font-size: 20px;
         text-decoration: none;
           }
-
--- script.js --
+  -- script.js --
 // Basic JS to save/load editable timetable and notes to localStorage
 (function(){
   function saveTimetable(){
@@ -86,3 +85,4 @@ a {margin-left: 1100%;}
     }
   });
 })();
+
