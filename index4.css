@@ -1,123 +1,138 @@
-* { 
-    box-sizing: border-box;
+/* RESET */
+*{
+  box-sizing:border-box;
 }
 
-/* Základ */
-:root {
-    --accent:#6a4bd9;
-    --bg:#f5f6f7;
+:root{
+  --accent:#6a4bd9;
+  --bg:#f5f6f7;
 }
 
-body {
-    margin:0;
-    font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;
-    background:var(--bg);
-    color:black;
-    display:flex;               /* 🔥 hlavní flex layout */
+body{
+  margin:0;
+  font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;
+  background:var(--bg);
+  color:#222;
+  display:flex;              /* 🔥 hlavní flex layout */
+  min-height:100vh;
 }
 
 /* SIDEBAR */
-.sidebar {
-    width:230px;
-    min-height:100vh;
-    background:#fff;
-    border-right:1px solid #e6e6e6;
-    padding:24px;
-    flex-shrink:0;              /* aby se nezmenšoval */
+.sidebar{
+  width:230px;
+  background:#fff;
+  border-right:1px solid #e6e6e6;
+  padding:24px;
+  flex-shrink:0;
 }
 
-.sidebar .brand {
-    font-weight:700;
-    color:var(--accent);
-    font-size:20px;
-    margin-bottom:12px;
+.sidebar .brand{
+  font-weight:700;
+  color:var(--accent);
+  font-size:20px;
+  margin-bottom:12px;
 }
 
-.sidebar nav a {
-    display:block;
-    color:#333;
-    padding:8px 0;
-    text-decoration:none;
+.sidebar nav a{
+  display:block;
+  color:#333;
+  padding:8px 0;
+  text-decoration:none;
 }
 
-.sidebar nav a.active {
-    color:var(--accent);
-    font-weight:600;
+.sidebar nav a.active{
+  color:var(--accent);
+  font-weight:600;
 }
 
-/* PRAVÁ ČÁST (topbar + main) */
-.topbar {
-    height:60px;
-    background:#fff;
-    border-bottom:1px solid #eee;
-    display:flex;
-    align-items:center;
-    justify-content:flex-end;
-    padding:0 20px;
+/* PRAVÁ STRANA (všechno kromě sidebaru) */
+body > :not(.sidebar){
+  flex:1;
+  display:flex;
+  flex-direction:column;
 }
 
-/* OBSAH */
-.main {
-    padding:30px 20px;
-    display:flex;
-    flex-direction:column;
-    align-items:center;
-    width:100%;
+/* TOPBAR */
+.topbar{
+  height:60px;
+  background:#fff;
+  border-bottom:1px solid #eee;
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  padding:0 20px;
 }
 
-/* OBAL PRO OBSAH */
-body > :not(.sidebar) {
-    flex:1;
-    display:flex;
-    flex-direction:column;
+/* MAIN */
+.main{
+  flex:1;
+  padding:30px 20px;
 }
 
 /* KARTY */
-.cards {
-    display:flex;
-    gap:18px;
-    flex-wrap:wrap;              /* 🔥 zalamování */
-    justify-content:center;
+.cards{
+  display:flex;
+  gap:18px;
+  flex-wrap:wrap;   /* 🔥 důležité */
 }
 
-.card {
-    background:#fff;
-    padding:15px;
-    border-radius:8px;
-    box-shadow:0 1px 3px rgba(0,0,0,0.06);
-    margin-bottom:18px;
-    width:100%;
-    max-width:900px;
+.card{
+  background:#fff;
+  padding:15px;
+  border-radius:8px;
+  box-shadow:0 1px 3px rgba(0,0,0,0.06);
+  margin-bottom:18px;
+  flex:1 1 300px;   /* 🔥 automatická responzivita */
 }
 
 /* TABULKY */
-table {
+table{
+  width:100%;
+  border-collapse:collapse;
+}
+
+.mini th,.mini td{
+  border:1px solid #eee;
+  padding:8px;
+  text-align:center;
+}
+
+table.editable th,
+table.editable td{
+  border:1px solid #e9e9e9;
+  padding:12px;
+  text-align:center;
+}
+
+/* BUTTONS */
+.controls button{
+  padding:8px 12px;
+  margin:4px 4px 0 0;
+}
+
+/* TEXT */
+.muted{
+  color:#777;
+  font-size:13px;
+}
+
+/* ❌ SMAZALI JSME margin-left 1000px */
+/* už není potřeba žádné ruční odsazování */
+
+/* 📱 MOBILE */
+@media (max-width:768px){
+
+  body{
+    flex-direction:column;
+  }
+
+  .sidebar{
     width:100%;
-    border-collapse:collapse;
-}
+    border-right:none;
+    border-bottom:1px solid #eee;
+  }
 
-table.editable th, 
-table.editable td {
-    border:1px solid #e9e9e9;
-    padding:12px;
-    text-align:center;
-}
-
-/* RESPONSIVE */
-@media (max-width: 768px) {
-
-    body {
-        flex-direction:column;   /* 🔥 otočí layout */
-    }
-
-    .sidebar {
-        width:100%;
-        min-height:auto;
-        border-right:none;
-        border-bottom:1px solid #eee;
-    }
-
-    .cards {
-        flex-direction:column;
-    }
+  .cards{
+    flex-direction:column;
+  }
 }
