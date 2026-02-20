@@ -1,17 +1,23 @@
-*   {color: purple;}
-/* Základní styl pro jednoduchou edookit-like mockup */
-:root{--accent:#6a4bd9;--bg:#f5f6f7}
-*{box-sizing:border-box}
+* { 
+    color: black; 
+    box-sizing: border-box;
+}
 
-body{
+/* Základní styl */
+:root {
+    --accent:#6a4bd9;
+    --bg:#f5f6f7;
+}
+
+body {
     margin:0;
     font-family:Inter,Segoe UI,Arial,Helvetica,sans-serif;
     background:var(--bg);
-    color:#222;
+    color:black;
 }
 
 /* SIDEBAR */
-.sidebar{
+.sidebar {
     position:fixed;
     left:0;
     top:0;
@@ -22,27 +28,27 @@ body{
     padding:24px;
 }
 
-.sidebar .brand{
+.sidebar .brand {
     font-weight:700;
     color:var(--accent);
     font-size:20px;
     margin-bottom:12px;
 }
 
-.sidebar nav a{
+.sidebar nav a {
     display:block;
     color:#333;
     padding:8px 0;
     text-decoration:none;
 }
 
-.sidebar nav a.active{
+.sidebar nav a.active {
     color:var(--accent);
     font-weight:600;
 }
 
 /* TOPBAR */
-.topbar{
+.topbar {
     position:fixed;
     left:230px;
     right:0;
@@ -56,18 +62,18 @@ body{
     padding:0 20px;
 }
 
-/* HLAVNÍ OBSAH – CENTROVANÝ */
-.main{
+/* HLAVNÍ OBSAH – 1 cm z každé strany + střed */
+.main {
     margin-left:260px;
-    margin-right:260px;
-    padding:90px 40px 40px;
+    padding:90px 1cm 40px 1cm;
     display:flex;
     flex-direction:column;
-    align-items:center;     /* vše na střed */
+    align-items:center;
+    text-align:center;
 }
 
-/* KARTA – 5 CM OD LEVÉHO OKRAJE */
-.card{
+/* KARTA – zarovnaná, čistá */
+.card {
     background:#fff;
     padding:15px;
     border-radius:8px;
@@ -75,66 +81,51 @@ body{
     margin-bottom:18px;
     width:100%;
     max-width:900px;
-    margin-left:5cm;         /* přesně jak chceš */
 }
 
 /* OSTATNÍ */
-.cards{
+.cards {
     display:flex;
     gap:18px;
 }
 
-.timetable-preview table.mini{
-    width:100%;
-    border-collapse:collapse;
-}
-
-.mini th,.mini td{
+.mini th, .mini td {
     border:1px solid #eee;
     padding:8px;
     text-align:center;
 }
 
-table.editable{
+table.editable {
     width:100%;
     border-collapse:collapse;
 }
 
-table.editable th, table.editable td{
+table.editable th, table.editable td {
     border:1px solid #e9e9e9;
     padding:12px;
     text-align:center;
 }
 
-table.editable td[contenteditable]{
+table.editable td[contenteditable] {
     min-width:60px;
 }
 
-.controls{
+.controls {
     margin-top:12px;
 }
 
-.controls button{
+.controls button {
     padding:8px 12px;
     margin-right:8px;
 }
 
-.muted{
+.muted {
     color:#777;
     font-size:13px;
 }
 
-h1{
+/* NADPIS + PODNADPIS NA STŘED */
+h1, h2, a {
     text-align:center;
-}
-
-a{
-    text-align:center;
-}
-
-.mr{
-    margin-left:1150px;
-    color:black;
-    font-size:20px;
-    text-decoration:none;
+    width:100%;
 }
