@@ -129,3 +129,8 @@ h1, h2, a {
     text-align:center;
     width:100%;
 }
+
+.div-center {
+    display: flex; 
+    justify-content: center;
+}
