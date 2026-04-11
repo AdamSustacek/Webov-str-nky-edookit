@@ -1,9 +1,18 @@
 /* Základní nastavení */
-h2   {text-align: center;
-      font-size: 50px;}
-a     {margin-left: 1200px;
-       text-decoration: none;
-        color: black;}
+h2 {
+  text-align: center;
+  font-size: 50px;
+}
+
+/* Odkaz - upraveno, aby nelítal úplně mimo obrazovku */
+a {
+  display: block;
+  text-align: right;
+  margin-right: 3cm; /* Odsazení od pravého kraje */
+  text-decoration: none;
+  color: black;
+}
+
 body { 
   font-family: 'Segoe UI', sans-serif;
   background-color: #f9f9f9;
@@ -12,10 +21,11 @@ body {
   color: #333;
 }
 
+/* Hlavní kontejner, který drží obsah uprostřed */
 .container {
-  max-width: 960px;
+  max-width: 1100px; /* Trochu jsem ho rozšířil pro lepší vzhled */
   margin: 40px auto;
-  padding: 0 20px;
+  padding: 0 3cm;    /* Tady jsou tvé 3 cm z každé strany */
 }
 
 /* Nadpis */
@@ -24,16 +34,18 @@ body {
   font-weight: 700;
   margin-bottom: 24px;
   color: #2c3e50;
+  text-align: left; /* Nadpis v boxu je lepší vlevo */
 }
 
 /* Box docházky */
- .attendance {
+.attendance {
   background: #fff;
   padding: 25px;
-  margin: 40px 80px;   /* 40px nahoře/dole, 80px vlevo/vpravo */
+  /* Změněno na auto, aby se box centroval a nebyl fixní jen 80px od kraje */
+  margin: 40px auto; 
+  max-width: 100%;
   border-radius: 10px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
-}
 }
 
 /* Řádek s dny */
@@ -67,17 +79,9 @@ body {
   display: block;
 }
 
-.icon.ok {
-  color: #27ae60;
-}
-
-.icon.question {
-  color: #bdc3c7;
-}
-
-.icon.calendar {
-  color: #6a4bd9;
-}
+.icon.ok { color: #27ae60; }
+.icon.question { color: #bdc3c7; }
+.icon.calendar { color: #6a4bd9; }
 
 /* Název dne */
 .day-name {
@@ -123,4 +127,4 @@ body {
 .stat .text {
   font-size: 14px;
   color: #555;
-
+}
