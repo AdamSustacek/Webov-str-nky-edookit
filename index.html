@@ -1090,32 +1090,42 @@ function loadFromLocalStorage() {
 async function firebaseInit() {
   showLoader('Připojování k databázi…');
   try {
+    showLoader('Načítám data…');
     const snap = await DOC_REF.get();
     if (snap.exists) {
       const loaded = firestoreToCache(snap.data());
       _cache = loaded ? mergeWithDefaults(loaded) : defaultDB();
+      console.log('✅ Firebase: data načtena');
     } else {
+      console.log('📝 Firebase: první spuštění, vytvářím dokument…');
       _cache = defaultDB();
       await DOC_REF.set(cacheToFirestore(_cache));
+      console.log('✅ Firebase: dokument vytvořen');
     }
   } catch(e) {
-    console.warn('Firebase nedostupný, používám localStorage:', e);
+    console.error('❌ Firebase chyba:', e.code, e.message);
+    showLoader('⚠️ Firebase nedostupný – používám lokální data');
+    await new Promise(r => setTimeout(r, 1500));
     _cache = loadFromLocalStorage();
   }
 
   hideLoader();
 
   // Real-time listener
-  _unsubscribe = DOC_REF.onSnapshot(snap => {
-    if (!snap.exists) return;
-    if (_ignoreNext) { _ignoreNext = false; return; }
-    const remote = firestoreToCache(snap.data());
-    if (!remote) return;
-    if (JSON.stringify(remote) !== JSON.stringify(_cache)) {
-      _cache = mergeWithDefaults(remote);
-      try { renderView(activePage); buildNav(); } catch(e) {}
-    }
-  }, err => console.warn('Firestore listener:', err));
+  try {
+    _unsubscribe = DOC_REF.onSnapshot(snap => {
+      if (!snap.exists) return;
+      if (_ignoreNext) { _ignoreNext = false; return; }
+      const remote = firestoreToCache(snap.data());
+      if (!remote) return;
+      if (JSON.stringify(remote) !== JSON.stringify(_cache)) {
+        _cache = mergeWithDefaults(remote);
+        try { renderView(activePage); buildNav(); } catch(e) {}
+      }
+    }, err => console.error('❌ Firestore listener:', err.code, err.message));
+  } catch(e) {
+    console.error('❌ onSnapshot failed:', e);
+  }
 
   // Spustit app
   const role = sessionLoad();
@@ -1129,11 +1139,18 @@ async function firebaseInit() {
 
 function scheduleSave() {
   if (_saveTimer) clearTimeout(_saveTimer);
-  _saveTimer = setTimeout(async () => {
+  _saveTimer = setTimeout(function() {
     _ignoreNext = true;
-    try { await DOC_REF.set(cacheToFirestore(_cache)); }
-    catch(e) { console.warn('Firebase save failed:', e); _ignoreNext = false; }
-    try { localStorage.setItem('zs_alexandra_db', JSON.stringify(_cache)); } catch {}
+    DOC_REF.set(cacheToFirestore(_cache))
+      .then(function() {
+        console.log('✅ Uloženo do Firebase');
+        try { localStorage.setItem('zs_alexandra_db', JSON.stringify(_cache)); } catch(e) {}
+      })
+      .catch(function(e) {
+        console.error('❌ Firebase uložení selhalo:', e.code, e.message);
+        _ignoreNext = false;
+        try { localStorage.setItem('zs_alexandra_db', JSON.stringify(_cache)); } catch(le) {}
+      });
   }, 700);
 }
 
