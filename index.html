@@ -4,6 +4,9 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZS Alexandra – Žákovská knížka</title>
+<!-- Firebase MUSÍ být první – před jakýmkoliv jiným scriptem -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -641,18 +644,18 @@ tr:hover .del-btn,
       </div>
       <div class="pin-error" id="pin-error">&nbsp;</div>
       <div class="numpad" id="numpad">
-        <button class="numpad-btn" data-key="1">1</button>
-        <button class="numpad-btn" data-key="2">2</button>
-        <button class="numpad-btn" data-key="3">3</button>
-        <button class="numpad-btn" data-key="4">4</button>
-        <button class="numpad-btn" data-key="5">5</button>
-        <button class="numpad-btn" data-key="6">6</button>
-        <button class="numpad-btn" data-key="7">7</button>
-        <button class="numpad-btn" data-key="8">8</button>
-        <button class="numpad-btn" data-key="9">9</button>
+        <button class="numpad-btn" onclick="pinKey('1')">1</button>
+        <button class="numpad-btn" onclick="pinKey('2')">2</button>
+        <button class="numpad-btn" onclick="pinKey('3')">3</button>
+        <button class="numpad-btn" onclick="pinKey('4')">4</button>
+        <button class="numpad-btn" onclick="pinKey('5')">5</button>
+        <button class="numpad-btn" onclick="pinKey('6')">6</button>
+        <button class="numpad-btn" onclick="pinKey('7')">7</button>
+        <button class="numpad-btn" onclick="pinKey('8')">8</button>
+        <button class="numpad-btn" onclick="pinKey('9')">9</button>
         <div class="numpad-empty"></div>
-        <button class="numpad-btn" data-key="0">0</button>
-        <button class="numpad-btn del" id="pin-del-btn">
+        <button class="numpad-btn" onclick="pinKey('0')">0</button>
+        <button class="numpad-btn del" onclick="pinDel()">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
         </button>
       </div>
@@ -746,7 +749,23 @@ tr:hover .del-btn,
                 </div>
                 <div style="padding:8px 0" id="dash-grades"></div>
               </div>
+              <div class="card" style="margin-top:12px">
+                <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <span style="font-weight:600;font-size:13px" id="dash-tt-label">Rozvrh dnes</span>
+                </div>
+                <div style="padding:8px 0" id="dash-tt"></div>
+              </div>
             </div>
+          </div>
+
+          <!-- Týdenní rozvrh -->
+          <div class="card" style="margin-top:12px">
+            <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span style="font-weight:600;font-size:13px">Týdenní rozvrh</span>
+            </div>
+            <div style="padding:12px;overflow-x:auto" id="dash-weekly-tt"></div>
           </div>
         </div>
 
@@ -862,6 +881,43 @@ tr:hover .del-btn,
           </div>
         </div>
 
+        <!-- ─────────────── MESSAGES ─────────────── -->
+        <div id="view-messages" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+              <div class="page-title"><h1>Zprávy</h1><p>Odeslat zprávu učiteli nebo škole</p></div>
+            </div>
+          </div>
+          <div class="card card-body">
+            <div class="alert alert-info" style="margin-bottom:16px">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Zpráva bude odeslána e-mailem na adresu školy
+            </div>
+            <div class="form-group"><label class="form-label">Od (jméno)</label><input class="form-input" id="msg-from" placeholder="Jan Novák"></div>
+            <div class="form-group"><label class="form-label">Předmět</label><input class="form-input" id="msg-subject" placeholder="Předmět zprávy…"></div>
+            <div class="form-group"><label class="form-label">Zpráva</label><textarea class="form-textarea" id="msg-body" rows="5" placeholder="Text zprávy…" style="min-height:120px"></textarea></div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <button class="btn btn-primary" id="msg-send-btn" onclick="sendMessage()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                Odeslat zprávu
+              </button>
+              <span id="msg-status" style="font-size:13px"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────── VÝCHOVNÁ OPATŘENÍ ─────────────── -->
+        <div id="view-disciplinary" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon red"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+              <div class="page-title"><h1>Výchovná opatření</h1><p id="disc-summary">Přehled opatření</p></div>
+            </div>
+          </div>
+          <div class="card"><div id="disc-list" style="padding:4px 0"></div></div>
+        </div>
+
         <!-- ─────────────── SETTINGS (admin only) ─────────────── -->
         <div id="view-settings" class="view">
           <div class="page-header">
@@ -915,17 +971,40 @@ tr:hover .del-btn,
 </div>
 
 
-<script type="module">
-/* ═══════════════════════════════════════════════════════════════
-   FIREBASE + FIRESTORE
-   Data se ukládají jako JSON string v jednom dokumentu,
-   protože Firestore nepodporuje vnořená pole přímo.
-═══════════════════════════════════════════════════════════════ */
-import { initializeApp }
-  from "https://www.gstatic.com/firebasejs/11.8.1/firebase-app.js";
-import { getFirestore, doc, getDoc, setDoc, onSnapshot }
-  from "https://www.gstatic.com/firebasejs/11.8.1/firebase-firestore.js";
+<!-- Globální PIN funkce – musí být před Firebase, aby onclick fungoval okamžitě -->
+<script>
+var pinBuffer = '';
+var pinBusy   = false;
 
+function renderDots() {
+  document.querySelectorAll('.pin-dot').forEach(function(d,i){ d.classList.toggle('filled', i < pinBuffer.length); });
+}
+function setError(msg) {
+  var el = document.getElementById('pin-error');
+  if (el) el.textContent = msg || '\u00a0';
+}
+function pinKey(d) {
+  if (pinBusy || pinBuffer.length >= 4) return;
+  pinBuffer += d; setError(''); renderDots();
+  if (pinBuffer.length === 4) {
+    // verifyPin je definována ve Firebase scriptu níže
+    // počkej až bude dostupná
+    var t = setInterval(function(){
+      if (typeof verifyPin === 'function') { clearInterval(t); verifyPin(); }
+    }, 50);
+  }
+}
+function pinDel() {
+  if (pinBusy) return;
+  pinBuffer = pinBuffer.slice(0,-1); setError(''); renderDots();
+}
+</script>
+
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   FIREBASE INIT
+═══════════════════════════════════════════════════════════════ */
 const firebaseConfig = {
   apiKey:            "AIzaSyChLAQmzNz3tXtWWwpjwt8_P7fwdOwqvC8",
   authDomain:        "test-stranky-94ae7.firebaseapp.com",
@@ -935,9 +1014,9 @@ const firebaseConfig = {
   appId:             "1:414055116493:web:5bee467091a1680d428384",
 };
 
-const fbApp  = initializeApp(firebaseConfig);
-const db_fs  = getFirestore(fbApp);
-const DOC_REF = doc(db_fs, "skola", "hlavni");
+firebase.initializeApp(firebaseConfig);
+const db_fs   = firebase.firestore();
+const DOC_REF = db_fs.collection("skola").doc("hlavni");
 
 /* ═══════════════════════════════════════════════════════════════
    SESSION
@@ -967,84 +1046,78 @@ function logout() {
 /* ═══════════════════════════════════════════════════════════════
    IN-MEMORY CACHE + FIREBASE SYNC
 ═══════════════════════════════════════════════════════════════ */
-let _cache = null;       // aktuální data
-let _saveTimer = null;   // debounce timer
-let _ignoreNext = false; // zabránit smyčce při vlastním ukládání
+var _cache       = null;
+var _saveTimer   = null;
+var _ignoreNext  = false;
+var _unsubscribe = null;
 
 function showLoader(msg) {
   let el = document.getElementById('fb-loader');
   if (!el) {
     el = document.createElement('div');
     el.id = 'fb-loader';
-    el.style.cssText = [
-      'position:fixed','inset:0','z-index:9999',
-      'background:hsl(225,43%,8%)',
-      'display:flex','flex-direction:column',
-      'align-items:center','justify-content:center','gap:16px',
-      'pointer-events:none'  /* loader neblokuje klikání ani klávesy */
-    ].join(';');
+    el.style.cssText = 'position:fixed;inset:0;z-index:500;background:hsl(225,43%,8%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
     el.innerHTML = `
-      <div style="width:36px;height:36px;border:3px solid hsla(221,88%,60%,0.2);
-        border-top-color:hsl(221,88%,60%);border-radius:50%;
-        animation:spin 0.8s linear infinite"></div>
-      <div id="fb-loader-msg" style="color:hsl(215,18%,52%);font-size:13px;
-        font-family:'DM Sans',sans-serif">${msg}</div>`;
+      <div style="width:36px;height:36px;border:3px solid hsla(221,88%,60%,0.2);border-top-color:hsl(221,88%,60%);border-radius:50%;animation:spin 0.8s linear infinite"></div>
+      <div id="fb-loader-msg" style="color:hsl(215,18%,52%);font-size:13px;font-family:'DM Sans',sans-serif">${msg}</div>`;
     document.body.appendChild(el);
   } else {
-    document.getElementById('fb-loader-msg').textContent = msg;
+    const m = document.getElementById('fb-loader-msg');
+    if (m) m.textContent = msg;
   }
 }
 function hideLoader() {
   const el = document.getElementById('fb-loader');
-  if (el) {
-    el.style.transition = 'opacity 0.3s';
-    el.style.opacity = '0';
-    setTimeout(() => el.remove(), 320);
-  }
+  if (el) { el.style.transition='opacity 0.3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),320); }
 }
 
-// Firestore → JSON string → JS objekt (řeší problém s vnořenými poli)
 function firestoreToCache(data) {
   try { return JSON.parse(data.json); } catch { return null; }
 }
 function cacheToFirestore(cache) {
   return { json: JSON.stringify(cache) };
 }
+function mergeWithDefaults(data) {
+  const def = defaultDB();
+  Object.keys(def).forEach(k => { if (data[k] === undefined) data[k] = def[k]; });
+  return data;
+}
+function loadFromLocalStorage() {
+  try { const r = localStorage.getItem('zs_alexandra_db'); if(r) return mergeWithDefaults(JSON.parse(r)); } catch {}
+  return defaultDB();
+}
 
 async function firebaseInit() {
   showLoader('Připojování k databázi…');
   try {
-    const snap = await getDoc(DOC_REF);
-    if (snap.exists()) {
+    const snap = await DOC_REF.get();
+    if (snap.exists) {
       const loaded = firestoreToCache(snap.data());
       _cache = loaded ? mergeWithDefaults(loaded) : defaultDB();
     } else {
       _cache = defaultDB();
-      await setDoc(DOC_REF, cacheToFirestore(_cache));
+      await DOC_REF.set(cacheToFirestore(_cache));
     }
-  } catch (e) {
-    console.warn('Firebase chyba při inicializaci, záloha z localStorage:', e);
+  } catch(e) {
+    console.warn('Firebase nedostupný, používám localStorage:', e);
     _cache = loadFromLocalStorage();
   }
 
   hideLoader();
 
-  // Real-time listener – aktualizace z jiných zařízení
-  onSnapshot(DOC_REF, (snap) => {
-    if (!snap.exists()) return;
+  // Real-time listener
+  _unsubscribe = DOC_REF.onSnapshot(snap => {
+    if (!snap.exists) return;
     if (_ignoreNext) { _ignoreNext = false; return; }
     const remote = firestoreToCache(snap.data());
     if (!remote) return;
-    const remoteStr = JSON.stringify(remote);
-    const cacheStr  = JSON.stringify(_cache);
-    if (remoteStr !== cacheStr) {
+    if (JSON.stringify(remote) !== JSON.stringify(_cache)) {
       _cache = mergeWithDefaults(remote);
-      // Tiše překreslit aktuální pohled
-      try { renderView(activePage); buildNav(); } catch {}
+      try { renderView(activePage); buildNav(); } catch(e) {}
     }
-  }, (err) => console.warn('Firestore listener:', err));
+  }, err => console.warn('Firestore listener:', err));
 
-  // Spustit aplikaci
+  // Spustit app
   const role = sessionLoad();
   if (role) {
     currentRole = role;
@@ -1058,38 +1131,13 @@ function scheduleSave() {
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(async () => {
     _ignoreNext = true;
-    try {
-      await setDoc(DOC_REF, cacheToFirestore(_cache));
-    } catch (e) {
-      console.warn('Firebase uložení selhalo:', e);
-      _ignoreNext = false;
-    }
-    // Vždy záloha do localStorage
+    try { await DOC_REF.set(cacheToFirestore(_cache)); }
+    catch(e) { console.warn('Firebase save failed:', e); _ignoreNext = false; }
     try { localStorage.setItem('zs_alexandra_db', JSON.stringify(_cache)); } catch {}
   }, 700);
 }
 
-function loadFromLocalStorage() {
-  try {
-    const raw = localStorage.getItem('zs_alexandra_db');
-    if (raw) return mergeWithDefaults(JSON.parse(raw));
-  } catch {}
-  return defaultDB();
-}
-
-function mergeWithDefaults(data) {
-  const def = defaultDB();
-  // Přidej chybějící klíče (např. při přidání nové funkce)
-  Object.keys(def).forEach(k => {
-    if (data[k] === undefined) data[k] = def[k];
-  });
-  return data;
-}
-
-/* ─── Veřejné DB funkce ─── */
-function dbGet() {
-  return _cache || defaultDB();
-}
+function dbGet() { return _cache || defaultDB(); }
 function dbSet(fn) {
   if (!_cache) _cache = defaultDB();
   fn(_cache);
@@ -1101,29 +1149,26 @@ function dbSet(fn) {
 ═══════════════════════════════════════════════════════════════ */
 function defaultDB() {
   return {
-    student: {
-      name: 'Jan Novák', class: '8.A', school: 'ZS Alexandra',
-      year: '2025/2026', classTeacher: 'Mgr. Jana Horáčková'
-    },
+    student: { name:'Jan Novák', class:'8.A', school:'ZS Alexandra', year:'2025/2026', classTeacher:'Mgr. Jana Horáčková' },
     subjects: [
-      { id:'mat', name:'Matematika',      short:'MAT', teacher:'Mgr. Pavel Horák',      room:'21', type:'sci',   order:1 },
-      { id:'csj', name:'Český jazyk',     short:'ČSJ', teacher:'Mgr. Jana Horáčková',  room:'15', type:'hum',   order:2 },
-      { id:'ang', name:'Anglický jazyk',  short:'ANG', teacher:'Mgr. Petra Dvořáčková',room:'12', type:'lang',  order:3 },
-      { id:'fyz', name:'Fyzika',          short:'FYZ', teacher:'Ing. Tomáš Novotný',    room:'18', type:'sci',   order:4 },
-      { id:'che', name:'Chemie',          short:'CHE', teacher:'RNDr. Eva Součková',    room:'19', type:'sci',   order:5 },
-      { id:'bio', name:'Biologie',        short:'BIO', teacher:'Mgr. Lucie Marková',    room:'14', type:'sci',   order:6 },
-      { id:'dej', name:'Dějepis',         short:'DEJ', teacher:'Mgr. Radek Beneš',      room:'16', type:'hum',   order:7 },
-      { id:'zsv', name:'Zeměpis',         short:'ZSV', teacher:'Mgr. Alena Říhová',     room:'13', type:'hum',   order:8 },
-      { id:'inf', name:'Informatika',     short:'INF', teacher:'Ing. Marek Procházka',  room:'20', type:'tech',  order:9 },
-      { id:'tv',  name:'Tělesná výchova', short:'TV',  teacher:'Mgr. Petr Kratochvíl',  room:'TL', type:'sport', order:10 },
+      {id:'mat',name:'Matematika',     short:'MAT',teacher:'Mgr. Pavel Horák',      room:'21',type:'sci',  order:1},
+      {id:'csj',name:'Český jazyk',    short:'ČSJ',teacher:'Mgr. Jana Horáčková',  room:'15',type:'hum',  order:2},
+      {id:'ang',name:'Anglický jazyk', short:'ANG',teacher:'Mgr. Petra Dvořáčková',room:'12',type:'lang', order:3},
+      {id:'fyz',name:'Fyzika',         short:'FYZ',teacher:'Ing. Tomáš Novotný',    room:'18',type:'sci',  order:4},
+      {id:'che',name:'Chemie',         short:'CHE',teacher:'RNDr. Eva Součková',    room:'19',type:'sci',  order:5},
+      {id:'bio',name:'Biologie',       short:'BIO',teacher:'Mgr. Lucie Marková',    room:'14',type:'sci',  order:6},
+      {id:'dej',name:'Dějepis',        short:'DEJ',teacher:'Mgr. Radek Beneš',      room:'16',type:'hum',  order:7},
+      {id:'zsv',name:'Zeměpis',        short:'ZSV',teacher:'Mgr. Alena Říhová',     room:'13',type:'hum',  order:8},
+      {id:'inf',name:'Informatika',    short:'INF',teacher:'Ing. Marek Procházka',  room:'20',type:'tech', order:9},
+      {id:'tv', name:'Těl. výchova',   short:'TV', teacher:'Mgr. Petr Kratochvíl',  room:'TL',type:'sport',order:10},
     ],
     grades: [
-      { id:'g1', subjectId:'mat', value:2, type:'Písemka', date:'15.5.2026', note:'Kvadratické rovnice' },
-      { id:'g2', subjectId:'csj', value:1, type:'Sloh',    date:'12.5.2026', note:'' },
-      { id:'g3', subjectId:'ang', value:2, type:'Test',    date:'8.5.2026',  note:'Unit 7' },
-      { id:'g4', subjectId:'fyz', value:3, type:'Ústní',   date:'6.5.2026',  note:'Optika' },
-      { id:'g5', subjectId:'mat', value:1, type:'Ústní',   date:'2.5.2026',  note:'' },
-      { id:'g6', subjectId:'bio', value:2, type:'Test',    date:'28.4.2026', note:'Evoluce' },
+      {id:'g1',subjectId:'mat',value:2,type:'Písemka',date:'15.5.2026',note:'Kvadratické rovnice'},
+      {id:'g2',subjectId:'csj',value:1,type:'Sloh',   date:'12.5.2026',note:''},
+      {id:'g3',subjectId:'ang',value:2,type:'Test',   date:'8.5.2026', note:'Unit 7'},
+      {id:'g4',subjectId:'fyz',value:3,type:'Ústní',  date:'6.5.2026', note:'Optika'},
+      {id:'g5',subjectId:'mat',value:1,type:'Ústní',  date:'2.5.2026', note:''},
+      {id:'g6',subjectId:'bio',value:2,type:'Test',   date:'28.4.2026',note:'Evoluce'},
     ],
     timetable: [
       {day:0,period:1,subject:'MAT',room:'21'},{day:0,period:2,subject:'ČSJ',room:'15'},{day:0,period:3,subject:'ANG',room:'12'},{day:0,period:4,subject:'FYZ',room:'18'},{day:0,period:5,subject:'TV',room:'TL'},
@@ -1133,63 +1178,39 @@ function defaultDB() {
       {day:4,period:1,subject:'MAT',room:'21'},{day:4,period:2,subject:'ZSV',room:'13'},{day:4,period:3,subject:'DEJ',room:'16'},{day:4,period:4,subject:'INF',room:'20'},
     ],
     homework: [
-      { id:'hw1', subject:'MAT', title:'Příklady str. 85, č.1–10', description:'Lineární nerovnice',  dueDate:'26.5.2026', done:false },
-      { id:'hw2', subject:'ANG', title:'Přečíst Unit 8',           description:'Slovíčka + grammar',  dueDate:'27.5.2026', done:false },
-      { id:'hw3', subject:'ČSJ', title:'Slohovka – popis osoby',   description:'Min. 200 slov',        dueDate:'28.5.2026', done:true  },
-      { id:'hw4', subject:'BIO', title:'Referát o evoluci',         description:'Prezentace 5 minut', dueDate:'2.6.2026',  done:false },
+      {id:'hw1',subject:'MAT',title:'Příklady str. 85, č.1–10',description:'Lineární nerovnice',dueDate:'26.5.2026',done:false},
+      {id:'hw2',subject:'ANG',title:'Přečíst Unit 8',           description:'Slovíčka + grammar', dueDate:'27.5.2026',done:false},
+      {id:'hw3',subject:'ČSJ',title:'Slohovka – popis osoby',   description:'Min. 200 slov',      dueDate:'28.5.2026',done:true},
+      {id:'hw4',subject:'BIO',title:'Referát o evoluci',         description:'Prezentace 5 min',   dueDate:'2.6.2026', done:false},
     ],
     tests: [
-      { id:'t1', subject:'MAT', topic:'Funkce a grafy',                  date:'27.5.2026', teacher:'Mgr. Pavel Horák' },
-      { id:'t2', subject:'CHE', topic:'Organická chemie – opakování',    date:'29.5.2026', teacher:'RNDr. Eva Součková' },
-      { id:'t3', subject:'FYZ', topic:'Elektřina a magnetismus',         date:'3.6.2026',  teacher:'Ing. Tomáš Novotný' },
+      {id:'t1',subject:'MAT',topic:'Funkce a grafy',               date:'27.5.2026',teacher:'Mgr. Pavel Horák'},
+      {id:'t2',subject:'CHE',topic:'Organická chemie – opakování', date:'29.5.2026',teacher:'RNDr. Eva Součková'},
+      {id:'t3',subject:'FYZ',topic:'Elektřina a magnetismus',      date:'3.6.2026', teacher:'Ing. Tomáš Novotný'},
     ],
     attendance: [
-      { id:'a1', date:'24.5.2026', status:'present', note:'' },
-      { id:'a2', date:'23.5.2026', status:'present', note:'' },
-      { id:'a3', date:'22.5.2026', status:'excused', note:'Nemoc' },
-      { id:'a4', date:'21.5.2026', status:'present', note:'' },
-      { id:'a5', date:'20.5.2026', status:'late',    note:'Zpoždění vlaku' },
+      {id:'a1',date:'24.5.2026',status:'present',note:''},
+      {id:'a2',date:'23.5.2026',status:'present',note:''},
+      {id:'a3',date:'22.5.2026',status:'excused',note:'Nemoc'},
+      {id:'a4',date:'21.5.2026',status:'present',note:''},
+      {id:'a5',date:'20.5.2026',status:'late',   note:'Zpoždění vlaku'},
     ],
     notes: [],
-    pins: { admin: '8520', student: '0258' },
+    disciplinary: [],
+    pins: { admin:'8520', student:'0258' },
   };
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   PIN LOGIN
+   PIN LOGIN  (proměnné pinBuffer/pinBusy jsou v globálním scriptu výše)
 ═══════════════════════════════════════════════════════════════ */
-let currentRole = null;
-let pinBuffer   = '';
-let pinBusy     = false;
-
-function renderDots() {
-  document.querySelectorAll('.pin-dot').forEach((d, i) => {
-    d.classList.toggle('filled', i < pinBuffer.length);
-  });
-}
-function setError(msg) {
-  document.getElementById('pin-error').textContent = msg || '\u00a0';
-}
-function pinKey(d) {
-  if (pinBusy || pinBuffer.length >= 4) return;
-  pinBuffer += d;
-  setError('');
-  renderDots();
-  if (pinBuffer.length === 4) verifyPin();
-}
-function pinDel() {
-  if (pinBusy) return;
-  pinBuffer = pinBuffer.slice(0, -1);
-  setError('');
-  renderDots();
-}
+var currentRole = null;
 function verifyPin() {
   pinBusy = true;
-  const db = dbGet();
-  const { admin, student } = db.pins;
+  const pins = dbGet().pins;
   let role = null;
-  if (pinBuffer === admin)   role = 'admin';
-  else if (pinBuffer === student) role = 'student';
+  if (pinBuffer === pins.admin)   role = 'admin';
+  else if (pinBuffer === pins.student) role = 'student';
 
   if (role) {
     currentRole = role;
@@ -1198,390 +1219,377 @@ function verifyPin() {
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').classList.add('visible');
       initApp();
-      pinBusy   = false;
-      pinBuffer = '';
-      renderDots();
+      pinBusy = false; pinBuffer = ''; renderDots();
     }, 180);
   } else {
     const card = document.getElementById('pin-card');
-    card.classList.add('shake');
+    if (card) card.classList.add('shake');
     setError('Nesprávný PIN');
     setTimeout(() => {
-      card.classList.remove('shake');
-      pinBuffer = '';
-      renderDots();
-      setError('');
-      pinBusy = false;
+      if (card) card.classList.remove('shake');
+      pinBuffer = ''; renderDots(); setError(''); pinBusy = false;
     }, 1200);
   }
 }
-
-
 
 /* ═══════════════════════════════════════════════════════════════
    NAV
 ═══════════════════════════════════════════════════════════════ */
 const NAV_ITEMS = [
-  { id:'dashboard',  label:'Hlavní panel',  section:'Přehled',      icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>' },
-  { id:'inbox',      label:'Schránka',       section:null,           icon:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>' },
-  { id:'grades',     label:'Hodnocení',      section:null,           icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>' },
-  { id:'homework',   label:'Domácí úkoly',   section:'Výuka',        icon:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>' },
-  { id:'tests',      label:'Písemky',        section:null,           icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>' },
-  { id:'curriculum', label:'Učivo',          section:null,           icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>' },
-  { id:'activity',   label:'Aktivita',       section:null,           icon:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>' },
-  { id:'schedule',   label:'Rozvrh',         section:'Správa',       icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>' },
-  { id:'attendance', label:'Docházka',       section:null,           icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>' },
-  { id:'settings',   label:'Nastavení',      section:'Administrace', icon:'<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/>',  adminOnly:true },
-  { id:'admin',      label:'Admin panel',    section:null,           icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',                                                                                                                    adminOnly:true },
+  {id:'dashboard', label:'Hlavní panel',  section:'Přehled',      icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  {id:'inbox',     label:'Schránka',       section:null,           icon:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>'},
+  {id:'grades',    label:'Hodnocení',      section:null,           icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'},
+  {id:'homework',  label:'Domácí úkoly',   section:'Výuka',        icon:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'},
+  {id:'tests',     label:'Písemky',        section:null,           icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'},
+  {id:'curriculum',label:'Učivo',          section:null,           icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'},
+  {id:'activity',  label:'Aktivita',       section:null,           icon:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'},
+  {id:'schedule',  label:'Rozvrh',         section:'Správa',       icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'},
+  {id:'attendance',  label:'Docházka',         section:null,           icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'},
+  {id:'disciplinary',label:'Výchovná opatření', section:null,           icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'},
+  {id:'messages',    label:'Zprávy',            section:'Ostatní',      icon:'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>'},
+  {id:'settings',  label:'Nastavení',      section:'Administrace', icon:'<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/>',adminOnly:true},
+  {id:'admin',     label:'Admin panel',    section:null,           icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',adminOnly:true},
 ];
-
-let activePage = 'dashboard';
+var activePage = 'dashboard';
 
 function buildNav() {
   const nav = document.getElementById('sidebar-nav');
+  if (!nav) return;
   nav.innerHTML = '';
-  const db = dbGet();
-  const pendingHw = db.homework.filter(h => !h.done).length;
-  const visible   = NAV_ITEMS.filter(i => !i.adminOnly || currentRole === 'admin');
+  const pending = dbGet().homework.filter(h=>!h.done).length;
+  const visible = NAV_ITEMS.filter(i=>!i.adminOnly||currentRole==='admin');
   let lastSection = null;
-
   visible.forEach(item => {
     if (item.section && item.section !== lastSection) {
       const lbl = document.createElement('div');
-      lbl.className = 'nav-section-label' + (item.adminOnly ? ' admin-label' : '');
+      lbl.className = 'nav-section-label' + (item.adminOnly?' admin-label':'');
       lbl.textContent = item.section;
       nav.appendChild(lbl);
       lastSection = item.section;
     }
     const btn = document.createElement('button');
-    btn.className = `nav-btn${item.adminOnly ? ' admin-btn' : ''}${activePage === item.id ? ' active' : ''}`;
-    btn.id = 'nav-' + item.id;
-    btn.onclick = () => navigate(item.id);
-
-    const badge = (item.id === 'homework' && pendingHw > 0)
-      ? `<span class="nav-badge">${pendingHw}</span>` : '';
-
-    btn.innerHTML = `
-      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg>
-      <span class="label">${item.label}</span>${badge}`;
+    btn.className = `nav-btn${item.adminOnly?' admin-btn':''}${activePage===item.id?' active':''}`;
+    btn.id = 'nav-'+item.id;
+    btn.addEventListener('click', () => navigate(item.id));
+    const badge = (item.id==='homework'&&pending>0)?`<span class="nav-badge">${pending}</span>`:'';
+    btn.innerHTML = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${item.icon}</svg><span class="label">${item.label}</span>${badge}`;
     nav.appendChild(btn);
   });
 }
 
 function navigate(page) {
-  if (['admin','settings'].includes(page) && currentRole !== 'admin') return;
+  if (['admin','settings'].includes(page) && currentRole!=='admin') return;
   activePage = page;
-  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-  const btn = document.getElementById('nav-' + page);
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  const btn = document.getElementById('nav-'+page);
   if (btn) btn.classList.add('active');
-  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-  const view = document.getElementById('view-' + page);
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  const view = document.getElementById('view-'+page);
   if (view) view.classList.add('active');
   closeSidebar();
   renderView(page);
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   MOBILE SIDEBAR
+   SIDEBAR / MODAL
 ═══════════════════════════════════════════════════════════════ */
-function openSidebar() {
-  document.getElementById('sidebar').classList.add('mobile-open');
-  document.getElementById('sidebar-overlay').style.display = 'block';
-}
-function closeSidebar() {
-  document.getElementById('sidebar').classList.remove('mobile-open');
-  document.getElementById('sidebar-overlay').style.display = 'none';
-}
+function openSidebar()  { document.getElementById('sidebar')?.classList.add('mobile-open'); document.getElementById('sidebar-overlay').style.display='block'; }
+function closeSidebar() { document.getElementById('sidebar')?.classList.remove('mobile-open'); document.getElementById('sidebar-overlay').style.display='none'; }
 
-/* ═══════════════════════════════════════════════════════════════
-   MODAL
-═══════════════════════════════════════════════════════════════ */
 function openModal(title, bodyHTML, actionsHTML) {
-  document.getElementById('modal-title').textContent  = title;
-  document.getElementById('modal-body').innerHTML     = bodyHTML;
-  document.getElementById('modal-actions').innerHTML  = actionsHTML;
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML    = bodyHTML;
+  document.getElementById('modal-actions').innerHTML = actionsHTML;
   document.getElementById('modal-overlay').style.display = 'flex';
 }
-function closeModal() {
-  document.getElementById('modal-overlay').style.display = 'none';
-}
+function closeModal() { document.getElementById('modal-overlay').style.display='none'; }
 
 /* ═══════════════════════════════════════════════════════════════
    UTILITY
 ═══════════════════════════════════════════════════════════════ */
-function uid() { return Math.random().toString(36).slice(2, 10); }
-function esc(s) {
-  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-function subjIcon(short) { return `<span class="subj-chip">${esc(short)}</span>`; }
-function gradeHtml(v)    { return `<span class="grade-badge grade-${v}">${v}</span>`; }
+function uid()  { return Math.random().toString(36).slice(2,10); }
+function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function subjIcon(s)  { return `<span class="subj-chip">${esc(s)}</span>`; }
+function gradeHtml(v) { return `<span class="grade-badge grade-${v}">${v}</span>`; }
 function attBadge(status) {
-  const cls = { present:'badge-green', absent:'badge-red', excused:'badge-yellow', late:'badge-yellow', 'school-event':'badge-blue' };
-  const lbl = { present:'Přítomen', absent:'Nepřítomen', excused:'Omluveno', late:'Pozdní příchod', 'school-event':'Školní akce' };
+  const cls={present:'badge-green',absent:'badge-red',excused:'badge-yellow',late:'badge-yellow','school-event':'badge-blue'};
+  const lbl={present:'Přítomen',absent:'Nepřítomen',excused:'Omluveno',late:'Pozdní příchod','school-event':'Školní akce'};
   return `<span class="badge ${cls[status]||'badge-gray'}">${lbl[status]||status}</span>`;
 }
-function svgIcon(path, size=14) {
-  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`;
-}
-const DAYS    = ['Pondělí','Úterý','Středa','Čtvrtek','Pátek'];
-const PERIODS = [1,2,3,4,5,6];
+function svgIcon(path,size=14) { return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`; }
+const DAYS=['Pondělí','Úterý','Středa','Čtvrtek','Pátek'];
+const PERIODS=[1,2,3,4,5,6];
 
 /* ═══════════════════════════════════════════════════════════════
    RENDER VIEWS
 ═══════════════════════════════════════════════════════════════ */
 function renderView(page) {
-  const map = {
-    dashboard:  renderDashboard,
-    grades:     renderGrades,
-    schedule:   renderSchedule,
-    homework:   renderHomework,
-    tests:      renderTests,
-    attendance: renderAttendance,
-    settings:   renderSettings,
-    admin:      renderAdmin,
-  };
-  if (map[page]) map[page]();
+  ({dashboard:renderDashboard,grades:renderGrades,schedule:renderSchedule,
+    homework:renderHomework,tests:renderTests,attendance:renderAttendance,
+    disciplinary:renderDisciplinary,messages:renderMessages,
+    settings:renderSettings,admin:renderAdmin})[page]?.();
 }
 
-/* ────── DASHBOARD ────── */
+/* ── DASHBOARD ── */
 function renderDashboard() {
   const db = dbGet();
   const h  = new Date().getHours();
-  const greet = h < 12 ? 'Dobré ráno' : h < 17 ? 'Dobré odpoledne' : 'Dobrý večer';
-  document.getElementById('dash-greeting').textContent = `${greet}, ${db.student.name.split(' ')[0]}!`;
+  const greet = h<12?'Dobré ráno':h<17?'Dobré odpoledne':'Dobrý večer';
+  const jmeno = db.student.name.split(' ')[0];
+  document.getElementById('dash-greeting').textContent = `${greet}, ${jmeno}!`;
 
-  const pending = db.homework.filter(h => !h.done).length;
-  const avg     = db.grades.length
-    ? (db.grades.reduce((a,g) => a+g.value, 0) / db.grades.length).toFixed(1) : '—';
-  const present = db.attendance.filter(a => a.status==='present').length;
+  const pending = db.homework.filter(h=>!h.done).length;
+  const avg = db.grades.length ? (db.grades.reduce((a,g)=>a+g.value,0)/db.grades.length).toFixed(1) : '—';
+  const present = db.attendance.filter(a=>a.status==='present').length;
   const total   = db.attendance.length;
 
   document.getElementById('dash-stats').innerHTML = `
-    <div class="stat-card">
-      <div class="stat-label">Průměr</div>
-      <div class="stat-value">${avg}</div>
-      <div class="stat-sub">ze všech předmětů</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Nesplněné úkoly</div>
-      <div class="stat-value" style="color:${pending>0?'var(--warning)':'var(--success)'}">${pending}</div>
-      <div class="stat-sub">z ${db.homework.length} celkem</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Docházka</div>
-      <div class="stat-value">${total ? Math.round(present/total*100) : 100}<span style="font-size:16px">%</span></div>
-      <div class="stat-sub">${present}/${total} dní</div>
-    </div>
-    <div class="stat-card">
-      <div class="stat-label">Písemky</div>
-      <div class="stat-value">${db.tests.length}</div>
-      <div class="stat-sub">naplánované</div>
-    </div>`;
+    <div class="stat-card"><div class="stat-label">Průměr</div><div class="stat-value">${avg}</div><div class="stat-sub">ze všech předmětů</div></div>
+    <div class="stat-card"><div class="stat-label">Nesplněné úkoly</div><div class="stat-value" style="color:${pending>0?'var(--warning)':'var(--success)'}">${pending}</div><div class="stat-sub">z ${db.homework.length} celkem</div></div>
+    <div class="stat-card"><div class="stat-label">Docházka</div><div class="stat-value">${total?Math.round(present/total*100):100}<span style="font-size:16px">%</span></div><div class="stat-sub">${present}/${total} dní</div></div>
+    <div class="stat-card"><div class="stat-label">Písemky</div><div class="stat-value">${db.tests.length}</div><div class="stat-sub">naplánované</div></div>`;
 
-  const pending_hw = db.homework.filter(h => !h.done);
-  document.getElementById('dash-hw').innerHTML = pending_hw.length === 0
+  const phw = db.homework.filter(h=>!h.done);
+  document.getElementById('dash-hw').innerHTML = phw.length===0
     ? '<div class="empty-state" style="padding:20px"><p>Žádné nesplněné úkoly 🎉</p></div>'
-    : pending_hw.slice(0,4).map(hw => `
-        <div class="dash-hw-row" style="padding:9px 16px">
-          ${subjIcon(hw.subject)}
-          <span style="flex:1;font-size:13px">${esc(hw.title)}</span>
-          <span style="font-size:11px;color:var(--fg-muted)">${esc(hw.dueDate)}</span>
-        </div>`).join('');
+    : phw.slice(0,4).map(hw=>`<div class="dash-hw-row" style="padding:9px 16px">${subjIcon(hw.subject)}<span style="flex:1;font-size:13px">${esc(hw.title)}</span><span style="font-size:11px;color:var(--fg-muted)">${esc(hw.dueDate)}</span></div>`).join('');
 
-  document.getElementById('dash-tests').innerHTML = db.tests.length === 0
+  document.getElementById('dash-tests').innerHTML = db.tests.length===0
     ? '<div class="empty-state" style="padding:20px"><p>Žádné písemky</p></div>'
-    : db.tests.slice(0,3).map(t => `
-        <div class="dash-hw-row" style="padding:9px 16px">
-          ${subjIcon(t.subject)}
-          <span style="flex:1;font-size:13px">${esc(t.topic)}</span>
-          <span style="font-size:11px;color:var(--fg-muted)">${esc(t.date)}</span>
-        </div>`).join('');
+    : db.tests.slice(0,3).map(t=>`<div class="dash-hw-row" style="padding:9px 16px">${subjIcon(t.subject)}<span style="flex:1;font-size:13px">${esc(t.topic)}</span><span style="font-size:11px;color:var(--fg-muted)">${esc(t.date)}</span></div>`).join('');
 
-  document.getElementById('dash-grades').innerHTML = db.grades.length === 0
+  document.getElementById('dash-grades').innerHTML = db.grades.length===0
     ? '<div class="empty-state" style="padding:20px"><p>Žádné známky</p></div>'
-    : db.grades.slice(-4).reverse().map(g => {
-        const subj = db.subjects.find(s => s.id===g.subjectId);
-        return `<div class="dash-hw-row" style="padding:9px 16px">
-          ${gradeHtml(g.value)}
-          <span style="flex:1;font-size:13px">${esc(subj?.short||g.subjectId)}
-            <span style="color:var(--fg-muted);font-size:11px">${esc(g.type)}</span></span>
-          <span style="font-size:11px;color:var(--fg-muted)">${esc(g.date)}</span>
-        </div>`;
-      }).join('');
+    : db.grades.slice(-4).reverse().map(g=>{const subj=db.subjects.find(s=>s.id===g.subjectId);return`<div class="dash-hw-row" style="padding:9px 16px">${gradeHtml(g.value)}<span style="flex:1;font-size:13px">${esc(subj?.short||g.subjectId)} <span style="color:var(--fg-muted);font-size:11px">${esc(g.type)}</span></span><span style="font-size:11px;color:var(--fg-muted)">${esc(g.date)}</span></div>`}).join('');
+
+  // Rozvrh dnes
+  const dayIdx = new Date().getDay()-1; // 0=Po ... 4=Pá, -1=Ne, 5=So
+  const ttLabel = document.getElementById('dash-tt-label');
+  const ttDiv   = document.getElementById('dash-tt');
+  if (dayIdx < 0 || dayIdx > 4) {
+    if (ttLabel) ttLabel.textContent = 'Rozvrh – víkend';
+    if (ttDiv)   ttDiv.innerHTML = '<div class="empty-state" style="padding:16px"><p>Dnes není školní den 🏖️</p></div>';
+  } else {
+    if (ttLabel) ttLabel.textContent = `Rozvrh – ${DAYS[dayIdx]}`;
+    const todaySlots = db.timetable.filter(c=>c.day===dayIdx).sort((a,b)=>a.period-b.period);
+    if (ttDiv) ttDiv.innerHTML = todaySlots.length===0
+      ? '<div class="empty-state" style="padding:16px"><p>Žádné hodiny v rozvrhu</p></div>'
+      : todaySlots.map(c=>`
+          <div class="dash-hw-row" style="padding:8px 16px">
+            <span style="font-size:11px;color:var(--fg-muted);width:20px;font-weight:700">${c.period}.</span>
+            ${subjIcon(c.subject)}
+            <span style="flex:1;font-size:13px;font-weight:500">${esc(c.subject)}</span>
+            <span style="font-size:11px;color:var(--fg-muted)">${esc(c.room)}</span>
+          </div>`).join('');
+  }
+
+  // Týdenní rozvrh
+  const todayIdx = new Date().getDay()-1;
+  const weeklyDiv = document.getElementById('dash-weekly-tt');
+  if (weeklyDiv) {
+    let wh = '<table style="width:100%;border-collapse:collapse;min-width:340px"><thead><tr>';
+    wh += '<th style="width:28px;padding:5px 4px;font-size:10px;color:var(--fg-muted)">H.</th>';
+    DAYS.forEach((d,i) => {
+      const today = i===todayIdx;
+      wh += `<th style="text-align:center;padding:5px 3px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:${today?'var(--primary)':'var(--fg-muted)'};font-weight:${today?700:600}">${d.slice(0,2)}</th>`;
+    });
+    wh += '</tr></thead><tbody>';
+    PERIODS.forEach(p => {
+      wh += `<tr><td style="text-align:center;font-weight:700;color:var(--fg-muted);font-size:11px;padding:2px 3px">${p}</td>`;
+      DAYS.forEach((_,day) => {
+        const c = db.timetable.find(x=>x.day===day&&x.period===p);
+        const today = day===todayIdx;
+        wh += `<td style="padding:2px 2px"><div style="min-height:40px;border-radius:6px;padding:4px 5px;text-align:center;font-size:10px;border:1px solid ${today?'hsla(221,88%,60%,0.4)':'var(--border)'};background:${c?(today?'hsla(221,88%,60%,0.15)':'var(--primary-dim)'):'var(--surface)'};display:flex;flex-direction:column;align-items:center;justify-content:center">`;
+        if (c) wh += `<div style="font-weight:700;color:var(--primary);font-size:11px">${esc(c.subject)}</div><div style="color:var(--fg-muted);font-size:9px">${esc(c.room)}</div>`;
+        else   wh += `<div style="color:var(--fg-dim);font-size:14px">·</div>`;
+        wh += '</div></td>';
+      });
+      wh += '</tr>';
+    });
+    wh += '</tbody></table>';
+    weeklyDiv.innerHTML = wh;
+  }
 }
 
-/* ────── GRADES ────── */
+/* ── GRADES ── */
 function renderGrades() {
   const db = dbGet();
   const bySubj = {};
-  db.subjects.forEach(s => { bySubj[s.id] = { subj:s, grades:[] }; });
-  db.grades.forEach(g => { if (bySubj[g.subjectId]) bySubj[g.subjectId].grades.push(g); });
-
-  let html = '';
-  db.subjects.forEach(s => {
-    const data = bySubj[s.id];
-    if (!data || data.grades.length === 0) return;
-    const avg = (data.grades.reduce((a,g)=>a+g.value,0)/data.grades.length).toFixed(1);
-    html += `
-      <div class="card" style="margin-bottom:10px">
-        <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
-          ${subjIcon(s.short)}
-          <span style="font-weight:600;flex:1">${esc(s.name)}</span>
-          <span style="font-size:12px;color:var(--fg-muted)">${esc(s.teacher)}</span>
-          <span style="font-weight:700;background:var(--surface);padding:3px 10px;border-radius:8px;font-size:13px">∅ ${avg}</span>
-        </div>
-        <div style="padding:4px 0">
-          ${data.grades.map(g=>`
-            <div class="row">
-              ${gradeHtml(g.value)}
-              <span style="flex:1;font-size:13px">${esc(g.type)}</span>
-              ${g.note?`<span style="font-size:11px;color:var(--fg-muted)">${esc(g.note)}</span>`:''}
-              <span style="font-size:11px;color:var(--fg-muted);width:80px;text-align:right">${esc(g.date)}</span>
-            </div>`).join('')}
-        </div>
-      </div>`;
+  db.subjects.forEach(s=>{bySubj[s.id]={subj:s,grades:[]};});
+  db.grades.forEach(g=>{if(bySubj[g.subjectId])bySubj[g.subjectId].grades.push(g);});
+  let html='';
+  db.subjects.forEach(s=>{
+    const d=bySubj[s.id]; if(!d||d.grades.length===0) return;
+    const avg=(d.grades.reduce((a,g)=>a+g.value,0)/d.grades.length).toFixed(1);
+    html+=`<div class="card" style="margin-bottom:10px">
+      <div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">
+        ${subjIcon(s.short)}<span style="font-weight:600;flex:1">${esc(s.name)}</span>
+        <span style="font-size:12px;color:var(--fg-muted)">${esc(s.teacher)}</span>
+        <span style="font-weight:700;background:var(--surface);padding:3px 10px;border-radius:8px;font-size:13px">∅ ${avg}</span>
+      </div><div style="padding:4px 0">
+        ${d.grades.map(g=>`<div class="row">${gradeHtml(g.value)}<span style="flex:1;font-size:13px">${esc(g.type)}</span>${g.note?`<span style="font-size:11px;color:var(--fg-muted)">${esc(g.note)}</span>`:''}<span style="font-size:11px;color:var(--fg-muted);width:80px;text-align:right">${esc(g.date)}</span></div>`).join('')}
+      </div></div>`;
   });
-  document.getElementById('grades-content').innerHTML = html ||
-    '<div class="card card-body"><div class="empty-state"><p>Žádné známky</p></div></div>';
+  document.getElementById('grades-content').innerHTML = html||'<div class="card card-body"><div class="empty-state"><p>Žádné známky</p></div></div>';
 }
 
-/* ────── SCHEDULE ────── */
+/* ── SCHEDULE ── */
 function renderSchedule() {
-  const db = dbGet();
-  const getCell = (day,period) => db.timetable.find(c=>c.day===day&&c.period===period);
-  let html = `<table style="width:100%;border-collapse:collapse">
-    <thead><tr>
-      <th style="width:36px;color:var(--fg-muted);font-size:11px;text-align:center;padding:8px 4px">H.</th>
-      ${DAYS.map(d=>`<th style="color:var(--fg-muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:8px 4px;text-align:center">${d.slice(0,2)}</th>`).join('')}
-    </tr></thead><tbody>`;
-  PERIODS.forEach(p => {
-    html += `<tr>
-      <td style="text-align:center;font-weight:700;color:var(--fg-muted);font-size:12px;padding:3px 4px">${p}</td>
-      ${DAYS.map((_,day)=>{
-        const c = getCell(day,p);
-        return `<td style="padding:3px 3px"><div class="tt-cell ${c?'filled':''}">
-          ${c?`<div class="tt-subj">${esc(c.subject)}</div><div class="tt-room">${esc(c.room)}</div>`
-             :`<div class="tt-empty">·</div>`}
-        </div></td>`;
-      }).join('')}
-    </tr>`;
+  const db=dbGet();
+  const getCell=(day,period)=>db.timetable.find(c=>c.day===day&&c.period===period);
+  let html=`<table style="width:100%;border-collapse:collapse"><thead><tr>
+    <th style="width:36px;color:var(--fg-muted);font-size:11px;text-align:center;padding:8px 4px">H.</th>
+    ${DAYS.map(d=>`<th style="color:var(--fg-muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:8px 4px;text-align:center">${d.slice(0,2)}</th>`).join('')}
+  </tr></thead><tbody>`;
+  PERIODS.forEach(p=>{
+    html+=`<tr><td style="text-align:center;font-weight:700;color:var(--fg-muted);font-size:12px;padding:3px 4px">${p}</td>
+      ${DAYS.map((_,day)=>{const c=getCell(day,p);return`<td style="padding:3px 3px"><div class="tt-cell ${c?'filled':''}">
+        ${c?`<div class="tt-subj">${esc(c.subject)}</div><div class="tt-room">${esc(c.room)}</div>`:`<div class="tt-empty">·</div>`}
+      </div></td>`;}).join('')}</tr>`;
   });
-  html += '</tbody></table>';
-  document.getElementById('timetable-view').innerHTML = html;
+  document.getElementById('timetable-view').innerHTML=html+'</tbody></table>';
 }
 
-/* ────── HOMEWORK ────── */
-let hwFilter = 'all';
+/* ── HOMEWORK ── */
+var hwFilter='all';
 function setHwFilter(f) {
-  hwFilter = f;
-  ['all','pending','done'].forEach(x => {
-    document.getElementById('hwf-'+x).className = `btn btn-sm ${x===f?'btn-primary':'btn-outline'}`;
-  });
+  hwFilter=f;
+  ['all','pending','done'].forEach(x=>{ const b=document.getElementById('hwf-'+x); if(b) b.className=`btn btn-sm ${x===f?'btn-primary':'btn-outline'}`; });
   renderHomeworkList();
 }
-function renderHomework()     { renderHomeworkList(); }
+function renderHomework() { renderHomeworkList(); }
 function renderHomeworkList() {
-  const db    = dbGet();
-  let items   = db.homework;
-  if (hwFilter==='pending') items = items.filter(h=>!h.done);
-  if (hwFilter==='done')    items = items.filter(h=>h.done);
-  const pending = db.homework.filter(h=>!h.done).length;
-  document.getElementById('hw-count-label').textContent =
-    `${pending} nesplněných z ${db.homework.length} celkem`;
-  document.getElementById('hw-list').innerHTML = items.length===0
-    ? '<div class="empty-state"><p>Žádné úkoly</p></div>'
-    : items.map(hw=>`
-        <div class="row hw-row" style="padding:10px 12px">
-          <button class="checkbox-btn ${hw.done?'checked':''}" onclick="toggleHw('${hw.id}')">
-            ${hw.done?svgIcon('<polyline points="20 6 9 17 4 12"/>',11):''}
-          </button>
-          ${subjIcon(hw.subject)}
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500;${hw.done?'text-decoration:line-through;opacity:.5':''}">${esc(hw.title)}</div>
-            ${hw.description?`<div style="font-size:11px;color:var(--fg-muted)">${esc(hw.description)}</div>`:''}
-          </div>
-          <span style="font-size:11px;color:var(--fg-muted);white-space:nowrap">${esc(hw.dueDate)}</span>
-          <button class="del-btn" onclick="deleteHw('${hw.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>
-        </div>`).join('');
+  const db=dbGet();
+  let items=db.homework;
+  if(hwFilter==='pending') items=items.filter(h=>!h.done);
+  if(hwFilter==='done')    items=items.filter(h=>h.done);
+  const pending=db.homework.filter(h=>!h.done).length;
+  const lbl=document.getElementById('hw-count-label');
+  if(lbl) lbl.textContent=`${pending} nesplněných z ${db.homework.length} celkem`;
+  const list=document.getElementById('hw-list');
+  if(!list) return;
+  list.innerHTML=items.length===0?'<div class="empty-state"><p>Žádné úkoly</p></div>'
+    :items.map(hw=>`<div class="row hw-row" style="padding:10px 12px">
+      <button class="checkbox-btn ${hw.done?'checked':''}" onclick="toggleHw('${hw.id}')">${hw.done?svgIcon('<polyline points="20 6 9 17 4 12"/>',11):''}</button>
+      ${subjIcon(hw.subject)}
+      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;${hw.done?'text-decoration:line-through;opacity:.5':''}">${esc(hw.title)}</div>${hw.description?`<div style="font-size:11px;color:var(--fg-muted)">${esc(hw.description)}</div>`:''}</div>
+      <span style="font-size:11px;color:var(--fg-muted);white-space:nowrap">${esc(hw.dueDate)}</span>
+      <button class="del-btn" onclick="deleteHw('${hw.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>
+    </div>`).join('');
 }
-function toggleHw(id) {
-  dbSet(db => { const h=db.homework.find(x=>x.id===id); if(h) h.done=!h.done; });
-  buildNav(); renderHomeworkList();
-}
-function deleteHw(id) {
-  dbSet(db => { db.homework=db.homework.filter(h=>h.id!==id); });
-  buildNav(); renderHomeworkList();
-}
+function toggleHw(id) { dbSet(db=>{const h=db.homework.find(x=>x.id===id);if(h)h.done=!h.done;}); buildNav();renderHomeworkList(); }
+function deleteHw(id)  { dbSet(db=>{db.homework=db.homework.filter(h=>h.id!==id);}); buildNav();renderHomeworkList(); }
 
-/* ────── TESTS ────── */
+/* ── TESTS ── */
 function renderTests() {
-  const db = dbGet();
-  document.getElementById('tests-list').innerHTML = db.tests.length===0
-    ? '<div class="empty-state"><p>Žádné naplánované písemky</p></div>'
-    : db.tests.map(t=>`
-        <div class="row" style="padding:12px 16px">
-          ${subjIcon(t.subject)}
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500">${esc(t.topic)}</div>
-            ${t.teacher?`<div style="font-size:11px;color:var(--fg-muted)">${esc(t.teacher)}</div>`:''}
-          </div>
-          <span style="font-size:12px;color:var(--fg-muted);font-weight:600;white-space:nowrap">${esc(t.date)}</span>
-        </div>`).join('');
+  const db=dbGet();
+  document.getElementById('tests-list').innerHTML=db.tests.length===0?'<div class="empty-state"><p>Žádné naplánované písemky</p></div>'
+    :db.tests.map(t=>`<div class="row" style="padding:12px 16px">${subjIcon(t.subject)}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">${esc(t.topic)}</div>${t.teacher?`<div style="font-size:11px;color:var(--fg-muted)">${esc(t.teacher)}</div>`:''}</div><span style="font-size:12px;color:var(--fg-muted);font-weight:600;white-space:nowrap">${esc(t.date)}</span></div>`).join('');
 }
 
-/* ────── ATTENDANCE ────── */
+/* ── ATTENDANCE ── */
 function renderAttendance() {
-  const db      = dbGet();
-  const total   = db.attendance.length;
-  const present = db.attendance.filter(a=>a.status==='present').length;
-  const absent  = db.attendance.filter(a=>a.status==='absent').length;
-  const excused = db.attendance.filter(a=>a.status==='excused').length;
-  document.getElementById('att-summary').textContent =
-    `${present}/${total} přítomen · ${absent} absencí · ${excused} omluveno`;
-  document.getElementById('att-list').innerHTML = db.attendance.length===0
-    ? '<div class="empty-state"><p>Žádné záznamy</p></div>'
-    : db.attendance.map(a=>`
-        <div class="row" style="padding:10px 16px">
-          <span style="font-size:12px;color:var(--fg-muted);width:90px">${esc(a.date)}</span>
-          ${attBadge(a.status)}
-          <span style="flex:1;font-size:12px;color:var(--fg-muted);margin-left:8px">${esc(a.note||'')}</span>
-        </div>`).join('');
+  const db=dbGet();
+  const present=db.attendance.filter(a=>a.status==='present').length;
+  const absent =db.attendance.filter(a=>a.status==='absent').length;
+  const excused=db.attendance.filter(a=>a.status==='excused').length;
+  const total  =db.attendance.length;
+  const s=document.getElementById('att-summary');
+  if(s) s.textContent=`${present}/${total} přítomen · ${absent} absencí · ${excused} omluveno`;
+  document.getElementById('att-list').innerHTML=db.attendance.length===0?'<div class="empty-state"><p>Žádné záznamy</p></div>'
+    :db.attendance.map(a=>`<div class="row" style="padding:10px 16px"><span style="font-size:12px;color:var(--fg-muted);width:90px">${esc(a.date)}</span>${attBadge(a.status)}<span style="flex:1;font-size:12px;color:var(--fg-muted);margin-left:8px">${esc(a.note||'')}</span></div>`).join('');
 }
 
-/* ────── SETTINGS (admin only) ────── */
-function renderSettings() { /* Stránka je statická, nepotřebuje render */ }
+/* ── SETTINGS ── */
+function renderSettings() {}
 function savePins() {
-  const ap = document.getElementById('settings-admin-pin').value.replace(/\D/g,'');
-  const sp = document.getElementById('settings-student-pin').value.replace(/\D/g,'');
-  if ((ap && ap.length!==4)||(sp && sp.length!==4)) { alert('PIN musí mít přesně 4 číslice'); return; }
-  dbSet(db => { if(ap) db.pins.admin=ap; if(sp) db.pins.student=sp; });
-  const el = document.getElementById('pin-saved-msg');
-  el.style.display='flex';
-  setTimeout(()=>el.style.display='none',2500);
-  document.getElementById('settings-admin-pin').value='';
-  document.getElementById('settings-student-pin').value='';
+  const ap=document.getElementById('settings-admin-pin')?.value.replace(/\D/g,'');
+  const sp=document.getElementById('settings-student-pin')?.value.replace(/\D/g,'');
+  if((ap&&ap.length!==4)||(sp&&sp.length!==4)){alert('PIN musí mít přesně 4 číslice');return;}
+  dbSet(db=>{if(ap)db.pins.admin=ap;if(sp)db.pins.student=sp;});
+  const el=document.getElementById('pin-saved-msg');
+  if(el){el.style.display='flex';setTimeout(()=>el.style.display='none',2500);}
+  if(document.getElementById('settings-admin-pin'))  document.getElementById('settings-admin-pin').value='';
+  if(document.getElementById('settings-student-pin')) document.getElementById('settings-student-pin').value='';
+}
+
+/* ── ZPRÁVY ── */
+function renderMessages() {}
+function sendMessage() {
+  const from    = document.getElementById('msg-from').value.trim();
+  const subject = document.getElementById('msg-subject').value.trim();
+  const body    = document.getElementById('msg-body').value.trim();
+  const status  = document.getElementById('msg-status');
+  if (!subject || !body) { alert('Vyplňte předmět a text zprávy'); return; }
+  const btn = document.getElementById('msg-send-btn');
+  btn.disabled = true;
+  status.style.color = 'var(--fg-muted)';
+  status.textContent = 'Odesílám…';
+  // Mailto odkaz jako fallback – otevře emailový klient
+  const mailto = `mailto:sustacek.adam@gmail.com?subject=${encodeURIComponent('[ZS Alexandra] '+subject)}&body=${encodeURIComponent('Od: '+(from||'Anonym')+'\n\n'+body)}`;
+  window.open(mailto, '_blank');
+  status.style.color = 'var(--success)';
+  status.textContent = '✓ Otevřen e-mailový klient';
+  btn.disabled = false;
+  setTimeout(() => {
+    status.textContent = '';
+    document.getElementById('msg-subject').value = '';
+    document.getElementById('msg-body').value = '';
+  }, 3000);
+}
+
+/* ── VÝCHOVNÁ OPATŘENÍ ── */
+function renderDisciplinary() {
+  const db = dbGet();
+  const disc = db.disciplinary || [];
+  const pozitive = disc.filter(d=>d.kind==='pochvala').length;
+  const negative = disc.filter(d=>d.kind!=='pochvala').length;
+  const s = document.getElementById('disc-summary');
+  if (s) s.textContent = `${disc.length} opatření celkem · ${pozitive} pochval · ${negative} napomenutí/důtek`;
+
+  const KINDS = {
+    'pochvala':         {label:'Pochvala třídního učitele',  cls:'badge-green'},
+    'pochvala-red':     {label:'Pochvala ředitele',          cls:'badge-green'},
+    'napomenuti':       {label:'Napomenutí třídního učitele',cls:'badge-yellow'},
+    'dttu':             {label:'Důtka třídního učitele',     cls:'badge-yellow'},
+    'dtred':            {label:'Důtka ředitele',             cls:'badge-red'},
+    'podminecne':       {label:'Podmínečné vyloučení',       cls:'badge-red'},
+    'vylouceni':        {label:'Vyloučení ze školy',         cls:'badge-red'},
+  };
+
+  document.getElementById('disc-list').innerHTML = disc.length===0
+    ? '<div class="empty-state"><p>Žádná výchovná opatření</p></div>'
+    : disc.map(d => {
+        const k = KINDS[d.kind] || {label:d.kind, cls:'badge-gray'};
+        return `<div class="row" style="padding:12px 16px">
+          <span class="badge ${k.cls}" style="white-space:nowrap">${k.label}</span>
+          <div style="flex:1;min-width:0;margin-left:10px">
+            <div style="font-size:13px;font-weight:500">${esc(d.reason)}</div>
+            ${d.teacher?`<div style="font-size:11px;color:var(--fg-muted)">${esc(d.teacher)}</div>`:''}
+          </div>
+          <span style="font-size:11px;color:var(--fg-muted);white-space:nowrap">${esc(d.date)}</span>
+        </div>`;
+      }).join('');
 }
 
 /* ═══════════════════════════════════════════════════════════════
    ADMIN PANEL
 ═══════════════════════════════════════════════════════════════ */
-let openSection = 'student';
+var openSection='student';
 
 function renderAdmin() {
-  const sections = [
-    { id:'student',    label:'Profil žáka',           icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',    fn: renderAdminStudent    },
-    { id:'timetable',  label:'Rozvrh hodin',           icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', fn: renderAdminTimetable  },
-    { id:'subjects',   label:'Předměty',               icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',                                          fn: renderAdminSubjects   },
-    { id:'grades',     label:'Hodnocení / Známky',     icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',                                                fn: renderAdminGrades     },
-    { id:'homework',   label:'Domácí úkoly',           icon:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',                                                      fn: renderAdminHomework   },
-    { id:'tests',      label:'Písemky a zkoušení',     icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',                                                        fn: renderAdminTests      },
-    { id:'attendance', label:'Docházka',               icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',                                                                               fn: renderAdminAttendance },
-    { id:'notes',      label:'Poznámky',               icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',  fn: renderAdminNotes     },
+  const sections=[
+    {id:'student',   label:'Profil žáka',         icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',                                                                                                                                           fn:renderAdminStudent},
+    {id:'timetable', label:'Rozvrh hodin',         icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',                                                             fn:renderAdminTimetable},
+    {id:'subjects',  label:'Předměty',             icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',                                                                                                      fn:renderAdminSubjects},
+    {id:'grades',    label:'Hodnocení / Známky',   icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',                                                                                                           fn:renderAdminGrades},
+    {id:'homework',  label:'Domácí úkoly',         icon:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',                                                                                                                  fn:renderAdminHomework},
+    {id:'tests',     label:'Písemky a zkoušení',   icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',                                                                                                                    fn:renderAdminTests},
+    {id:'attendance',label:'Docházka',             icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',                                                                                                                                           fn:renderAdminAttendance},
+    {id:'notes',     label:'Poznámky',             icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',                                       fn:renderAdminNotes},
+    {id:'disciplinary',label:'Výchovná opatření',  icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',                                       fn:renderAdminDisciplinary},
   ];
-
-  document.getElementById('admin-sections').innerHTML = sections.map(s => `
+  document.getElementById('admin-sections').innerHTML=sections.map(s=>`
     <div class="card" style="margin-bottom:10px;overflow:hidden">
       <button class="section-header ${openSection===s.id?'open':''}" onclick="toggleSection('${s.id}')">
         <div class="sh-icon">${svgIcon(s.icon,15)}</div>
@@ -1590,511 +1598,272 @@ function renderAdmin() {
       </button>
       <div class="section-body ${openSection===s.id?'open':''}" id="sec-${s.id}"></div>
     </div>`).join('');
-
-  if (openSection) {
-    const s = sections.find(x=>x.id===openSection);
-    if (s) s.fn();
-  }
+  if(openSection){const s=sections.find(x=>x.id===openSection);if(s)s.fn();}
 }
 
 function toggleSection(id) {
-  const fns = {
-    student:renderAdminStudent, timetable:renderAdminTimetable, subjects:renderAdminSubjects,
-    grades:renderAdminGrades, homework:renderAdminHomework, tests:renderAdminTests,
-    attendance:renderAdminAttendance, notes:renderAdminNotes
-  };
-  Object.keys(fns).forEach(sid => {
-    const btn  = document.querySelector(`.section-header[onclick*="'${sid}'"]`);
-    const body = document.getElementById('sec-'+sid);
-    if (sid===id && openSection!==id) {
-      btn?.classList.add('open'); body?.classList.add('open');
-      openSection = id; fns[id]?.();
-    } else {
-      btn?.classList.remove('open'); body?.classList.remove('open');
-      if (sid===id) openSection=null;
-    }
+  const fns={student:renderAdminStudent,timetable:renderAdminTimetable,subjects:renderAdminSubjects,grades:renderAdminGrades,homework:renderAdminHomework,tests:renderAdminTests,attendance:renderAdminAttendance,notes:renderAdminNotes,disciplinary:renderAdminDisciplinary};
+  Object.keys(fns).forEach(sid=>{
+    const btn=document.querySelector(`.section-header[onclick*="'${sid}'"]`);
+    const body=document.getElementById('sec-'+sid);
+    if(sid===id&&openSection!==id){btn?.classList.add('open');body?.classList.add('open');openSection=id;fns[id]?.();}
+    else{btn?.classList.remove('open');body?.classList.remove('open');if(sid===id)openSection=null;}
   });
 }
 
-/* ─── Admin: Student ─── */
 function renderAdminStudent() {
-  const s = dbGet().student;
-  document.getElementById('sec-student').innerHTML = `
-    <div style="padding:20px">
-      <div class="grid-2">
-        <div class="form-group"><label class="form-label">Jméno</label><input class="form-input" id="as-name" value="${esc(s.name)}"></div>
-        <div class="form-group"><label class="form-label">Třída</label><input class="form-input" id="as-class" value="${esc(s.class)}"></div>
-        <div class="form-group"><label class="form-label">Škola</label><input class="form-input" id="as-school" value="${esc(s.school)}"></div>
-        <div class="form-group"><label class="form-label">Školní rok</label><input class="form-input" id="as-year" value="${esc(s.year)}"></div>
-        <div class="form-group" style="grid-column:1/-1"><label class="form-label">Třídní učitel/ka</label><input class="form-input" id="as-teacher" value="${esc(s.classTeacher)}"></div>
-      </div>
-      <div style="display:flex;gap:8px;align-items:center">
-        <button class="btn btn-primary btn-sm" onclick="saveAdminStudent()">Uložit</button>
-        <span id="as-saved" style="display:none;color:var(--success);font-size:12px;font-weight:600">✓ Uloženo</span>
-      </div>
-    </div>`;
+  const s=dbGet().student;
+  document.getElementById('sec-student').innerHTML=`<div style="padding:20px">
+    <div class="grid-2">
+      <div class="form-group"><label class="form-label">Jméno</label><input class="form-input" id="as-name" value="${esc(s.name)}"></div>
+      <div class="form-group"><label class="form-label">Třída</label><input class="form-input" id="as-class" value="${esc(s.class)}"></div>
+      <div class="form-group"><label class="form-label">Škola</label><input class="form-input" id="as-school" value="${esc(s.school)}"></div>
+      <div class="form-group"><label class="form-label">Školní rok</label><input class="form-input" id="as-year" value="${esc(s.year)}"></div>
+      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Třídní učitel/ka</label><input class="form-input" id="as-teacher" value="${esc(s.classTeacher)}"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="btn btn-primary btn-sm" onclick="saveAdminStudent()">Uložit</button>
+      <span id="as-saved" style="display:none;color:var(--success);font-size:12px;font-weight:600">✓ Uloženo</span>
+    </div></div>`;
 }
 function saveAdminStudent() {
-  dbSet(db => {
-    db.student = {
-      name:         document.getElementById('as-name').value,
-      class:        document.getElementById('as-class').value,
-      school:       document.getElementById('as-school').value,
-      year:         document.getElementById('as-year').value,
-      classTeacher: document.getElementById('as-teacher').value,
-    };
-  });
-  const el = document.getElementById('as-saved');
-  el.style.display='inline'; setTimeout(()=>el.style.display='none',2000);
+  dbSet(db=>{db.student={name:document.getElementById('as-name').value,class:document.getElementById('as-class').value,school:document.getElementById('as-school').value,year:document.getElementById('as-year').value,classTeacher:document.getElementById('as-teacher').value};});
+  const el=document.getElementById('as-saved');el.style.display='inline';setTimeout(()=>el.style.display='none',2000);
 }
 
-/* ─── Admin: Timetable ─── */
 function renderAdminTimetable() {
-  const db = dbGet();
-  const getCell = (day,period) => db.timetable.find(c=>c.day===day&&c.period===period);
-  let html = `<div style="padding:16px;overflow-x:auto">
-    <table style="width:100%;border-collapse:collapse;min-width:420px">
-      <thead><tr>
-        <th style="width:32px;text-align:center;font-size:10px;color:var(--fg-muted);padding:6px 3px">H.</th>
-        ${DAYS.map(d=>`<th style="text-align:center;font-size:10px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 3px">${d.slice(0,2)}</th>`).join('')}
-      </tr></thead><tbody>`;
-  PERIODS.forEach(p => {
-    html += `<tr><td style="text-align:center;font-weight:700;color:var(--fg-muted);font-size:11px;padding:2px 3px">${p}</td>
-      ${DAYS.map((_,day)=>{
-        const c=getCell(day,p);
-        return `<td style="padding:2px 2px">
-          <button onclick="editTTCell(${day},${p})" class="tt-cell ${c?'filled':''}" style="width:100%;cursor:pointer">
-            ${c?`<div class="tt-subj">${esc(c.subject)}</div><div class="tt-room">${esc(c.room)}</div>`
-               :`<div class="tt-empty">+</div>`}
-          </button></td>`;
-      }).join('')}
-    </tr>`;
+  const db=dbGet();
+  const getCell=(day,period)=>db.timetable.find(c=>c.day===day&&c.period===period);
+  let html=`<div style="padding:16px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:420px"><thead><tr>
+    <th style="width:32px;text-align:center;font-size:10px;color:var(--fg-muted);padding:6px 3px">H.</th>
+    ${DAYS.map(d=>`<th style="text-align:center;font-size:10px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 3px">${d.slice(0,2)}</th>`).join('')}
+  </tr></thead><tbody>`;
+  PERIODS.forEach(p=>{
+    html+=`<tr><td style="text-align:center;font-weight:700;color:var(--fg-muted);font-size:11px;padding:2px 3px">${p}</td>
+      ${DAYS.map((_,day)=>{const c=getCell(day,p);return`<td style="padding:2px 2px"><button onclick="editTTCell(${day},${p})" class="tt-cell ${c?'filled':''}" style="width:100%;cursor:pointer">${c?`<div class="tt-subj">${esc(c.subject)}</div><div class="tt-room">${esc(c.room)}</div>`:`<div class="tt-empty">+</div>`}</button></td>`;}).join('')}</tr>`;
   });
-  html += `</tbody></table><p style="font-size:11px;color:var(--fg-muted);margin-top:10px">Klikněte na buňku pro úpravu</p></div>`;
-  document.getElementById('sec-timetable').innerHTML = html;
+  html+=`</tbody></table><p style="font-size:11px;color:var(--fg-muted);margin-top:10px">Klikněte na buňku pro úpravu</p></div>`;
+  document.getElementById('sec-timetable').innerHTML=html;
 }
-function editTTCell(day, period) {
-  const db   = dbGet();
-  const cell = db.timetable.find(c=>c.day===day&&c.period===period);
-  const opts = ['', ...db.subjects.map(s=>s.short)]
-    .map(s=>`<option value="${esc(s)}" ${cell?.subject===s?'selected':''}>${s||'– prázdné –'}</option>`).join('');
+function editTTCell(day,period) {
+  const db=dbGet();const cell=db.timetable.find(c=>c.day===day&&c.period===period);
+  const opts=['', ...db.subjects.map(s=>s.short)].map(s=>`<option value="${esc(s)}" ${cell?.subject===s?'selected':''}>${s||'– prázdné –'}</option>`).join('');
   openModal(`Úprava ${DAYS[day]} – hodina ${period}`,
-    `<div class="form-group"><label class="form-label">Předmět</label>
-      <select class="form-select" id="tt-subj">${opts}</select></div>
-    <div class="form-group"><label class="form-label">Učebna</label>
-      <input class="form-input" id="tt-room" value="${esc(cell?.room||'')}"></div>`,
-    `<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button>
-     <button class="btn btn-primary btn-sm" onclick="saveTTCell(${day},${period})">Uložit</button>`);
+    `<div class="form-group"><label class="form-label">Předmět</label><select class="form-select" id="tt-subj">${opts}</select></div><div class="form-group"><label class="form-label">Učebna</label><input class="form-input" id="tt-room" value="${esc(cell?.room||'')}"></div>`,
+    `<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveTTCell(${day},${period})">Uložit</button>`);
 }
-function saveTTCell(day, period) {
-  const subj = document.getElementById('tt-subj').value;
-  const room = document.getElementById('tt-room').value;
-  dbSet(db => {
-    const idx = db.timetable.findIndex(c=>c.day===day&&c.period===period);
-    if (subj==='') { if(idx>=0) db.timetable.splice(idx,1); }
-    else if (idx>=0) { db.timetable[idx].subject=subj; db.timetable[idx].room=room; }
-    else db.timetable.push({day,period,subject:subj,room});
-  });
-  closeModal(); renderAdminTimetable();
-  if (activePage==='schedule') renderSchedule();
+function saveTTCell(day,period) {
+  const subj=document.getElementById('tt-subj').value;const room=document.getElementById('tt-room').value;
+  dbSet(db=>{const idx=db.timetable.findIndex(c=>c.day===day&&c.period===period);if(subj===''){if(idx>=0)db.timetable.splice(idx,1);}else if(idx>=0){db.timetable[idx].subject=subj;db.timetable[idx].room=room;}else db.timetable.push({day,period,subject:subj,room});});
+  closeModal();renderAdminTimetable();if(activePage==='schedule')renderSchedule();if(activePage==='dashboard')renderDashboard();
 }
 
-/* ─── Admin: Subjects ─── */
 function renderAdminSubjects() {
-  const db = dbGet();
-  const TL = {lang:'Jazyk',sci:'Přírodověda',hum:'Humanitní',art:'Umění',tech:'Technika',sport:'Sport'};
-  document.getElementById('sec-subjects').innerHTML = `
-    <div style="padding:16px">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:12px">
-        <button class="btn btn-primary btn-sm" onclick="addSubjectModal()">+ Přidat předmět</button>
-      </div>
-      <table class="data-table">
-        <thead><tr><th>Zkratka</th><th>Název</th><th>Učitel</th><th>Učebna</th><th>Typ</th><th></th></tr></thead>
-        <tbody>${db.subjects.map(s=>`
-          <tr>
-            <td>${subjIcon(s.short)}</td>
-            <td style="font-weight:500">${esc(s.name)}</td>
-            <td style="color:var(--fg-muted);font-size:12px">${esc(s.teacher)}</td>
-            <td style="font-size:12px">${esc(s.room)}</td>
-            <td><span class="badge badge-gray">${TL[s.type]||s.type}</span></td>
-            <td><button class="del-btn" style="opacity:1" onclick="deleteSubject('${s.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></td>
-          </tr>`).join('')}
-        </tbody>
-      </table>
-    </div>`;
+  const db=dbGet();const TL={lang:'Jazyk',sci:'Přírodověda',hum:'Humanitní',art:'Umění',tech:'Technika',sport:'Sport'};
+  document.getElementById('sec-subjects').innerHTML=`<div style="padding:16px"><div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="addSubjectModal()">+ Přidat předmět</button></div>
+    <table class="data-table"><thead><tr><th>Zkratka</th><th>Název</th><th>Učitel</th><th>Učebna</th><th>Typ</th><th></th></tr></thead>
+    <tbody>${db.subjects.map(s=>`<tr><td>${subjIcon(s.short)}</td><td style="font-weight:500">${esc(s.name)}</td><td style="color:var(--fg-muted);font-size:12px">${esc(s.teacher)}</td><td style="font-size:12px">${esc(s.room)}</td><td><span class="badge badge-gray">${TL[s.type]||s.type}</span></td><td><button class="del-btn" style="opacity:1" onclick="deleteSubject('${s.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function addSubjectModal() {
-  const TL = {lang:'Jazyk',sci:'Přírodověda',hum:'Humanitní',art:'Umění',tech:'Technika',sport:'Sport'};
-  openModal('Přidat předmět',`
-    <div class="grid-2">
-      <div class="form-group"><label class="form-label">Zkratka</label><input class="form-input" id="ns-short" maxlength="4" style="text-transform:uppercase"></div>
-      <div class="form-group"><label class="form-label">Název</label><input class="form-input" id="ns-name"></div>
-      <div class="form-group"><label class="form-label">Učitel</label><input class="form-input" id="ns-teacher"></div>
-      <div class="form-group"><label class="form-label">Učebna</label><input class="form-input" id="ns-room"></div>
-      <div class="form-group" style="grid-column:1/-1"><label class="form-label">Typ</label>
-        <select class="form-select" id="ns-type">
-          ${Object.entries(TL).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}
-        </select></div>
-    </div>`,
-    `<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button>
-     <button class="btn btn-primary btn-sm" onclick="saveNewSubject()">Přidat</button>`);
+  const TL={lang:'Jazyk',sci:'Přírodověda',hum:'Humanitní',art:'Umění',tech:'Technika',sport:'Sport'};
+  openModal('Přidat předmět',`<div class="grid-2"><div class="form-group"><label class="form-label">Zkratka</label><input class="form-input" id="ns-short" maxlength="4" style="text-transform:uppercase"></div><div class="form-group"><label class="form-label">Název</label><input class="form-input" id="ns-name"></div><div class="form-group"><label class="form-label">Učitel</label><input class="form-input" id="ns-teacher"></div><div class="form-group"><label class="form-label">Učebna</label><input class="form-input" id="ns-room"></div><div class="form-group" style="grid-column:1/-1"><label class="form-label">Typ</label><select class="form-select" id="ns-type">${Object.entries(TL).map(([v,l])=>`<option value="${v}">${l}</option>`).join('')}</select></div></div>`,
+    `<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveNewSubject()">Přidat</button>`);
 }
 function saveNewSubject() {
-  const short = document.getElementById('ns-short').value.trim().toUpperCase();
-  const name  = document.getElementById('ns-name').value.trim();
-  if (!short||!name) { alert('Zkratka a název jsou povinné'); return; }
-  dbSet(db => { db.subjects.push({
-    id:uid(), name, short,
-    teacher: document.getElementById('ns-teacher').value,
-    room:    document.getElementById('ns-room').value,
-    type:    document.getElementById('ns-type').value,
-    order:   db.subjects.length+1,
-  }); });
-  closeModal(); renderAdminSubjects();
+  const short=document.getElementById('ns-short').value.trim().toUpperCase();const name=document.getElementById('ns-name').value.trim();
+  if(!short||!name){alert('Zkratka a název jsou povinné');return;}
+  dbSet(db=>{db.subjects.push({id:uid(),name,short,teacher:document.getElementById('ns-teacher').value,room:document.getElementById('ns-room').value,type:document.getElementById('ns-type').value,order:db.subjects.length+1});});
+  closeModal();renderAdminSubjects();
 }
-function deleteSubject(id) {
-  if (!confirm('Smazat tento předmět?')) return;
-  dbSet(db => { db.subjects=db.subjects.filter(s=>s.id!==id); });
-  renderAdminSubjects();
-}
+function deleteSubject(id) { if(!confirm('Smazat?'))return;dbSet(db=>{db.subjects=db.subjects.filter(s=>s.id!==id);});renderAdminSubjects(); }
 
-/* ─── Admin: Grades ─── */
 function renderAdminGrades() {
-  const db   = dbGet();
-  const opts = db.subjects.map(s=>`<option value="${s.id}">${s.short} – ${s.name}</option>`).join('');
-  document.getElementById('sec-grades').innerHTML = `
-    <div style="padding:16px">
-      <div class="add-form">
-        <div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat známku</div>
-        <div class="grid-2">
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label>
-            <select class="form-select" id="ag-subj"><option value="">Vyberte…</option>${opts}</select></div>
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label>
-            <input class="form-input" id="ag-date" placeholder="22.5.2026"></div>
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Typ</label>
-            <input class="form-input" id="ag-type" value="Písemka"></div>
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Hodnota</label>
-            <select class="form-select" id="ag-val">${[1,2,3,4,5].map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
-          <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Poznámka</label>
-            <input class="form-input" id="ag-note"></div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="addGrade()">Přidat</button>
-      </div>
-      <table class="data-table">
-        <thead><tr><th>Předmět</th><th>Typ</th><th>Hodnota</th><th>Datum</th><th>Poznámka</th><th></th></tr></thead>
-        <tbody>${db.grades.map(g=>{
-          const subj=db.subjects.find(s=>s.id===g.subjectId);
-          return `<tr>
-            <td>${subjIcon(subj?.short||g.subjectId)}</td>
-            <td style="font-size:12px;color:var(--fg-muted)">${esc(g.type)}</td>
-            <td>${gradeHtml(g.value)}</td>
-            <td style="font-size:12px;color:var(--fg-muted)">${esc(g.date)}</td>
-            <td style="font-size:12px;color:var(--fg-muted)">${esc(g.note||'')}</td>
-            <td><button class="del-btn" style="opacity:1" onclick="deleteGrade('${g.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></td>
-          </tr>`;}).join('')}
-        </tbody>
-      </table>
-    </div>`;
+  const db=dbGet();const opts=db.subjects.map(s=>`<option value="${s.id}">${s.short} – ${s.name}</option>`).join('');
+  document.getElementById('sec-grades').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat známku</div>
+    <div class="grid-2">
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="ag-subj"><option value="">Vyberte…</option>${opts}</select></div>
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="ag-date" placeholder="22.5.2026"></div>
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Typ</label><input class="form-input" id="ag-type" value="Písemka"></div>
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Hodnota</label><select class="form-select" id="ag-val">${[1,2,3,4,5].map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
+      <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Poznámka</label><input class="form-input" id="ag-note"></div>
+    </div><button class="btn btn-primary btn-sm" onclick="addGrade()">Přidat</button></div>
+    <table class="data-table"><thead><tr><th>Předmět</th><th>Typ</th><th>Hodnota</th><th>Datum</th><th>Poznámka</th><th></th></tr></thead>
+    <tbody>${db.grades.map(g=>{const subj=db.subjects.find(s=>s.id===g.subjectId);return`<tr><td>${subjIcon(subj?.short||g.subjectId)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.type)}</td><td>${gradeHtml(g.value)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.date)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.note||'')}</td><td><button class="del-btn" style="opacity:1" onclick="deleteGrade('${g.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></td></tr>`;}).join('')}</tbody></table></div>`;
 }
 function addGrade() {
-  const subj = document.getElementById('ag-subj').value;
-  const date = document.getElementById('ag-date').value;
-  if (!subj||!date) { alert('Vyberte předmět a zadejte datum'); return; }
-  dbSet(db => { db.grades.push({
-    id:uid(), subjectId:subj, date,
-    value: Number(document.getElementById('ag-val').value),
-    type:  document.getElementById('ag-type').value,
-    note:  document.getElementById('ag-note').value,
-  }); });
-  renderAdminGrades();
-  if (activePage==='grades') renderGrades();
-  if (activePage==='dashboard') renderDashboard();
+  const subj=document.getElementById('ag-subj').value;const date=document.getElementById('ag-date').value;
+  if(!subj||!date){alert('Vyberte předmět a zadejte datum');return;}
+  dbSet(db=>{db.grades.push({id:uid(),subjectId:subj,date,value:Number(document.getElementById('ag-val').value),type:document.getElementById('ag-type').value,note:document.getElementById('ag-note').value});});
+  renderAdminGrades();if(activePage==='grades')renderGrades();if(activePage==='dashboard')renderDashboard();
 }
-function deleteGrade(id) {
-  dbSet(db => { db.grades=db.grades.filter(g=>g.id!==id); });
-  renderAdminGrades();
-  if (activePage==='grades') renderGrades();
-}
+function deleteGrade(id) { dbSet(db=>{db.grades=db.grades.filter(g=>g.id!==id);});renderAdminGrades();if(activePage==='grades')renderGrades(); }
 
-/* ─── Admin: Homework ─── */
 function renderAdminHomework() {
-  const db   = dbGet();
-  const opts = db.subjects.map(s=>`<option value="${s.short}">${s.short}</option>`).join('');
-  document.getElementById('sec-homework').innerHTML = `
-    <div style="padding:16px">
-      <div class="add-form">
-        <div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat domácí úkol</div>
-        <div class="grid-2">
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label>
-            <select class="form-select" id="ahw-subj"><option value="">Vyberte…</option>${opts}</select></div>
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Termín</label>
-            <input class="form-input" id="ahw-due" placeholder="22.5.2026"></div>
-          <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Název</label>
-            <input class="form-input" id="ahw-title"></div>
-          <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Popis</label>
-            <input class="form-input" id="ahw-desc"></div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="addHomework()">Přidat</button>
-      </div>
-      <div>${db.homework.map(hw=>`
-        <div class="row hw-row" style="padding:10px 8px">
-          <button class="checkbox-btn ${hw.done?'checked':''}" onclick="adminToggleHw('${hw.id}')">
-            ${hw.done?svgIcon('<polyline points="20 6 9 17 4 12"/>',11):''}
-          </button>
-          ${subjIcon(hw.subject)}
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500;${hw.done?'text-decoration:line-through;opacity:.5':''}">${esc(hw.title)}</div>
-            ${hw.description?`<div style="font-size:11px;color:var(--fg-muted)">${esc(hw.description)}</div>`:''}
-          </div>
-          <span style="font-size:11px;color:var(--fg-muted)">${esc(hw.dueDate)}</span>
-          <button class="del-btn" style="opacity:1" onclick="adminDeleteHw('${hw.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>
-        </div>`).join('') || '<div class="empty-state"><p>Žádné úkoly</p></div>'}
-      </div>
-    </div>`;
+  const db=dbGet();const opts=db.subjects.map(s=>`<option value="${s.short}">${s.short}</option>`).join('');
+  document.getElementById('sec-homework').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat domácí úkol</div>
+    <div class="grid-2">
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="ahw-subj"><option value="">Vyberte…</option>${opts}</select></div>
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Termín</label><input class="form-input" id="ahw-due" placeholder="22.5.2026"></div>
+      <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Název</label><input class="form-input" id="ahw-title"></div>
+      <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Popis</label><input class="form-input" id="ahw-desc"></div>
+    </div><button class="btn btn-primary btn-sm" onclick="addHomework()">Přidat</button></div>
+    <div>${db.homework.map(hw=>`<div class="row hw-row" style="padding:10px 8px"><button class="checkbox-btn ${hw.done?'checked':''}" onclick="adminToggleHw('${hw.id}')">${hw.done?svgIcon('<polyline points="20 6 9 17 4 12"/>',11):''}</button>${subjIcon(hw.subject)}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;${hw.done?'text-decoration:line-through;opacity:.5':''}">${esc(hw.title)}</div>${hw.description?`<div style="font-size:11px;color:var(--fg-muted)">${esc(hw.description)}</div>`:''}</div><span style="font-size:11px;color:var(--fg-muted)">${esc(hw.dueDate)}</span><button class="del-btn" style="opacity:1" onclick="adminDeleteHw('${hw.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></div>`).join('')||'<div class="empty-state"><p>Žádné úkoly</p></div>'}</div></div>`;
 }
 function addHomework() {
-  const subj  = document.getElementById('ahw-subj').value;
-  const title = document.getElementById('ahw-title').value.trim();
-  const due   = document.getElementById('ahw-due').value;
-  if (!subj||!title||!due) { alert('Vyplňte předmět, název a termín'); return; }
-  dbSet(db => { db.homework.push({
-    id:uid(), subject:subj, title,
-    description: document.getElementById('ahw-desc').value,
-    dueDate:due, done:false,
-  }); });
-  buildNav(); renderAdminHomework();
-  if (activePage==='homework') renderHomework();
+  const subj=document.getElementById('ahw-subj').value;const title=document.getElementById('ahw-title').value.trim();const due=document.getElementById('ahw-due').value;
+  if(!subj||!title||!due){alert('Vyplňte předmět, název a termín');return;}
+  dbSet(db=>{db.homework.push({id:uid(),subject:subj,title,description:document.getElementById('ahw-desc').value,dueDate:due,done:false});});
+  buildNav();renderAdminHomework();if(activePage==='homework')renderHomework();
 }
-function adminToggleHw(id) {
-  dbSet(db => { const h=db.homework.find(x=>x.id===id); if(h) h.done=!h.done; });
-  buildNav(); renderAdminHomework();
-  if (activePage==='homework') renderHomeworkList();
-}
-function adminDeleteHw(id) {
-  dbSet(db => { db.homework=db.homework.filter(h=>h.id!==id); });
-  buildNav(); renderAdminHomework();
-  if (activePage==='homework') renderHomeworkList();
-}
+function adminToggleHw(id) { dbSet(db=>{const h=db.homework.find(x=>x.id===id);if(h)h.done=!h.done;});buildNav();renderAdminHomework();if(activePage==='homework')renderHomeworkList(); }
+function adminDeleteHw(id)  { dbSet(db=>{db.homework=db.homework.filter(h=>h.id!==id);});buildNav();renderAdminHomework();if(activePage==='homework')renderHomeworkList(); }
 
-/* ─── Admin: Tests ─── */
 function renderAdminTests() {
-  const db   = dbGet();
-  const opts = db.subjects.map(s=>`<option value="${s.short}">${s.short}</option>`).join('');
-  document.getElementById('sec-tests').innerHTML = `
-    <div style="padding:16px">
-      <div class="add-form">
-        <div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat písemku</div>
-        <div class="grid-2">
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label>
-            <select class="form-select" id="at-subj"><option value="">Vyberte…</option>${opts}</select></div>
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label>
-            <input class="form-input" id="at-date" placeholder="22.5.2026"></div>
-          <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Téma</label>
-            <input class="form-input" id="at-topic"></div>
-          <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Učitel</label>
-            <input class="form-input" id="at-teacher"></div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="addTest()">Přidat</button>
-      </div>
-      <div>${db.tests.map(t=>`
-        <div class="row" style="padding:10px 8px">
-          ${subjIcon(t.subject)}
-          <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500">${esc(t.topic)}</div>
-            ${t.teacher?`<div style="font-size:11px;color:var(--fg-muted)">${esc(t.teacher)}</div>`:''}
-          </div>
-          <span style="font-size:12px;color:var(--fg-muted);font-weight:600">${esc(t.date)}</span>
-          <button class="del-btn" style="opacity:1" onclick="deleteTest('${t.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>
-        </div>`).join('') || '<div class="empty-state"><p>Žádné písemky</p></div>'}
-      </div>
-    </div>`;
+  const db=dbGet();const opts=db.subjects.map(s=>`<option value="${s.short}">${s.short}</option>`).join('');
+  document.getElementById('sec-tests').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat písemku</div>
+    <div class="grid-2">
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="at-subj"><option value="">Vyberte…</option>${opts}</select></div>
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="at-date" placeholder="22.5.2026"></div>
+      <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Téma</label><input class="form-input" id="at-topic"></div>
+      <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Učitel</label><input class="form-input" id="at-teacher"></div>
+    </div><button class="btn btn-primary btn-sm" onclick="addTest()">Přidat</button></div>
+    <div>${db.tests.map(t=>`<div class="row" style="padding:10px 8px">${subjIcon(t.subject)}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">${esc(t.topic)}</div>${t.teacher?`<div style="font-size:11px;color:var(--fg-muted)">${esc(t.teacher)}</div>`:''}</div><span style="font-size:12px;color:var(--fg-muted);font-weight:600">${esc(t.date)}</span><button class="del-btn" style="opacity:1" onclick="deleteTest('${t.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></div>`).join('')||'<div class="empty-state"><p>Žádné písemky</p></div>'}</div></div>`;
 }
 function addTest() {
-  const subj  = document.getElementById('at-subj').value;
-  const topic = document.getElementById('at-topic').value.trim();
-  const date  = document.getElementById('at-date').value;
-  if (!subj||!topic||!date) { alert('Vyplňte předmět, téma a datum'); return; }
-  dbSet(db => { db.tests.push({
-    id:uid(), subject:subj, topic, date,
-    teacher: document.getElementById('at-teacher').value,
-  }); });
-  renderAdminTests();
-  if (activePage==='tests') renderTests();
+  const subj=document.getElementById('at-subj').value;const topic=document.getElementById('at-topic').value.trim();const date=document.getElementById('at-date').value;
+  if(!subj||!topic||!date){alert('Vyplňte předmět, téma a datum');return;}
+  dbSet(db=>{db.tests.push({id:uid(),subject:subj,topic,date,teacher:document.getElementById('at-teacher').value});});
+  renderAdminTests();if(activePage==='tests')renderTests();
 }
-function deleteTest(id) {
-  dbSet(db => { db.tests=db.tests.filter(t=>t.id!==id); });
-  renderAdminTests();
-  if (activePage==='tests') renderTests();
-}
+function deleteTest(id) { dbSet(db=>{db.tests=db.tests.filter(t=>t.id!==id);});renderAdminTests();if(activePage==='tests')renderTests(); }
 
-/* ─── Admin: Attendance ─── */
 function renderAdminAttendance() {
-  const db   = dbGet();
-  const STATUS = [
-    {value:'present',label:'Přítomen'},{value:'absent',label:'Nepřítomen'},
-    {value:'excused',label:'Omluveno'},{value:'late',label:'Pozdní příchod'},
-    {value:'school-event',label:'Školní akce'},
-  ];
-  document.getElementById('sec-attendance').innerHTML = `
-    <div style="padding:16px">
-      <div class="add-form">
-        <div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat záznam</div>
-        <div class="grid-2">
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label>
-            <input class="form-input" id="aa-date" placeholder="22.5.2026"></div>
-          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Stav</label>
-            <select class="form-select" id="aa-status">
-              ${STATUS.map(o=>`<option value="${o.value}">${o.label}</option>`).join('')}
-            </select></div>
-          <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Poznámka</label>
-            <input class="form-input" id="aa-note"></div>
-        </div>
-        <button class="btn btn-primary btn-sm" onclick="addAttendance()">Přidat</button>
-      </div>
-      <div>${db.attendance.map(a=>`
-        <div class="row" style="padding:10px 8px">
-          <span style="font-size:12px;color:var(--fg-muted);width:90px">${esc(a.date)}</span>
-          ${attBadge(a.status)}
-          <span style="flex:1;font-size:12px;color:var(--fg-muted);margin-left:8px">${esc(a.note||'')}</span>
-          <button class="del-btn" style="opacity:1" onclick="deleteAttendance('${a.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>
-        </div>`).join('') || '<div class="empty-state"><p>Žádné záznamy</p></div>'}
-      </div>
-    </div>`;
+  const db=dbGet();
+  const STATUS=[{value:'present',label:'Přítomen'},{value:'absent',label:'Nepřítomen'},{value:'excused',label:'Omluveno'},{value:'late',label:'Pozdní příchod'},{value:'school-event',label:'Školní akce'}];
+  document.getElementById('sec-attendance').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat záznam</div>
+    <div class="grid-2">
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="aa-date" placeholder="22.5.2026"></div>
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Stav</label><select class="form-select" id="aa-status">${STATUS.map(o=>`<option value="${o.value}">${o.label}</option>`).join('')}</select></div>
+      <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Poznámka</label><input class="form-input" id="aa-note"></div>
+    </div><button class="btn btn-primary btn-sm" onclick="addAttendance()">Přidat</button></div>
+    <div>${db.attendance.map(a=>`<div class="row" style="padding:10px 8px"><span style="font-size:12px;color:var(--fg-muted);width:90px">${esc(a.date)}</span>${attBadge(a.status)}<span style="flex:1;font-size:12px;color:var(--fg-muted);margin-left:8px">${esc(a.note||'')}</span><button class="del-btn" style="opacity:1" onclick="deleteAttendance('${a.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></div>`).join('')||'<div class="empty-state"><p>Žádné záznamy</p></div>'}</div></div>`;
 }
 function addAttendance() {
-  const date = document.getElementById('aa-date').value;
-  if (!date) { alert('Zadejte datum'); return; }
-  dbSet(db => { db.attendance.unshift({
-    id:uid(), date,
-    status: document.getElementById('aa-status').value,
-    note:   document.getElementById('aa-note').value,
-  }); });
-  renderAdminAttendance();
-  if (activePage==='attendance') renderAttendance();
+  const date=document.getElementById('aa-date').value;if(!date){alert('Zadejte datum');return;}
+  dbSet(db=>{db.attendance.unshift({id:uid(),date,status:document.getElementById('aa-status').value,note:document.getElementById('aa-note').value});});
+  renderAdminAttendance();if(activePage==='attendance')renderAttendance();
 }
-function deleteAttendance(id) {
-  dbSet(db => { db.attendance=db.attendance.filter(a=>a.id!==id); });
-  renderAdminAttendance();
-  if (activePage==='attendance') renderAttendance();
-}
+function deleteAttendance(id) { dbSet(db=>{db.attendance=db.attendance.filter(a=>a.id!==id);});renderAdminAttendance();if(activePage==='attendance')renderAttendance(); }
 
-/* ─── Admin: Notes ─── */
 function renderAdminNotes() {
-  const db = dbGet();
-  document.getElementById('sec-notes').innerHTML = `
-    <div style="padding:16px">
-      <div class="add-form">
-        <div style="font-weight:600;font-size:13px;margin-bottom:10px">Nová poznámka</div>
-        <div class="form-group"><label class="form-label">Název</label>
-          <input class="form-input" id="an-title" placeholder="Název poznámky…"></div>
-        <div class="form-group"><label class="form-label">Obsah</label>
-          <textarea class="form-textarea" id="an-content" placeholder="Text poznámky…"></textarea></div>
-        <button class="btn btn-primary btn-sm" onclick="addNote()">Přidat</button>
-      </div>
-      <div>${db.notes.length===0
-        ? '<div class="empty-state"><p>Žádné poznámky</p></div>'
-        : db.notes.map(n=>`
-          <div class="card" style="margin-bottom:8px">
-            <div style="padding:12px 14px;display:flex;gap:10px;align-items:flex-start">
-              ${svgIcon('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',14)}
-              <div style="flex:1;min-width:0">
-                <div style="font-weight:600;font-size:13px">${esc(n.title||'(bez názvu)')}</div>
-                <div style="font-size:12px;color:var(--fg-muted);margin-top:3px;white-space:pre-wrap">${esc(n.content)}</div>
-                <div style="font-size:10px;color:var(--fg-dim);margin-top:6px">${n.updatedAt||''}</div>
-              </div>
-              <button class="del-btn" style="opacity:1;flex-shrink:0" onclick="deleteNote('${n.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>
-            </div>
-          </div>`).join('')}
-      </div>
-    </div>`;
+  const db=dbGet();
+  document.getElementById('sec-notes').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Nová poznámka</div>
+    <div class="form-group"><label class="form-label">Název</label><input class="form-input" id="an-title" placeholder="Název poznámky…"></div>
+    <div class="form-group"><label class="form-label">Obsah</label><textarea class="form-textarea" id="an-content" placeholder="Text poznámky…"></textarea></div>
+    <button class="btn btn-primary btn-sm" onclick="addNote()">Přidat</button></div>
+    <div>${db.notes.length===0?'<div class="empty-state"><p>Žádné poznámky</p></div>':db.notes.map(n=>`<div class="card" style="margin-bottom:8px"><div style="padding:12px 14px;display:flex;gap:10px;align-items:flex-start">${svgIcon('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',14)}<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${esc(n.title||'(bez názvu)')}</div><div style="font-size:12px;color:var(--fg-muted);margin-top:3px;white-space:pre-wrap">${esc(n.content)}</div><div style="font-size:10px;color:var(--fg-dim);margin-top:6px">${n.updatedAt||''}</div></div><button class="del-btn" style="opacity:1;flex-shrink:0" onclick="deleteNote('${n.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></div></div>`).join('')}</div></div>`;
 }
 function addNote() {
-  const title   = document.getElementById('an-title').value.trim();
-  const content = document.getElementById('an-content').value.trim();
-  if (!title&&!content) return;
-  const now = new Date().toLocaleDateString('cs-CZ');
-  dbSet(db => { db.notes.unshift({id:uid(),title,content,createdAt:now,updatedAt:now}); });
-  renderAdminNotes();
+  const title=document.getElementById('an-title').value.trim();const content=document.getElementById('an-content').value.trim();
+  if(!title&&!content)return;const now=new Date().toLocaleDateString('cs-CZ');
+  dbSet(db=>{db.notes.unshift({id:uid(),title,content,createdAt:now,updatedAt:now});});renderAdminNotes();
 }
-function deleteNote(id) {
-  dbSet(db => { db.notes=db.notes.filter(n=>n.id!==id); });
-  renderAdminNotes();
+function deleteNote(id) { dbSet(db=>{db.notes=db.notes.filter(n=>n.id!==id);});renderAdminNotes(); }
+
+function renderAdminDisciplinary() {
+  const db = dbGet();
+  const disc = db.disciplinary || [];
+  const KINDS = [
+    {value:'pochvala',   label:'Pochvala třídního učitele'},
+    {value:'pochvala-red',label:'Pochvala ředitele'},
+    {value:'napomenuti', label:'Napomenutí třídního učitele'},
+    {value:'dttu',       label:'Důtka třídního učitele'},
+    {value:'dtred',      label:'Důtka ředitele'},
+    {value:'podminecne', label:'Podmínečné vyloučení'},
+    {value:'vylouceni',  label:'Vyloučení ze školy'},
+  ];
+  const BADGE = {pochvala:'badge-green','pochvala-red':'badge-green',napomenuti:'badge-yellow',dttu:'badge-yellow',dtred:'badge-red',podminecne:'badge-red',vylouceni:'badge-red'};
+  document.getElementById('sec-disciplinary').innerHTML = `
+    <div style="padding:16px">
+      <div class="add-form">
+        <div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat opatření</div>
+        <div class="grid-2">
+          <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Typ opatření</label>
+            <select class="form-select" id="ad-kind">${KINDS.map(k=>`<option value="${k.value}">${k.label}</option>`).join('')}</select></div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label>
+            <input class="form-input" id="ad-date" placeholder="22.5.2026"></div>
+          <div class="form-group" style="margin-bottom:8px"><label class="form-label">Udělil</label>
+            <input class="form-input" id="ad-teacher" placeholder="Mgr. Jana Horáčková"></div>
+          <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Důvod / popis</label>
+            <input class="form-input" id="ad-reason" placeholder="Popis důvodu…"></div>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addDisciplinary()">Přidat</button>
+      </div>
+      <div>${disc.length===0?'<div class="empty-state"><p>Žádná výchovná opatření</p></div>':disc.map(d=>{
+        const k=KINDS.find(x=>x.value===d.kind)||{label:d.kind};
+        const bc=BADGE[d.kind]||'badge-gray';
+        return `<div class="row" style="padding:12px 8px">
+          <span class="badge ${bc}" style="white-space:nowrap;flex-shrink:0">${k.label}</span>
+          <div style="flex:1;min-width:0;margin-left:10px">
+            <div style="font-size:13px;font-weight:500">${esc(d.reason)}</div>
+            ${d.teacher?`<div style="font-size:11px;color:var(--fg-muted)">${esc(d.teacher)}</div>`:''}
+          </div>
+          <span style="font-size:11px;color:var(--fg-muted);white-space:nowrap;margin-right:8px">${esc(d.date)}</span>
+          <button class="del-btn" style="opacity:1" onclick="deleteDisciplinary('${d.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>
+        </div>`;}).join('')}</div>
+    </div>`;
+}
+function addDisciplinary() {
+  const kind   = document.getElementById('ad-kind').value;
+  const date   = document.getElementById('ad-date').value;
+  const reason = document.getElementById('ad-reason').value.trim();
+  if (!date||!reason) { alert('Vyplňte datum a důvod'); return; }
+  dbSet(db => {
+    if (!db.disciplinary) db.disciplinary = [];
+    db.disciplinary.unshift({id:uid(),kind,date,reason,teacher:document.getElementById('ad-teacher').value});
+  });
+  renderAdminDisciplinary();
+  if (activePage==='disciplinary') renderDisciplinary();
+}
+function deleteDisciplinary(id) {
+  dbSet(db=>{db.disciplinary=(db.disciplinary||[]).filter(d=>d.id!==id);});
+  renderAdminDisciplinary();
+  if (activePage==='disciplinary') renderDisciplinary();
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   INIT
+   INIT + EVENT LISTENERS
 ═══════════════════════════════════════════════════════════════ */
-function initApp() {
-  buildNav();
-  navigate('dashboard');
-}
+function initApp() { buildNav(); navigate('dashboard'); }
 
-window.addEventListener('DOMContentLoaded', () => {
-  bindEvents();
-  // Zajisti focus aby klávesnice fungovala hned od startu
-  document.body.setAttribute('tabindex', '-1');
-  document.body.focus();
-  firebaseInit();
-});
-
-/* ═══════════════════════════════════════════════════════════════
-   BIND ALL STATIC EVENT LISTENERS
-   (nahrazuje onclick="" atributy – nutné kvůli type="module")
-═══════════════════════════════════════════════════════════════ */
-function bindEvents() {
-  // Numpad
-  document.querySelectorAll('.numpad-btn[data-key]').forEach(btn => {
-    btn.addEventListener('click', () => pinKey(btn.dataset.key));
-  });
-  document.getElementById('pin-del-btn')?.addEventListener('click', pinDel);
-
-  // Sidebar overlay + logout + mobile menu
-  document.getElementById('sidebar-overlay')?.addEventListener('click', closeSidebar);
-  document.getElementById('logout-btn')?.addEventListener('click', logout);
-  document.getElementById('mobile-menu-btn')?.addEventListener('click', openSidebar);
-
-  // Modal overlay – klik mimo modal zavře
-  document.getElementById('modal-overlay')?.addEventListener('click', e => {
-    if (e.target === document.getElementById('modal-overlay')) closeModal();
-  });
-
-  // Homework filters
-  document.getElementById('hwf-all')?.addEventListener('click',     () => setHwFilter('all'));
-  document.getElementById('hwf-pending')?.addEventListener('click', () => setHwFilter('pending'));
-  document.getElementById('hwf-done')?.addEventListener('click',    () => setHwFilter('done'));
-
-  // Settings save pins
-  document.getElementById('save-pins-btn')?.addEventListener('click', savePins);
-
-  // Klávesnice – PIN
-  document.addEventListener('keydown', e => {
+window.addEventListener('DOMContentLoaded', function() {
+  // Klávesnice
+  document.addEventListener('keydown', function(e) {
     const ls = document.getElementById('login-screen');
-    // Viditelný = není display:none A není skrytý jinak
-    if (ls && ls.style.display !== 'none') {
-      if (e.key >= '0' && e.key <= '9') pinKey(e.key);
-      if (e.key === 'Backspace') pinDel();
+    if (ls && ls.offsetParent !== null && ls.style.display !== 'none') {
+      if (e.key >= '0' && e.key <= '9') { e.preventDefault(); pinKey(e.key); }
+      if (e.key === 'Backspace')          { e.preventDefault(); pinDel(); }
     }
   });
-}
 
-/* ═══════════════════════════════════════════════════════════════
-   EXPOSE TO GLOBAL SCOPE (nutné kvůli type="module")
-═══════════════════════════════════════════════════════════════ */
-Object.assign(window, {
-  pinKey, pinDel,
-  navigate, openSidebar, closeSidebar, logout,
-  openModal, closeModal,
-  setHwFilter, toggleHw, deleteHw,
-  renderSettings, savePins,
-  toggleSection,
-  saveAdminStudent,
-  editTTCell, saveTTCell,
-  addSubjectModal, saveNewSubject, deleteSubject,
-  addGrade, deleteGrade,
-  addHomework, adminToggleHw, adminDeleteHw,
-  addTest, deleteTest,
-  addAttendance, deleteAttendance,
-  addNote, deleteNote,
+  // Sidebar / logout / modal
+  document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+  document.getElementById('logout-btn').addEventListener('click', logout);
+  document.getElementById('mobile-menu-btn').addEventListener('click', openSidebar);
+  document.getElementById('modal-overlay').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Homework filtry
+  document.getElementById('hwf-all').addEventListener('click',     function(){setHwFilter('all');});
+  document.getElementById('hwf-pending').addEventListener('click', function(){setHwFilter('pending');});
+  document.getElementById('hwf-done').addEventListener('click',    function(){setHwFilter('done');});
+
+  // Settings
+  document.getElementById('save-pins-btn').addEventListener('click', savePins);
+
+  // Spustit Firebase
+  firebaseInit();
 });
 </script>
 </body>
