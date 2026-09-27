@@ -112,6 +112,66 @@ svg { display: block; }
 .stagger > *:nth-child(8) { animation-delay: 0.24s; }
 
 /* ═══════════════════════════════════════════════════════════════
+   TUTORIAL
+═══════════════════════════════════════════════════════════════ */
+#tutorial-overlay {
+  position: fixed; inset: 0; z-index: 1200;
+  background: hsla(225, 43%, 6%, 0.75);
+  backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+  padding: 16px;
+}
+#tutorial-overlay.open { display: flex; }
+.tut-box {
+  width: 100%; max-width: 460px;
+  max-height: 92vh; overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.25s ease both;
+  position: relative;
+}
+.tut-box::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: var(--radius-xl);
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, hsla(221,88%,60%,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.tut-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-glow);
+  color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.tut-step { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-dim); margin-bottom: 4px; }
+.tut-title { font-size: 18px; font-weight: 700; color: var(--fg); letter-spacing: -0.3px; }
+.tut-text { font-size: 13.5px; color: var(--fg-muted); line-height: 1.65; margin-top: 10px; }
+.tut-text strong, .tut-text b { color: var(--fg); font-weight: 600; }
+.tut-text code { font-family: var(--mono); font-size: 12px; background: var(--surface); padding: 2px 6px; border-radius: 6px; color: var(--primary); }
+.tut-dots { display: flex; gap: 6px; justify-content: center; margin: 20px 0 0; }
+.tut-dot { width: 6px; height: 6px; border-radius: 4px; background: var(--border); transition: all 0.2s ease; }
+.tut-dot.active { width: 20px; background: var(--primary); }
+.tut-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; gap: 8px; }
+.tut-actions-left { display: flex; gap: 8px; }
+.tut-close {
+  position: absolute; top: 14px; right: 14px; width: 30px; height: 30px;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  color: var(--fg-dim); transition: all 0.12s;
+}
+.tut-close:hover { background: hsla(255,100%,100%,0.06); color: var(--fg); }
+.tut-hint-link {
+  background: none; border: none; color: var(--primary);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+  padding: 2px 4px; border-radius: 6px;
+}
+.tut-hint-link:hover { color: var(--fg); }
+
+/* ═══════════════════════════════════════════════════════════════
    LOGIN SCREEN
 ═══════════════════════════════════════════════════════════════ */
 #login-screen {
@@ -130,6 +190,7 @@ svg { display: block; }
   width: 100%; max-width: 320px;
   display: flex; flex-direction: column; align-items: center; gap: 32px;
   position: relative; z-index: 1;
+  max-height: 100vh; overflow-y: auto; padding: 8px 0;
 }
 .login-logo {
   display: flex; flex-direction: column; align-items: center; gap: 12px;
@@ -327,7 +388,7 @@ svg { display: block; }
 #mobile-header .mobile-title { color: var(--fg); font-weight: 700; font-size: 14px; }
 
 #content-scroll { flex: 1; overflow-y: auto; padding: 28px 32px; }
-#content-inner  { max-width: 860px; margin: 0 auto; }
+#content-inner  { max-width: 1100px; margin: 0 auto; }
 
 /* ═══════════════════════════════════════════════════════════════
    VIEWS
@@ -661,7 +722,10 @@ tr:hover .del-btn,
         </button>
       </div>
     </div>
-    <div class="login-footer">ZS Alexandra · Žákovská knížka · 2025/2026</div>
+    <div class="login-footer">
+      ZS Alexandra · Žákovská knížka · 2025/2026
+      <br><button class="tut-hint-link" id="tut-open-btn" type="button">Jak aplikace funguje?</button>
+    </div>
   </div>
 </div>
 
@@ -944,6 +1008,16 @@ tr:hover .del-btn,
               <div id="pin-saved-msg" style="display:none;margin-top:10px" class="alert alert-success">✓ PINy uloženy!</div>
             </div>
           </div>
+          <div class="card">
+            <div class="card-body">
+              <div style="font-weight:600;margin-bottom:6px;font-size:14px">Jak aplikace funguje?</div>
+              <p style="font-size:12px;color:var(--fg-muted);margin-bottom:12px">Zobrazit znovu průvodce pro nové uživatele – přihlášení, přidávání žáků a ukládání dat.</p>
+              <button class="btn btn-ghost btn-sm" id="settings-tutorial-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                Zobrazit tutoriál
+              </button>
+            </div>
+          </div>
         </div>
 
         <!-- ─────────────── ADMIN ─────────────── -->
@@ -953,6 +1027,14 @@ tr:hover .del-btn,
               <div class="page-icon gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
               <div class="page-title"><h1>Admin panel</h1><p>Správa všech školních dat</p></div>
             </div>
+          </div>
+          <div id="admin-target-bar" style="display:none;margin-bottom:10px;align-items:center;gap:10px;flex-wrap:wrap;background:var(--primary-dim);border:1px solid var(--primary-glow);border-radius:var(--radius);padding:10px 14px">
+            <div style="font-size:13px;color:var(--fg);display:flex;align-items:center;gap:6px;white-space:nowrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span style="font-weight:600">Upravuji žáka:</span>
+            </div>
+            <select id="admin-target-select" class="form-select" style="max-width:240px;margin-bottom:0;font-size:13px" onchange="adminSelectStudent(this.value,true);this.blur()"></select>
+            <span style="font-size:12px;color:var(--fg-muted)">Vše níže (známky, poznámky, úkoly…) platí jen pro tohoto žáka.</span>
           </div>
           <div id="admin-sections" class="stagger"></div>
         </div>
@@ -968,6 +1050,27 @@ tr:hover .del-btn,
     <div class="modal-title" id="modal-title">Dialog</div>
     <div id="modal-body"></div>
     <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ TUTORIAL ═══════════════════════════ -->
+<div id="tutorial-overlay" role="dialog" aria-modal="true" aria-label="Nápověda – jak aplikace funguje">
+  <div class="tut-box">
+    <button class="tut-close" id="tut-close" aria-label="Zavřít nápovědu">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="tut-icon" id="tut-icon"></div>
+    <div class="tut-step" id="tut-step"></div>
+    <div class="tut-title" id="tut-title"></div>
+    <div class="tut-text" id="tut-text"></div>
+    <div class="tut-dots" id="tut-dots"></div>
+    <div class="tut-actions">
+      <div class="tut-actions-left">
+        <button class="btn btn-outline btn-sm" id="tut-prev" type="button">Zpět</button>
+        <button class="btn btn-outline btn-sm" id="tut-skip" type="button">Přeskočit</button>
+      </div>
+      <button class="btn btn-primary btn-sm" id="tut-next" type="button">Další</button>
+    </div>
   </div>
 </div>
 
@@ -1017,7 +1120,9 @@ const firebaseConfig = {
 
 firebase.initializeApp(firebaseConfig);
 const db_fs   = firebase.firestore();
-const DOC_REF = db_fs.collection("skola").doc("hlavni");
+const META_REF  = db_fs.collection("meta").doc("hlavni");
+const LEGACY_REF = db_fs.collection("skola").doc("hlavni");
+const ZACI_REF = db_fs.collection("zaci");
 
 /* ═══════════════════════════════════════════════════════════════
    SESSION
@@ -1028,16 +1133,20 @@ const SESSION_TTL = 8 * 60 * 60 * 1000;
 function sessionLoad() {
   try {
     const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
-    if (s && s.expires > Date.now()) return s.role;
+    if (s && s.expires > Date.now()) return s;
   } catch {}
   return null;
 }
-function sessionSave(role) {
-  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ role, expires: Date.now() + SESSION_TTL }));
+function sessionSave(role, studentId) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({ role, studentId: studentId || null, expires: Date.now() + SESSION_TTL }));
 }
 function logout() {
   sessionStorage.removeItem(SESSION_KEY);
   currentRole = null;
+  _currentStudentId = null;
+  _adminSelectedId  = null;
+  _keepPage = null;
+  _cache = null;
   document.getElementById('app').classList.remove('visible');
   document.getElementById('login-screen').style.display = 'flex';
   pinBuffer = '';
@@ -1048,9 +1157,14 @@ function logout() {
    IN-MEMORY CACHE + FIREBASE SYNC
 ═══════════════════════════════════════════════════════════════ */
 var _cache       = null;
+var _metaStore   = null; // {pins, students} – skutečná společná nastavení z meta/hlavni
+var _zaciCache   = {};   // { studentId: studentData }
+var _zaciTimer   = null;
 var _saveTimer   = null;
 var _ignoreNext  = false;
+var _ignoreZaci  = {};
 var _unsubscribe = null;
+var _zaciUnsubs  = {};   // real-time listenery pro jednotlivé žáky
 
 function showLoader(msg) {
   let el = document.getElementById('fb-loader');
@@ -1078,6 +1192,20 @@ function firestoreToCache(data) {
 function cacheToFirestore(cache) {
   return { json: JSON.stringify(cache) };
 }
+/* Tolerantní čtení meta/hlavni – podporuje jak formát {json}, tak nativní pole {pins, students} */
+function metaFromFirestore(data) {
+  if (!data) return null;
+  if (data.json) {
+    try {
+      const p = JSON.parse(data.json);
+      if (p && (p.students || p.pins)) return { pins: p.pins || {}, students: Array.isArray(p.students) ? p.students : [] };
+    } catch {}
+  }
+  if (data.students || data.pins) {
+    return { pins: data.pins || {}, students: Array.isArray(data.students) ? data.students : [] };
+  }
+  return null;
+}
 function mergeWithDefaults(data) {
   const def = defaultDB();
   Object.keys(def).forEach(k => { if (data[k] === undefined) data[k] = def[k]; });
@@ -1092,17 +1220,86 @@ async function firebaseInit() {
   showLoader('Připojování k databázi…');
   try {
     showLoader('Načítám data…');
-    const snap = await DOC_REF.get();
+    const snap = await META_REF.get();
     if (snap.exists) {
-      const loaded = firestoreToCache(snap.data());
+      const loaded = metaFromFirestore(snap.data());
       _cache = loaded ? mergeWithDefaults(loaded) : defaultDB();
       console.log('✅ Firebase: data načtena');
+      // meta bez žáků → zkusit doplnit migrací ze staré kolekce
+      if (!_cache.students || _cache.students.length === 0) {
+        try {
+          const legacy = await LEGACY_REF.get();
+          if (legacy.exists) {
+            const lm = mergeWithDefaults(firestoreToCache(legacy.data()) || {});
+            if (lm && lm.student && lm.student.name) {
+              _cache.students = [{ id:'zak1', name: lm.student.name, class: lm.student.class, pin: (lm.pins&&lm.pins.student)||'0258' }];
+              if (lm.pins) _cache.pins = lm.pins;
+              const zakDoc = await ZACI_REF.doc('zak1').get();
+              if (!zakDoc.exists) {
+                const zd = Object.assign({}, lm); delete zd.pins; delete zd.students;
+                await ZACI_REF.doc('zak1').set(cacheToFirestore(zd));
+              }
+              await META_REF.set({ pins: _cache.pins, students: JSON.parse(JSON.stringify(_cache.students)) });
+              console.log('🔁 Doplněna migrace žáka z kolekce skola');
+            }
+          }
+        } catch(e) { console.log('ℹ️ Migrace ze skola přeskočena:', e.code||e); }
+      }
     } else {
-      console.log('📝 Firebase: první spuštění, vytvářím dokument…');
-      _cache = defaultDB();
-      await DOC_REF.set(cacheToFirestore(_cache));
-      console.log('✅ Firebase: dokument vytvořen');
+      // První spuštění – zkusit migraci starých dat ze skola/hlavni
+      let migrated = null;
+      try {
+        const legacy = await LEGACY_REF.get();
+        if (legacy.exists) migrated = firestoreToCache(legacy.data());
+      } catch(e) { console.log('ℹ️ Stará kolekce skola nenalezena – čistý start'); }
+
+      if (migrated) {
+        console.log('🔁 Migrace starých dat (skola/hlavni → meta + zaci)…');
+        migrated = mergeWithDefaults(migrated);
+        const zakPin = (migrated.pins && migrated.pins.student) || '0258';
+        const zakId  = 'zak1';
+        _cache = defaultDB();
+        _cache.pins = migrated.pins || _cache.pins;
+        _cache.students = [{ id: zakId, name: migrated.student.name, class: migrated.student.class, pin: zakPin }];
+        await META_REF.set(cacheToFirestore(_cache));
+        // Veškerá data původního žáka (známky, rozvrh, úkoly, písemky, docházka,
+        // poznámky, výchovná opatření, předměty, profil) do zaci/zak1
+        const zakData = Object.assign({}, migrated);
+        delete zakData.pins; delete zakData.students;
+        await ZACI_REF.doc(zakId).set(cacheToFirestore(zakData));
+        console.log('✅ Migrace dokončena – žák ' + migrated.student.name + ' přesunut');
+      } else {
+        console.log('📝 Firebase: první spuštění, vytvářím dokument…');
+        _cache = defaultDB();
+        _cache.students = [{ id: 'zak1', name: _cache.student.name, class: _cache.student.class, pin: _cache.pins.student }];
+        await META_REF.set(cacheToFirestore(_cache));
+        const zakData = Object.assign({}, _cache);
+        delete zakData.pins; delete zakData.students;
+        await ZACI_REF.doc('zak1').set(cacheToFirestore(zakData));
+        console.log('✅ Firebase: dokument vytvořen');
+      }
     }
+
+    // Načíst žáky z kolekce zaci/{studentId}
+    const zaciSnap = await ZACI_REF.get();
+    _zaciCache = {};
+    zaciSnap.forEach(d => {
+      const parsed = firestoreToCache(d.data());
+      if (parsed) _zaciCache[d.id] = parsed;
+    });
+    // Pro žáky bez dat vytvořit výchozí data a uložit je
+    for (const s of (dbGet().students || [])) {
+      if (!_zaciCache[s.id]) {
+        const fresh = defaultDB();
+        delete fresh.pins; delete fresh.students;
+        fresh.student.name = s.name;
+        fresh.student.class = s.class || fresh.student.class;
+        _zaciCache[s.id] = fresh;
+        ZACI_REF.doc(s.id).set(cacheToFirestore(fresh)).catch(e => console.error('❌ Vytvoření dat žáka:', e.code, e.message));
+      }
+    }
+    console.log('✅ Firebase: žáci načteni (' + Object.keys(_zaciCache).length + ')');
+    _metaStore = { pins: _cache.pins, students: JSON.parse(JSON.stringify(_cache.students || [])) };
   } catch(e) {
     console.error('❌ Firebase chyba:', e.code, e.message);
     showLoader('⚠️ Firebase nedostupný – používám lokální data');
@@ -1112,37 +1309,56 @@ async function firebaseInit() {
 
   hideLoader();
 
-  // Real-time listener
+  // Real-time listener (meta/hlavni)
   try {
-    _unsubscribe = DOC_REF.onSnapshot(snap => {
+    _unsubscribe = META_REF.onSnapshot(snap => {
       if (!snap.exists) return;
       if (_ignoreNext) { _ignoreNext = false; return; }
-      const remote = firestoreToCache(snap.data());
+      const remote = metaFromFirestore(snap.data());
       if (!remote) return;
-      if (JSON.stringify(remote) !== JSON.stringify(_cache)) {
-        _cache = mergeWithDefaults(remote);
-        try { renderView(activePage); buildNav(); } catch(e) {}
-      }
+      // meta obsahuje jen společná nastavení – sloučit bez přepsání dat žáka
+      if (remote.pins)     { _cache.pins = remote.pins; _metaStore.pins = remote.pins; }
+      if (remote.students) { _cache.students = remote.students; _metaStore.students = remote.students; }
+      try { renderView(activePage); buildNav(); } catch(e) {}
     }, err => console.error('❌ Firestore listener:', err.code, err.message));
   } catch(e) {
     console.error('❌ onSnapshot failed:', e);
   }
 
+  // Real-time listenery pro jednotlivé žáky
+  Object.keys(_zaciCache).forEach(ensureZaciListener);
+
   // Spustit app
-  const role = sessionLoad();
-  if (role) {
-    currentRole = role;
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('app').classList.add('visible');
-    initApp();
+  const sess = sessionLoad();
+  if (sess && sess.role) {
+    currentRole = sess.role;
+    _currentStudentId = sess.studentId || null;
+    if (sess.role === 'admin') _adminSelectedId = firstStudentId();
+    _loadContext();
   }
 }
+
+const STUDENT_DATA_KEYS = ['student','subjects','grades','timetable','homework','tests','attendance','notes','disciplinary'];
 
 function scheduleSave() {
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function() {
+    if (_switching) return; // nepřepisovat data během přepínání žáka
+    // 1) Data žáka → zaci/{studentId}
+    const sid = currentStudentId();
+    if (sid) {
+      if (!_zaciCache[sid]) {
+        const sm = ((dbGet().students || [])); const one = sm.find(s => s.id === sid);
+        _zaciCache[sid] = cleanStudentData(one ? one.name : '', one ? one.class : '');
+      }
+      STUDENT_DATA_KEYS.forEach(k => { _zaciCache[sid][k] = JSON.parse(JSON.stringify(_cache[k])); });
+      _zaciCache[sid]._dirty = true;
+      scheduleZaciSave(sid);
+    }
+    // 2) Společné nastavení (PINy, seznam žáků) → meta/hlavni
+    const metaDoc = { pins: _cache.pins, students: JSON.parse(JSON.stringify(_cache.students || [])) };
     _ignoreNext = true;
-    DOC_REF.set(cacheToFirestore(_cache))
+    META_REF.set(metaDoc)
       .then(function() {
         console.log('✅ Uloženo do Firebase');
         try { localStorage.setItem('zs_alexandra_db', JSON.stringify(_cache)); } catch(e) {}
@@ -1155,11 +1371,114 @@ function scheduleSave() {
   }, 700);
 }
 
-function dbGet() { return _cache || defaultDB(); }
+function dbGet() {
+  if (_cache) return _cache;
+  const def = defaultDB();
+  if (_metaStore) { def.pins = _metaStore.pins; def.students = _metaStore.students || []; }
+  return def;
+}
+
+function ensureZaciListener(id) {
+  if (_zaciUnsubs[id]) return;
+  _zaciUnsubs[id] = ZACI_REF.doc(id).onSnapshot(snap => {
+    if (!snap.exists) return;
+    if (_ignoreZaci[id]) { _ignoreZaci[id] = false; return; }
+    // Lokální neuložené změny mají přednost – vzdálený snapshot nesmí přepsat čekající edit
+    if (_zaciCache[id] && _zaciCache[id]._dirty) return;
+    const remote = firestoreToCache(snap.data());
+    if (!remote) return;
+    delete remote._dirty;
+    _zaciCache[id] = remote;
+    try { renderView(activePage); } catch(e) {}
+  }, err => console.error('❌ Žák listener:', id, err.code, err.message));
+}
+
 function dbSet(fn) {
   if (!_cache) _cache = defaultDB();
   fn(_cache);
   scheduleSave();
+}
+
+/* ── Žáci: ukládání a načítání z kolekce zaci/{studentId} ── */
+function scheduleZaciSave(studentId) {
+  if (_zaciTimer) clearTimeout(_zaciTimer);
+  _zaciTimer = setTimeout(function() {
+    Object.keys(_zaciCache).forEach(function(id) {
+      if (!_zaciCache[id]._dirty) return;
+      delete _zaciCache[id]._dirty;
+      _ignoreZaci[id] = true;
+      const data = Object.assign({}, _zaciCache[id]);
+      delete data._dirty;
+      ZACI_REF.doc(id).set(cacheToFirestore(data))
+        .then(function(){ console.log('✅ Žák uložen:', id); })
+        .catch(function(e){ console.error('❌ Uložení žáka selhalo:', id, e.code, e.message); });
+    });
+  }, 700);
+}
+
+function zaciList() {
+  // Seznam žáků: meta.students (id, name, class, pin) + data v zaci cache
+  const meta = dbGet();
+  const list = (meta.students || []).map(s => Object.assign({}, s, { data: _zaciCache[s.id] || null }));
+  return list;
+}
+
+/* Čistá šablona dat žáka – předměty a rozvrh z výchozích hodnot, žádná ukázková známky/úkoly/poznámky */
+function cleanStudentData(name, cls) {
+  const d = defaultDB();
+  delete d.pins; delete d.students;
+  d.student.name = name || '';
+  d.student.class = cls || '';
+  d.grades = [];
+  d.homework = [];
+  d.tests = [];
+  d.attendance = [];
+  d.notes = [];
+  d.disciplinary = [];
+  return d;
+}
+
+function studentDataFor(id) {
+  const meta = (dbGet().students || []).find(s => s.id === id);
+  if (!meta) return null;
+  const data = _zaciCache[id];
+  if (data) return mergeWithDefaults(JSON.parse(JSON.stringify(data)));
+  // fallback: čistá šablona – žádné sdílené/defaultní známky mezi žáky
+  return cleanStudentData(meta.name, meta.class);
+}
+
+/* Přímý zápis do dat KONKRÉTNÍHO žáka (nezávisle na aktuálním kontextu) */
+function writeStudentData(sid, fn) {
+  if (!sid) return false;
+  const meta = (dbGet().students || []).find(s => s.id === sid);
+  if (!meta) return false;
+  let data = _zaciCache[sid]
+    ? mergeWithDefaults(JSON.parse(JSON.stringify(_zaciCache[sid])))
+    : cleanStudentData(meta.name, meta.class);
+  delete data._dirty;
+  fn(data);
+  _zaciCache[sid] = data;
+  _zaciCache[sid]._dirty = true;
+  ensureZaciListener(sid);
+  scheduleZaciSave(sid);
+  return true;
+}
+
+/* Admin: přepne kontext na žáka sid a zůstane na aktuální stránce */
+function targetAdmin(sid) {
+  if (!sid) return;
+  _keepPage = activePage || 'admin';
+  if (_adminSelectedId === sid) { /* kontext už odpovídá */ }
+  _adminSelectedId = sid;
+  _loadContext();
+}
+
+function setStudentData(id, mutator) {
+  if (!_zaciCache[id]) _zaciCache[id] = defaultDB();
+  mutator(_zaciCache[id]);
+  _zaciCache[id]._dirty = true;
+  scheduleZaciSave(id);
+  ensureZaciListener(id);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1216,6 +1535,7 @@ function defaultDB() {
     notes: [],
     disciplinary: [],
     pins: { admin:'8520', student:'0258' },
+    students: [],   // {id, name, class, pin} – data žáků jsou v kolekci zaci/{id}
   };
 }
 
@@ -1223,22 +1543,39 @@ function defaultDB() {
    PIN LOGIN  (proměnné pinBuffer/pinBusy jsou v globálním scriptu výše)
 ═══════════════════════════════════════════════════════════════ */
 var currentRole = null;
+var _currentStudentId = null;   // žák přihlášený PINem
+var _adminSelectedId  = null;   // žák vybraný v admin panelu
+
+function currentStudentId() {
+  if (currentRole === 'student') return _currentStudentId;
+  if (currentRole === 'admin')   return _adminSelectedId || firstStudentId();
+  return null;
+}
+function firstStudentId() {
+  const st = dbGet().students || [];
+  return st.length ? st[0].id : null;
+}
 function verifyPin() {
   pinBusy = true;
   const pins = dbGet().pins;
-  let role = null;
-  if (pinBuffer === pins.admin)   role = 'admin';
-  else if (pinBuffer === pins.student) role = 'student';
+  let role = null, studentId = null;
+
+  if (pinBuffer === pins.admin) {
+    role = 'admin';
+  } else {
+    const students = dbGet().students || [];
+    const match = students.find(s => s.pin === pinBuffer);
+    if (match) { role = 'student'; studentId = match.id; }
+    // zpětná kompatibilita: starý žákovský PIN
+    else if (pinBuffer === pins.student) { role = 'student'; studentId = firstStudentId(); }
+  }
 
   if (role) {
     currentRole = role;
-    sessionSave(role);
-    setTimeout(() => {
-      document.getElementById('login-screen').style.display = 'none';
-      document.getElementById('app').classList.add('visible');
-      initApp();
-      pinBusy = false; pinBuffer = ''; renderDots();
-    }, 180);
+    _currentStudentId = studentId;
+    if (role === 'admin') _adminSelectedId = firstStudentId();
+    sessionSave(role, studentId);
+    _loadContext(); // nastav _cache podle kontextu, pak spustit app
   } else {
     const card = document.getElementById('pin-card');
     if (card) card.classList.add('shake');
@@ -1248,6 +1585,51 @@ function verifyPin() {
       pinBuffer = ''; renderDots(); setError(''); pinBusy = false;
     }, 1200);
   }
+}
+
+/* Přepne _cache na data aktuálního kontextu (admin = vybraný žák) */
+function _loadContext() {
+  _switching = true;
+  const sid = currentStudentId();
+  // ponechat skutečná společná nastavení (PINy, seznam žáků)
+  const keepPins = (_metaStore && _metaStore.pins) || _cache?.pins || defaultDB().pins;
+  const keepStudents = (_metaStore && _metaStore.students) || _cache?.students || [];
+  if (sid) {
+    _cache = mergeWithDefaults(JSON.parse(JSON.stringify(studentDataFor(sid))));
+    // Profilové údaje (jméno, třída) vždy převzít ze seznamu žáků
+    const m = (keepStudents || []).find(s => s.id === sid);
+    if (m) {
+      _cache.student.name = m.name;
+      if (m.class) _cache.student.class = m.class;
+    }
+  } else {
+    _cache = defaultDB();
+  }
+  _cache.pins = keepPins;
+  _cache.students = keepStudents;
+  setTimeout(() => {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    initApp();
+    _switching = false;
+    pinBusy = false; pinBuffer = ''; renderDots();
+  }, 180);
+}
+
+/* V adminu: přepnutí na jiného žáka */
+var _keepPage = null;           // stránka, na které zůstat po přepnutí žáka
+var _switching = false;         // probíhá přepnutí kontextu (blokuje mezilehlé ukládání)
+function adminSelectStudent(id, stay) {
+  if (!id) return;
+  _adminSelectedId = id;
+  _keepPage = stay ? (activePage || 'admin') : null;
+  _loadContext();
+}
+
+/* Vrácení dat vybraného žáka pro admin správu žáků */
+function getSelectedStudentMeta() {
+  const sid = _adminSelectedId || firstStudentId();
+  return (dbGet().students || []).find(s => s.id === sid) || null;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -1321,6 +1703,65 @@ function openModal(title, bodyHTML, actionsHTML) {
   document.getElementById('modal-overlay').style.display = 'flex';
 }
 function closeModal() { document.getElementById('modal-overlay').style.display='none'; }
+
+/* ═══════════════════════════════════════════════════════════════
+   TUTORIÁL (první spuštění)
+═══════════════════════════════════════════════════════════════ */
+const TUTORIAL_KEY = 'zs_alexandra_tutorial_v1';
+var tutIndex = 0;
+
+var TUT_STEPS = [
+  {
+    icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
+    title: 'Vítejte ve Žákovské knížce',
+    text: 'Přihlašujte se <strong>4místným PINem</strong> pomocí klávesnice na obrazovce. Každý žák má <strong>svůj vlastní PIN</strong> a vlastní data – známky, úkoly, rozvrh i docházku.'
+  },
+  {
+    icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    title: 'Dva typy účtů',
+    text: '<strong>Admin</strong> spravuje vše: přidává žáky, zadává známky, úkoly a písemky. <strong>Žák</strong> vidí pouze své vlastní data a může odškrtávat splněné úkoly. PINy se nastavují v Nastavení, resp. v admin panelu.'
+  },
+  {
+    icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    title: 'Přidávání žáků',
+    text: 'V admin panelu otevřete sekci <strong>Žáci</strong> a klikněte na <strong>„+ Přidat žáka"</strong>. Zadejte jméno, třídu a nový 4místný PIN. Každý nový žák dostane <strong>prázdnou knížku</strong> – vlastní známky, úkoly i rozvrh.'
+  },
+  {
+    icon: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    title: 'Automatické ukládání',
+    text: 'Vše se ukládá do databáze <strong>automaticky v cloudu</strong> (Firestore). Změna se okamžitě projeví na všech zařízeních – na počítači, mobilu i tabletu. Nemusíte nic ukládat ručně.'
+  },
+  {
+    icon: '<polyline points="20 6 9 17 4 12"/>',
+    title: 'Vše připraveno!',
+    text: 'Zadejte PIN a můžete začít. Tuto nápovědu kdykoli znovu otevřete odkazem <strong>„Jak aplikace funguje?"</strong> pod přihlašovací obrazovkou, nebo v Nastavení.'
+  }
+];
+
+function tutRender() {
+  const s = TUT_STEPS[tutIndex];
+  document.getElementById('tut-icon').innerHTML =
+    `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${s.icon}</svg>`;
+  document.getElementById('tut-step').textContent = `Krok ${tutIndex+1} z ${TUT_STEPS.length}`;
+  document.getElementById('tut-title').textContent = s.title;
+  document.getElementById('tut-text').innerHTML = s.text;
+  document.getElementById('tut-prev').style.visibility = tutIndex===0 ? 'hidden' : 'visible';
+  document.getElementById('tut-next').textContent = tutIndex===TUT_STEPS.length-1 ? 'Hotovo' : 'Další';
+  document.getElementById('tut-skip').style.display = tutIndex===TUT_STEPS.length-1 ? 'none' : 'inline-flex';
+  document.getElementById('tut-dots').innerHTML = TUT_STEPS.map((_,i)=>
+    `<span class="tut-dot ${i===tutIndex?'active':''}"></span>`).join('');
+}
+function startTutorial(force) {
+  tutIndex = 0;
+  tutRender();
+  document.getElementById('tutorial-overlay').classList.add('open');
+}
+function tutFinish() {
+  document.getElementById('tutorial-overlay').classList.remove('open');
+  try { localStorage.setItem(TUTORIAL_KEY, 'done'); } catch(e) {}
+}
+function tutNext() { tutIndex < TUT_STEPS.length-1 ? (tutIndex++, tutRender()) : tutFinish(); }
+function tutPrev() { if (tutIndex > 0) { tutIndex--; tutRender(); } }
 
 /* ═══════════════════════════════════════════════════════════════
    UTILITY
@@ -1598,6 +2039,7 @@ var openSection='student';
 function renderAdmin() {
   const sections=[
     {id:'student',   label:'Profil žáka',         icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',                                                                                                                                           fn:renderAdminStudent},
+    {id:'zaci',      label:'Žáci',                icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',                                                               fn:renderAdminZaci},
     {id:'timetable', label:'Rozvrh hodin',         icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',                                                             fn:renderAdminTimetable},
     {id:'subjects',  label:'Předměty',             icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',                                                                                                      fn:renderAdminSubjects},
     {id:'grades',    label:'Hodnocení / Známky',   icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',                                                                                                           fn:renderAdminGrades},
@@ -1617,10 +2059,11 @@ function renderAdmin() {
       <div class="section-body ${openSection===s.id?'open':''}" id="sec-${s.id}"></div>
     </div>`).join('');
   if(openSection){const s=sections.find(x=>x.id===openSection);if(s)s.fn();}
+  renderAdminTargetBar();
 }
 
 function toggleSection(id) {
-  const fns={student:renderAdminStudent,timetable:renderAdminTimetable,subjects:renderAdminSubjects,grades:renderAdminGrades,homework:renderAdminHomework,tests:renderAdminTests,attendance:renderAdminAttendance,notes:renderAdminNotes,disciplinary:renderAdminDisciplinary};
+  const fns={student:renderAdminStudent,zaci:renderAdminZaci,timetable:renderAdminTimetable,subjects:renderAdminSubjects,grades:renderAdminGrades,homework:renderAdminHomework,tests:renderAdminTests,attendance:renderAdminAttendance,notes:renderAdminNotes,disciplinary:renderAdminDisciplinary};
   Object.keys(fns).forEach(sid=>{
     const btn=document.querySelector(`.section-header[onclick*="'${sid}'"]`);
     const body=document.getElementById('sec-'+sid);
@@ -1629,9 +2072,29 @@ function toggleSection(id) {
   });
 }
 
+/* ── ADMIN: kontextový výběr žáka – komu se zapisuje ── */
+function adminTargetChip() {
+  if (currentRole !== 'admin') return '';
+  const m = getSelectedStudentMeta();
+  if (!m) return '';
+  return `<div style="display:inline-flex;align-items:center;gap:5px;background:var(--primary-dim);border:1px solid var(--primary);color:var(--primary);font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap">Pro žáka: ${esc(m.name)}${m.class ? ' ('+esc(m.class)+')' : ''}</div>`;
+}
+function renderAdminTargetBar() {
+  const bar = document.getElementById('admin-target-bar');
+  if (!bar) return;
+  if (currentRole !== 'admin') { bar.style.display = 'none'; return; }
+  const students = dbGet().students || [];
+  const sel = currentStudentId();
+  const selEl = document.getElementById('admin-target-select');
+  if (selEl) selEl.innerHTML = students.map(s => `<option value="${s.id}"${s.id === sel ? ' selected' : ''}>${esc(s.name)}${s.class ? ' – ' + esc(s.class) : ''}</option>`).join('');
+  bar.style.display = 'flex';
+}
+
 function renderAdminStudent() {
   const s=dbGet().student;
+  const meta=getSelectedStudentMeta();
   document.getElementById('sec-student').innerHTML=`<div style="padding:20px">
+    ${meta?`<div style="margin-bottom:12px;font-size:12px;color:var(--fg-muted)">Upravujete data žáka: <strong style="color:var(--fg)">${esc(meta.name)}${meta.class?' ('+esc(meta.class)+')':''}</strong></div>`:''}
     <div class="grid-2">
       <div class="form-group"><label class="form-label">Jméno</label><input class="form-input" id="as-name" value="${esc(s.name)}"></div>
       <div class="form-group"><label class="form-label">Třída</label><input class="form-input" id="as-class" value="${esc(s.class)}"></div>
@@ -1646,7 +2109,93 @@ function renderAdminStudent() {
 }
 function saveAdminStudent() {
   dbSet(db=>{db.student={name:document.getElementById('as-name').value,class:document.getElementById('as-class').value,school:document.getElementById('as-school').value,year:document.getElementById('as-year').value,classTeacher:document.getElementById('as-teacher').value};});
+  // Změny profilu se synchronizují i do seznamu žáků (meta)
+  const sid=currentStudentId();
+  const name=document.getElementById('as-name').value;
+  const cls=document.getElementById('as-class').value;
+  dbSet(db=>{const st=(db.students||[]).find(x=>x.id===sid);if(st){st.name=name;st.class=cls;}});
   const el=document.getElementById('as-saved');el.style.display='inline';setTimeout(()=>el.style.display='none',2000);
+}
+
+/* ── ADMIN: Žáci (seznam, přidání, PIN, smazání) ── */
+function renderAdminZaci() {
+  const students = dbGet().students || [];
+  const rows = students.map(s => `
+    <tr>
+      <td style="font-weight:500">${esc(s.name)}</td>
+      <td style="font-size:12px;color:var(--fg-muted)">${esc(s.class||'')}</td>
+      <td><span style="font-family:var(--mono);font-size:12px;background:var(--surface);padding:2px 8px;border-radius:6px">••••</span></td>
+      <td style="text-align:right;white-space:nowrap">
+        <button class="btn btn-outline btn-xs" style="margin-right:4px;${s.id===currentStudentId()?'background:var(--primary-dim);border-color:var(--primary);color:var(--primary);':''}" onclick="adminSelectStudent('${s.id}',true)">${s.id===currentStudentId()?'Aktivní':'Upravit data'}</button>
+        <button class="btn btn-outline btn-xs" style="margin-right:4px" onclick="editZakPin('${s.id}')">Změnit PIN</button>
+        ${students.length>1?`<button class="del-btn" style="opacity:1" onclick="deleteZak('${s.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>`:''}
+      </td>
+    </tr>`).join('');
+  document.getElementById('sec-zaci').innerHTML=`<div style="padding:16px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">
+      <div style="font-size:12px;color:var(--fg-muted)">Každý žák má vlastní PIN pro přihlášení i vlastní data (známky, úkoly, rozvrh…). Data se ukládají do Firebase kolekce <code style="font-family:var(--mono);font-size:11px">zaci</code>.</div>
+      <button class="btn btn-primary btn-sm" style="flex-shrink:0" onclick="addZakModal()">+ Přidat žáka</button>
+    </div>
+    <table class="data-table"><thead><tr><th>Jméno</th><th>Třída</th><th>PIN</th><th></th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="4"><div class="empty-state"><p>Žádní žáci</p></div></td></tr>'}</tbody></table></div>`;
+  renderAdminTargetBar();
+}
+function addZakModal() {
+  openModal('Přidat žáka',
+    `<div class="form-group"><label class="form-label">Jméno</label><input class="form-input" id="nz-name" placeholder="Jan Novák"></div>
+     <div class="form-group"><label class="form-label">Třída</label><input class="form-input" id="nz-class" placeholder="8.A"></div>
+     <div class="form-group"><label class="form-label">PIN (4 číslice)</label><input class="form-input" id="nz-pin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••"></div>`,
+    `<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveNewZak()">Přidat</button>`);
+}
+function saveNewZak() {
+  const name  = document.getElementById('nz-name').value.trim();
+  const cls   = document.getElementById('nz-class').value.trim();
+  const pin   = document.getElementById('nz-pin').value.replace(/\D/g,'');
+  if (!name) { alert('Zadejte jméno žáka'); return; }
+  if (pin.length !== 4) { alert('PIN musí mít přesně 4 číslice'); return; }
+  const students = dbGet().students || [];
+  if (students.some(s => s.pin === pin)) { alert('Tento PIN už používá jiný žák. Zvolte jiný.'); return; }
+  const adminPin = dbGet().pins.admin;
+  if (pin === adminPin) { alert('Tento PIN je admin PIN. Zvolte jiný.'); return; }
+  const id = uid();
+  dbSet(db => { db.students.push({ id, name, class: cls, pin }); });
+  // Vytvořit čistá prázdná data žáka (předměty a rozvrh z šablony, žádné ukázkové známky ani poznámky)
+  const fresh = cleanStudentData(name, cls || '8.A');
+  _zaciCache[id] = fresh;
+  _zaciCache[id]._dirty = true;
+  ensureZaciListener(id);
+  scheduleZaciSave(id);
+  closeModal();
+  renderAdminZaci();
+}
+function editZakPin(id) {
+  const s = (dbGet().students||[]).find(x=>x.id===id);
+  if (!s) return;
+  openModal('Změnit PIN – ' + s.name,
+    `<div class="form-group"><label class="form-label">Nový PIN (4 číslice)</label><input class="form-input" id="ez-pin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••"></div>`,
+    `<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveZakPin('${id}')">Uložit</button>`);
+}
+function saveZakPin(id) {
+  const pin = document.getElementById('ez-pin').value.replace(/\D/g,'');
+  if (pin.length !== 4) { alert('PIN musí mít přesně 4 číslice'); return; }
+  const students = dbGet().students || [];
+  if (students.some(s => s.pin === pin && s.id !== id)) { alert('Tento PIN už používá jiný žák. Zvolte jiný.'); return; }
+  const adminPin = dbGet().pins.admin;
+  if (pin === adminPin) { alert('Tento PIN je admin PIN. Zvolte jiný.'); return; }
+  dbSet(db => { const s = (db.students||[]).find(x=>x.id===id); if (s) s.pin = pin; });
+  closeModal();
+  renderAdminZaci();
+}
+function deleteZak(id) {
+  const s = (dbGet().students||[]).find(x=>x.id===id);
+  if (!s) return;
+  if (!confirm(`Smazat žáka ${s.name}? Smazány budou i všechny jeho data (známky, úkoly, docházka…).`)) return;
+  dbSet(db => { db.students = (db.students||[]).filter(x=>x.id!==id); });
+  try { ZACI_REF.doc(id).delete(); } catch(e) { console.error('Smazání žáka selhalo:', e); }
+  delete _zaciCache[id];
+  if (_zaciUnsubs[id]) { try { _zaciUnsubs[id](); } catch(e){} delete _zaciUnsubs[id]; }
+  if (_adminSelectedId === id) { _adminSelectedId = firstStudentId(); _loadContext(); }
+  renderAdminZaci();
 }
 
 function renderAdminTimetable() {
@@ -1695,26 +2244,46 @@ function saveNewSubject() {
 }
 function deleteSubject(id) { if(!confirm('Smazat?'))return;dbSet(db=>{db.subjects=db.subjects.filter(s=>s.id!==id);});renderAdminSubjects(); }
 
+function adminStudentSelect(id, selId) {
+  const students = dbGet().students || [];
+  const sel = selId || currentStudentId() || (students[0] && students[0].id);
+  return `<select class="form-select" id="${id}" style="max-width:260px;background:var(--primary-dim);border-color:var(--primary);font-weight:600" data-testid="${id}">${students.map(s=>`<option value="${s.id}"${s.id===sel?' selected':''}>${esc(s.name)}${s.class?' – '+esc(s.class):''}</option>`).join('')}</select>`;
+}
+
 function renderAdminGrades() {
   const db=dbGet();const opts=db.subjects.map(s=>`<option value="${s.id}">${s.short} – ${s.name}</option>`).join('');
-  document.getElementById('sec-grades').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat známku</div>
+  document.getElementById('sec-grades').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat známku</span>${adminTargetChip()}</div>
+  document.getElementById('sec-grades').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:var(--primary-dim);border:1px solid var(--primary);border-radius:var(--radius)"><span style="font-weight:700;font-size:13px;color:var(--primary)">✎ Známka bude zapsána žáku:</span>${adminStudentSelect('ag-sid')}</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Nová známka</span>${adminTargetChip()}</div>
     <div class="grid-2">
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="ag-subj"><option value="">Vyberte…</option>${opts}</select></div>
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="ag-date" placeholder="22.5.2026"></div>
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Typ</label><input class="form-input" id="ag-type" value="Písemka"></div>
-      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Hodnota</label><select class="form-select" id="ag-val">${[1,2,3,4,5].map(v=>`<option value="${v}">${v}</option>`).join('')}</select></div>
-      <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Poznámka</label><input class="form-input" id="ag-note"></div>
-    </div><button class="btn btn-primary btn-sm" onclick="addGrade()">Přidat</button></div>
     <table class="data-table"><thead><tr><th>Předmět</th><th>Typ</th><th>Hodnota</th><th>Datum</th><th>Poznámka</th><th></th></tr></thead>
     <tbody>${db.grades.map(g=>{const subj=db.subjects.find(s=>s.id===g.subjectId);return`<tr><td>${subjIcon(subj?.short||g.subjectId)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.type)}</td><td>${gradeHtml(g.value)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.date)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.note||'')}</td><td><button class="del-btn" style="opacity:1" onclick="deleteGrade('${g.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></td></tr>`;}).join('')}</tbody></table></div>`;
 }
 function addGrade() {
+  const sidSel=document.getElementById('ag-sid');
+  const sid=sidSel?sidSel.value:currentStudentId();
   const subj=document.getElementById('ag-subj').value;const date=document.getElementById('ag-date').value;
+  if(!sid){alert('Nejprve přidejte žáka v sekci Žáci');return;}
   if(!subj||!date){alert('Vyberte předmět a zadejte datum');return;}
   dbSet(db=>{db.grades.push({id:uid(),subjectId:subj,date,value:Number(document.getElementById('ag-val').value),type:document.getElementById('ag-type').value,note:document.getElementById('ag-note').value});});
   renderAdminGrades();if(activePage==='grades')renderGrades();if(activePage==='dashboard')renderDashboard();
+  const grade={id:uid(),subjectId:subj,date,value:Number(document.getElementById('ag-val').value),type:document.getElementById('ag-type').value,note:document.getElementById('ag-note').value};
+  // Zápis PŘÍMO do dat vybraného žáka – ostatní žáci zůstávají beze změny
+  writeStudentData(sid, db=>{ db.grades.push(grade); });
+  // Kontext adminu se přepne na tohoto žáka, aby byl vidět jeho aktualizovaný přehled
+  targetAdmin(sid);
+  if(activePage==='grades')renderGrades();if(activePage==='dashboard')renderDashboard();
 }
 function deleteGrade(id) { dbSet(db=>{db.grades=db.grades.filter(g=>g.id!==id);});renderAdminGrades();if(activePage==='grades')renderGrades(); }
+function deleteGrade(id) {
+  // Smaže známku přímo u žáka, kterému patří (bez ohledu na aktuální kontext)
+  const sid = Object.keys(_zaciCache).find(k => (_zaciCache[k].grades||[]).some(g=>g.id===id)) || currentStudentId();
+  writeStudentData(sid, db=>{ db.grades=db.grades.filter(g=>g.id!==id); });
+  renderAdminGrades();if(activePage==='grades')renderGrades();
+}
 
 function renderAdminHomework() {
   const db=dbGet();const opts=db.subjects.map(s=>`<option value="${s.short}">${s.short}</option>`).join('');
@@ -1775,18 +2344,33 @@ function deleteAttendance(id) { dbSet(db=>{db.attendance=db.attendance.filter(a=
 
 function renderAdminNotes() {
   const db=dbGet();
-  document.getElementById('sec-notes').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Nová poznámka</div>
+  document.getElementById('sec-notes').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Nová poznámka</span>${adminTargetChip()}</div>
+  document.getElementById('sec-notes').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:var(--primary-dim);border:1px solid var(--primary);border-radius:var(--radius)"><span style="font-weight:700;font-size:13px;color:var(--primary)">✎ Poznámka bude zapsána žáku:</span>${adminStudentSelect('an-sid')}</div>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Nová poznámka</span>${adminTargetChip()}</div>
     <div class="form-group"><label class="form-label">Název</label><input class="form-input" id="an-title" placeholder="Název poznámky…"></div>
     <div class="form-group"><label class="form-label">Obsah</label><textarea class="form-textarea" id="an-content" placeholder="Text poznámky…"></textarea></div>
     <button class="btn btn-primary btn-sm" onclick="addNote()">Přidat</button></div>
     <div>${db.notes.length===0?'<div class="empty-state"><p>Žádné poznámky</p></div>':db.notes.map(n=>`<div class="card" style="margin-bottom:8px"><div style="padding:12px 14px;display:flex;gap:10px;align-items:flex-start">${svgIcon('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',14)}<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${esc(n.title||'(bez názvu)')}</div><div style="font-size:12px;color:var(--fg-muted);margin-top:3px;white-space:pre-wrap">${esc(n.content)}</div><div style="font-size:10px;color:var(--fg-dim);margin-top:6px">${n.updatedAt||''}</div></div><button class="del-btn" style="opacity:1;flex-shrink:0" onclick="deleteNote('${n.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></div></div>`).join('')}</div></div>`;
 }
 function addNote() {
+  const sidSel=document.getElementById('an-sid');
+  const sid=sidSel?sidSel.value:currentStudentId();
   const title=document.getElementById('an-title').value.trim();const content=document.getElementById('an-content').value.trim();
+  if(!sid){alert('Nejprve přidejte žáka v sekci Žáci');return;}
   if(!title&&!content)return;const now=new Date().toLocaleDateString('cs-CZ');
   dbSet(db=>{db.notes.unshift({id:uid(),title,content,createdAt:now,updatedAt:now});});renderAdminNotes();
+  // Zápis PŘÍMO do dat vybraného žáka – ostatní žáci zůstávají beze změny
+  writeStudentData(sid, db=>{db.notes.unshift({id:uid(),title,content,createdAt:now,updatedAt:now});});
+  // Kontext adminu se přepne na tohoto žáka, aby byl vidět jeho aktualizovaný přehled
+  targetAdmin(sid);
 }
 function deleteNote(id) { dbSet(db=>{db.notes=db.notes.filter(n=>n.id!==id);});renderAdminNotes(); }
+function deleteNote(id) {
+  // Smaže poznámku přímo u žáka, kterému patří
+  const sid = Object.keys(_zaciCache).find(k => (_zaciCache[k].notes||[]).some(n=>n.id===id)) || currentStudentId();
+  writeStudentData(sid, db=>{db.notes=db.notes.filter(n=>n.id!==id);});
+  renderAdminNotes();
+}
 
 function renderAdminDisciplinary() {
   const db = dbGet();
@@ -1852,7 +2436,7 @@ function deleteDisciplinary(id) {
 /* ═══════════════════════════════════════════════════════════════
    INIT + EVENT LISTENERS
 ═══════════════════════════════════════════════════════════════ */
-function initApp() { buildNav(); navigate('dashboard'); }
+function initApp() { buildNav(); navigate(_keepPage || 'dashboard'); _keepPage = null; }
 
 window.addEventListener('DOMContentLoaded', function() {
   // Klávesnice
@@ -1879,6 +2463,20 @@ window.addEventListener('DOMContentLoaded', function() {
 
   // Settings
   document.getElementById('save-pins-btn').addEventListener('click', savePins);
+  document.getElementById('settings-tutorial-btn').addEventListener('click', function(){ startTutorial(true); });
+
+  // Tutoriál
+  document.getElementById('tut-open-btn').addEventListener('click', function(){ startTutorial(true); });
+  document.getElementById('tut-close').addEventListener('click', tutFinish);
+  document.getElementById('tut-skip').addEventListener('click', tutFinish);
+  document.getElementById('tut-next').addEventListener('click', tutNext);
+  document.getElementById('tut-prev').addEventListener('click', tutPrev);
+  document.getElementById('tutorial-overlay').addEventListener('click', function(e) {
+    if (e.target === this) tutFinish();
+  });
+  var tutShown = false;
+  try { tutShown = localStorage.getItem(TUTORIAL_KEY) === 'done'; } catch(e) {}
+  if (!tutShown) startTutorial();
 
   // Spustit Firebase
   firebaseInit();
