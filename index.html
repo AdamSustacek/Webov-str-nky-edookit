@@ -1496,39 +1496,11 @@ function defaultDB() {
       {id:'inf',name:'Informatika',    short:'INF',teacher:'Ing. Marek Procházka',  room:'20',type:'tech', order:9},
       {id:'tv', name:'Těl. výchova',   short:'TV', teacher:'Mgr. Petr Kratochvíl',  room:'TL',type:'sport',order:10},
     ],
-    grades: [
-      {id:'g1',subjectId:'mat',value:2,type:'Písemka',date:'15.5.2026',note:'Kvadratické rovnice'},
-      {id:'g2',subjectId:'csj',value:1,type:'Sloh',   date:'12.5.2026',note:''},
-      {id:'g3',subjectId:'ang',value:2,type:'Test',   date:'8.5.2026', note:'Unit 7'},
-      {id:'g4',subjectId:'fyz',value:3,type:'Ústní',  date:'6.5.2026', note:'Optika'},
-      {id:'g5',subjectId:'mat',value:1,type:'Ústní',  date:'2.5.2026', note:''},
-      {id:'g6',subjectId:'bio',value:2,type:'Test',   date:'28.4.2026',note:'Evoluce'},
-    ],
-    timetable: [
-      {day:0,period:1,subject:'MAT',room:'21'},{day:0,period:2,subject:'ČSJ',room:'15'},{day:0,period:3,subject:'ANG',room:'12'},{day:0,period:4,subject:'FYZ',room:'18'},{day:0,period:5,subject:'TV',room:'TL'},
-      {day:1,period:1,subject:'ČSJ',room:'15'},{day:1,period:2,subject:'MAT',room:'21'},{day:1,period:3,subject:'CHE',room:'19'},{day:1,period:4,subject:'BIO',room:'14'},{day:1,period:5,subject:'INF',room:'20'},
-      {day:2,period:1,subject:'ANG',room:'12'},{day:2,period:2,subject:'DEJ',room:'16'},{day:2,period:3,subject:'MAT',room:'21'},{day:2,period:4,subject:'ZSV',room:'13'},{day:2,period:5,subject:'TV',room:'TL'},
-      {day:3,period:1,subject:'FYZ',room:'18'},{day:3,period:2,subject:'ANG',room:'12'},{day:3,period:3,subject:'ČSJ',room:'15'},{day:3,period:4,subject:'CHE',room:'19'},{day:3,period:5,subject:'BIO',room:'14'},
-      {day:4,period:1,subject:'MAT',room:'21'},{day:4,period:2,subject:'ZSV',room:'13'},{day:4,period:3,subject:'DEJ',room:'16'},{day:4,period:4,subject:'INF',room:'20'},
-    ],
-    homework: [
-      {id:'hw1',subject:'MAT',title:'Příklady str. 85, č.1–10',description:'Lineární nerovnice',dueDate:'26.5.2026',done:false},
-      {id:'hw2',subject:'ANG',title:'Přečíst Unit 8',           description:'Slovíčka + grammar', dueDate:'27.5.2026',done:false},
-      {id:'hw3',subject:'ČSJ',title:'Slohovka – popis osoby',   description:'Min. 200 slov',      dueDate:'28.5.2026',done:true},
-      {id:'hw4',subject:'BIO',title:'Referát o evoluci',         description:'Prezentace 5 min',   dueDate:'2.6.2026', done:false},
-    ],
-    tests: [
-      {id:'t1',subject:'MAT',topic:'Funkce a grafy',               date:'27.5.2026',teacher:'Mgr. Pavel Horák'},
-      {id:'t2',subject:'CHE',topic:'Organická chemie – opakování', date:'29.5.2026',teacher:'RNDr. Eva Součková'},
-      {id:'t3',subject:'FYZ',topic:'Elektřina a magnetismus',      date:'3.6.2026', teacher:'Ing. Tomáš Novotný'},
-    ],
-    attendance: [
-      {id:'a1',date:'24.5.2026',status:'present',note:''},
-      {id:'a2',date:'23.5.2026',status:'present',note:''},
-      {id:'a3',date:'22.5.2026',status:'excused',note:'Nemoc'},
-      {id:'a4',date:'21.5.2026',status:'present',note:''},
-      {id:'a5',date:'20.5.2026',status:'late',   note:'Zpoždění vlaku'},
-    ],
+    grades: [],
+    timetable: [],
+    homework: [],
+    tests: [],
+    attendance: [],
     notes: [],
     disciplinary: [],
     pins: { admin:'8520', student:'0258' },
@@ -2111,7 +2083,10 @@ function renderAdminStudent() {
     <div style="display:flex;gap:8px;align-items:center">
       <button class="btn btn-primary btn-sm" onclick="saveAdminStudent()">Uložit</button>
       <span id="as-saved" style="display:none;color:var(--success);font-size:12px;font-weight:600">✓ Uloženo</span>
-    </div></div>`;
+    </div>
+    <div class="divider"></div>
+    <div style="font-size:12px;color:var(--fg-muted);margin-bottom:8px">Smaže všechny známky, rozvrh, úkoly, písemky, docházku, poznámky a výchovná opatření tohoto žáka. Předměty a profil zůstanou.</div>
+    <button class="btn btn-danger btn-sm" onclick="resetStudentData()">Vynulovat data žáka</button></div>`;
 }
 function saveAdminStudent() {
   const sid=currentStudentId();
@@ -2124,6 +2099,18 @@ function saveAdminStudent() {
     if(st){st.name=name;st.class=cls;}
   });
   const el=document.getElementById('as-saved');el.style.display='inline';setTimeout(()=>el.style.display='none',2000);
+}
+
+function resetStudentData() {
+  const sid=currentStudentId();
+  const m=getSelectedStudentMeta();
+  if(!sid||!m) return;
+  if(!confirm(`Opravdu vynulovat všechna data žáka ${m.name}? Smažou se známky, rozvrh, úkoly, písemky, docházka, poznámky i výchovná opatření. Nelze vrátit zpět.`)) return;
+  writeStudentData(sid, db=>{
+    db.grades=[]; db.timetable=[]; db.homework=[]; db.tests=[];
+    db.attendance=[]; db.notes=[]; db.disciplinary=[];
+  });
+  targetAdmin(sid);
 }
 
 /* ── ADMIN: Žáci (seznam, přidání, PIN, smazání) ── */
