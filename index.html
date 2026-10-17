@@ -162,7 +162,7 @@ svg { display: block; }
   border-radius: 8px; display: flex; align-items: center; justify-content: center;
   color: var(--fg-dim); transition: all 0.12s;
 }
-.tut-close:hover { background: hsla(255,100%,100%,0.06); color: var(--fg); }
+.tut-close:hover { background: hsla(0,0%,100%,0.06); color: var(--fg); }
 .tut-hint-link {
   background: none; border: none; color: var(--primary);
   font-size: 11px; font-weight: 600; cursor: pointer;
@@ -244,18 +244,18 @@ svg { display: block; }
 }
 .numpad-btn {
   height: 56px; border-radius: var(--radius);
-  background: hsla(255,255%,255%,0.06);
+  background: hsla(0,0%,100%,0.06);
   border: 1px solid var(--border);
   color: var(--fg);
   font-size: 20px; font-weight: 600;
   transition: all 0.12s ease;
   display: flex; align-items: center; justify-content: center;
 }
-.numpad-btn:hover:not(:disabled) { background: hsla(255,100%,100%,0.1); border-color: var(--border-light); }
+.numpad-btn:hover:not(:disabled) { background: hsla(0,0%,100%,0.1); border-color: var(--border-light); }
 .numpad-btn:active:not(:disabled) { transform: scale(0.95); }
 .numpad-btn:disabled { opacity: 0.35; cursor: not-allowed; }
 .numpad-btn.del {
-  background: hsla(255,100%,100%,0.03);
+  background: hsla(0,0%,100%,0.03);
   color: var(--fg-muted); font-size: 14px;
 }
 .numpad-empty { pointer-events: none; }
@@ -319,7 +319,7 @@ svg { display: block; }
   color: var(--fg-muted); font-size: 13px; font-weight: 500;
   transition: all 0.12s ease; position: relative;
 }
-.nav-btn:hover { background: hsla(255,100%,100%,0.05); color: var(--fg); }
+.nav-btn:hover { background: hsla(0,0%,100%,0.05); color: var(--fg); }
 .nav-btn.active {
   background: var(--primary-dim);
   color: var(--primary);
@@ -341,7 +341,7 @@ svg { display: block; }
   background: var(--primary);
   color: #fff; border-radius: 20px; padding: 1px 6px; line-height: 1.6;
 }
-.nav-btn.active .nav-badge { background: hsla(255,100%,100%,0.25); }
+.nav-btn.active .nav-badge { background: hsla(0,0%,100%,0.25); }
 
 .sidebar-bottom {
   border-top: 1px solid var(--sidebar-b);
@@ -353,7 +353,7 @@ svg { display: block; }
   color: var(--fg-muted); font-size: 12px;
   transition: background 0.12s;
 }
-.sidebar-year:hover { background: hsla(255,100%,100%,0.04); }
+.sidebar-year:hover { background: hsla(0,0%,100%,0.04); }
 .sidebar-logout {
   width: 100%; display: flex; align-items: center; gap: 8px;
   padding: 7px 10px; border-radius: var(--radius-sm);
@@ -384,7 +384,7 @@ svg { display: block; }
   display: flex; align-items: center; justify-content: center;
   color: var(--fg); transition: background 0.12s;
 }
-#mobile-header .mobile-menu-btn:hover { background: hsla(255,100%,100%,0.08); }
+#mobile-header .mobile-menu-btn:hover { background: hsla(0,0%,100%,0.08); }
 #mobile-header .mobile-title { color: var(--fg); font-weight: 700; font-size: 14px; }
 
 #content-scroll { flex: 1; overflow-y: auto; padding: 28px 32px; }
@@ -551,7 +551,7 @@ svg { display: block; }
   transition: background 0.12s;
   background: none; text-align: left; color: var(--fg);
 }
-.section-header:hover { background: hsla(255,100%,100%,0.02); }
+.section-header:hover { background: hsla(0,0%,100%,0.02); }
 .section-header .sh-icon {
   width: 32px; height: 32px; border-radius: 9px;
   background: var(--primary-dim); color: var(--primary);
@@ -1091,8 +1091,7 @@ function pinKey(d) {
   if (pinBusy || pinBuffer.length >= 4) return;
   pinBuffer += d; setError(''); renderDots();
   if (pinBuffer.length === 4) {
-    // verifyPin je definována ve Firebase scriptu níže
-    // počkej až bude dostupná
+    // verifyPin je definována ve Firebase scriptu níže – počkej, až bude dostupná
     var t = setInterval(function(){
       if (typeof verifyPin === 'function') { clearInterval(t); verifyPin(); }
     }, 50);
@@ -1134,7 +1133,7 @@ function sessionLoad() {
   try {
     const s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
     if (s && s.expires > Date.now()) return s;
-  } catch {}
+  } catch (e) {}
   return null;
 }
 function sessionSave(role, studentId) {
@@ -1150,6 +1149,7 @@ function logout() {
   document.getElementById('app').classList.remove('visible');
   document.getElementById('login-screen').style.display = 'flex';
   pinBuffer = '';
+  pinBusy = false;
   renderDots();
 }
 
@@ -1187,7 +1187,7 @@ function hideLoader() {
 }
 
 function firestoreToCache(data) {
-  try { return JSON.parse(data.json); } catch { return null; }
+  try { return JSON.parse(data.json); } catch (e) { return null; }
 }
 function cacheToFirestore(cache) {
   return { json: JSON.stringify(cache) };
@@ -1199,7 +1199,7 @@ function metaFromFirestore(data) {
     try {
       const p = JSON.parse(data.json);
       if (p && (p.students || p.pins)) return { pins: p.pins || {}, students: Array.isArray(p.students) ? p.students : [] };
-    } catch {}
+    } catch (e) {}
   }
   if (data.students || data.pins) {
     return { pins: data.pins || {}, students: Array.isArray(data.students) ? data.students : [] };
@@ -1212,7 +1212,7 @@ function mergeWithDefaults(data) {
   return data;
 }
 function loadFromLocalStorage() {
-  try { const r = localStorage.getItem('zs_alexandra_db'); if(r) return mergeWithDefaults(JSON.parse(r)); } catch {}
+  try { const r = localStorage.getItem('zs_alexandra_db'); if(r) return mergeWithDefaults(JSON.parse(r)); } catch (e) {}
   return defaultDB();
 }
 
@@ -1261,9 +1261,7 @@ async function firebaseInit() {
         _cache = defaultDB();
         _cache.pins = migrated.pins || _cache.pins;
         _cache.students = [{ id: zakId, name: migrated.student.name, class: migrated.student.class, pin: zakPin }];
-        await META_REF.set(cacheToFirestore(_cache));
-        // Veškerá data původního žáka (známky, rozvrh, úkoly, písemky, docházka,
-        // poznámky, výchovná opatření, předměty, profil) do zaci/zak1
+        await META_REF.set({ pins: _cache.pins, students: JSON.parse(JSON.stringify(_cache.students)) });
         const zakData = Object.assign({}, migrated);
         delete zakData.pins; delete zakData.students;
         await ZACI_REF.doc(zakId).set(cacheToFirestore(zakData));
@@ -1272,7 +1270,7 @@ async function firebaseInit() {
         console.log('📝 Firebase: první spuštění, vytvářím dokument…');
         _cache = defaultDB();
         _cache.students = [{ id: 'zak1', name: _cache.student.name, class: _cache.student.class, pin: _cache.pins.student }];
-        await META_REF.set(cacheToFirestore(_cache));
+        await META_REF.set({ pins: _cache.pins, students: JSON.parse(JSON.stringify(_cache.students)) });
         const zakData = Object.assign({}, _cache);
         delete zakData.pins; delete zakData.students;
         await ZACI_REF.doc('zak1').set(cacheToFirestore(zakData));
@@ -1305,6 +1303,7 @@ async function firebaseInit() {
     showLoader('⚠️ Firebase nedostupný – používám lokální data');
     await new Promise(r => setTimeout(r, 1500));
     _cache = loadFromLocalStorage();
+    _metaStore = { pins: _cache.pins, students: JSON.parse(JSON.stringify(_cache.students || [])) };
   }
 
   hideLoader();
@@ -1315,10 +1314,10 @@ async function firebaseInit() {
       if (!snap.exists) return;
       if (_ignoreNext) { _ignoreNext = false; return; }
       const remote = metaFromFirestore(snap.data());
-      if (!remote) return;
+      if (!remote || !_cache) return;
       // meta obsahuje jen společná nastavení – sloučit bez přepsání dat žáka
-      if (remote.pins)     { _cache.pins = remote.pins; _metaStore.pins = remote.pins; }
-      if (remote.students) { _cache.students = remote.students; _metaStore.students = remote.students; }
+      if (remote.pins)     { _cache.pins = remote.pins; if (_metaStore) _metaStore.pins = remote.pins; }
+      if (remote.students) { _cache.students = remote.students; if (_metaStore) _metaStore.students = remote.students; }
       try { renderView(activePage); buildNav(); } catch(e) {}
     }, err => console.error('❌ Firestore listener:', err.code, err.message));
   } catch(e) {
@@ -1357,6 +1356,7 @@ function scheduleSave() {
     }
     // 2) Společné nastavení (PINy, seznam žáků) → meta/hlavni
     const metaDoc = { pins: _cache.pins, students: JSON.parse(JSON.stringify(_cache.students || [])) };
+    if (_metaStore) { _metaStore.pins = metaDoc.pins; _metaStore.students = JSON.parse(JSON.stringify(metaDoc.students)); }
     _ignoreNext = true;
     META_REF.set(metaDoc)
       .then(function() {
@@ -1411,16 +1411,14 @@ function scheduleZaciSave(studentId) {
       delete data._dirty;
       ZACI_REF.doc(id).set(cacheToFirestore(data))
         .then(function(){ console.log('✅ Žák uložen:', id); })
-        .catch(function(e){ console.error('❌ Uložení žáka selhalo:', id, e.code, e.message); });
+        .catch(function(e){ _ignoreZaci[id] = false; console.error('❌ Uložení žáka selhalo:', id, e.code, e.message); });
     });
   }, 700);
 }
 
 function zaciList() {
-  // Seznam žáků: meta.students (id, name, class, pin) + data v zaci cache
   const meta = dbGet();
-  const list = (meta.students || []).map(s => Object.assign({}, s, { data: _zaciCache[s.id] || null }));
-  return list;
+  return (meta.students || []).map(s => Object.assign({}, s, { data: _zaciCache[s.id] || null }));
 }
 
 /* Čistá šablona dat žáka – předměty a rozvrh z výchozích hodnot, žádná ukázková známky/úkoly/poznámky */
@@ -1468,7 +1466,6 @@ function writeStudentData(sid, fn) {
 function targetAdmin(sid) {
   if (!sid) return;
   _keepPage = activePage || 'admin';
-  if (_adminSelectedId === sid) { /* kontext už odpovídá */ }
   _adminSelectedId = sid;
   _loadContext();
 }
@@ -1545,6 +1542,8 @@ function defaultDB() {
 var currentRole = null;
 var _currentStudentId = null;   // žák přihlášený PINem
 var _adminSelectedId  = null;   // žák vybraný v admin panelu
+var _keepPage = null;           // stránka, na které zůstat po přepnutí žáka
+var _switching = false;         // probíhá přepnutí kontextu (blokuje mezilehlé ukládání)
 
 function currentStudentId() {
   if (currentRole === 'student') return _currentStudentId;
@@ -1592,12 +1591,13 @@ function _loadContext() {
   _switching = true;
   const sid = currentStudentId();
   // ponechat skutečná společná nastavení (PINy, seznam žáků)
-  const keepPins = (_metaStore && _metaStore.pins) || _cache?.pins || defaultDB().pins;
-  const keepStudents = (_metaStore && _metaStore.students) || _cache?.students || [];
-  if (sid) {
-    _cache = mergeWithDefaults(JSON.parse(JSON.stringify(studentDataFor(sid))));
+  const keepPins = (_metaStore && _metaStore.pins) || (_cache && _cache.pins) || defaultDB().pins;
+  const keepStudents = (_metaStore && _metaStore.students) || (_cache && _cache.students) || [];
+  const data = sid ? studentDataFor(sid) : null;
+  if (data) {
+    _cache = mergeWithDefaults(JSON.parse(JSON.stringify(data)));
     // Profilové údaje (jméno, třída) vždy převzít ze seznamu žáků
-    const m = (keepStudents || []).find(s => s.id === sid);
+    const m = keepStudents.find(s => s.id === sid);
     if (m) {
       _cache.student.name = m.name;
       if (m.class) _cache.student.class = m.class;
@@ -1617,8 +1617,6 @@ function _loadContext() {
 }
 
 /* V adminu: přepnutí na jiného žáka */
-var _keepPage = null;           // stránka, na které zůstat po přepnutí žáka
-var _switching = false;         // probíhá přepnutí kontextu (blokuje mezilehlé ukládání)
 function adminSelectStudent(id, stay) {
   if (!id) return;
   _adminSelectedId = id;
@@ -1724,7 +1722,7 @@ var TUT_STEPS = [
   {
     icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
     title: 'Přidávání žáků',
-    text: 'V admin panelu otevřete sekci <strong>Žáci</strong> a klikněte na <strong>„+ Přidat žáka"</strong>. Zadejte jméno, třídu a nový 4místný PIN. Každý nový žák dostane <strong>prázdnou knížku</strong> – vlastní známky, úkoly i rozvrh.'
+    text: 'V admin panelu otevřete sekci <strong>Žáci</strong> a klikněte na <strong>„+ Přidat žáka“</strong>. Zadejte jméno, třídu a nový 4místný PIN. Každý nový žák dostane <strong>prázdnou knížku</strong> – vlastní známky, úkoly i rozvrh.'
   },
   {
     icon: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
@@ -1734,7 +1732,7 @@ var TUT_STEPS = [
   {
     icon: '<polyline points="20 6 9 17 4 12"/>',
     title: 'Vše připraveno!',
-    text: 'Zadejte PIN a můžete začít. Tuto nápovědu kdykoli znovu otevřete odkazem <strong>„Jak aplikace funguje?"</strong> pod přihlašovací obrazovkou, nebo v Nastavení.'
+    text: 'Zadejte PIN a můžete začít. Tuto nápovědu kdykoli znovu otevřete odkazem <strong>„Jak aplikace funguje?“</strong> pod přihlašovací obrazovkou, nebo v Nastavení.'
   }
 ];
 
@@ -1760,14 +1758,14 @@ function tutFinish() {
   document.getElementById('tutorial-overlay').classList.remove('open');
   try { localStorage.setItem(TUTORIAL_KEY, 'done'); } catch(e) {}
 }
-function tutNext() { tutIndex < TUT_STEPS.length-1 ? (tutIndex++, tutRender()) : tutFinish(); }
+function tutNext() { if (tutIndex < TUT_STEPS.length-1) { tutIndex++; tutRender(); } else { tutFinish(); } }
 function tutPrev() { if (tutIndex > 0) { tutIndex--; tutRender(); } }
 
 /* ═══════════════════════════════════════════════════════════════
    UTILITY
 ═══════════════════════════════════════════════════════════════ */
 function uid()  { return Math.random().toString(36).slice(2,10); }
-function esc(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function esc(s) { return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 function subjIcon(s)  { return `<span class="subj-chip">${esc(s)}</span>`; }
 function gradeHtml(v) { return `<span class="grade-badge grade-${v}">${v}</span>`; }
 function attBadge(status) {
@@ -1778,15 +1776,17 @@ function attBadge(status) {
 function svgIcon(path,size=14) { return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${path}</svg>`; }
 const DAYS=['Pondělí','Úterý','Středa','Čtvrtek','Pátek'];
 const PERIODS=[1,2,3,4,5,6];
+const TRASH_ICON = '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>';
 
 /* ═══════════════════════════════════════════════════════════════
    RENDER VIEWS
 ═══════════════════════════════════════════════════════════════ */
 function renderView(page) {
-  ({dashboard:renderDashboard,grades:renderGrades,schedule:renderSchedule,
+  const map = {dashboard:renderDashboard,grades:renderGrades,schedule:renderSchedule,
     homework:renderHomework,tests:renderTests,attendance:renderAttendance,
     disciplinary:renderDisciplinary,messages:renderMessages,
-    settings:renderSettings,admin:renderAdmin})[page]?.();
+    settings:renderSettings,admin:renderAdmin};
+  if (map[page]) map[page]();
 }
 
 /* ── DASHBOARD ── */
@@ -1794,7 +1794,7 @@ function renderDashboard() {
   const db = dbGet();
   const h  = new Date().getHours();
   const greet = h<12?'Dobré ráno':h<17?'Dobré odpoledne':'Dobrý večer';
-  const jmeno = db.student.name.split(' ')[0];
+  const jmeno = (db.student.name || '').split(' ')[0];
   document.getElementById('dash-greeting').textContent = `${greet}, ${jmeno}!`;
 
   const pending = db.homework.filter(h=>!h.done).length;
@@ -1933,7 +1933,7 @@ function renderHomeworkList() {
       ${subjIcon(hw.subject)}
       <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;${hw.done?'text-decoration:line-through;opacity:.5':''}">${esc(hw.title)}</div>${hw.description?`<div style="font-size:11px;color:var(--fg-muted)">${esc(hw.description)}</div>`:''}</div>
       <span style="font-size:11px;color:var(--fg-muted);white-space:nowrap">${esc(hw.dueDate)}</span>
-      <button class="del-btn" onclick="deleteHw('${hw.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>
+      <button class="del-btn" onclick="deleteHw('${hw.id}')">${svgIcon(TRASH_ICON,13)}</button>
     </div>`).join('');
 }
 function toggleHw(id) { dbSet(db=>{const h=db.homework.find(x=>x.id===id);if(h)h.done=!h.done;}); buildNav();renderHomeworkList(); }
@@ -1984,7 +1984,7 @@ function sendMessage() {
   btn.disabled = true;
   status.style.color = 'var(--fg-muted)';
   status.textContent = 'Odesílám…';
-  // Mailto odkaz jako fallback – otevře emailový klient
+  // Mailto odkaz – otevře e-mailový klient
   const mailto = `mailto:sustacek.adam@gmail.com?subject=${encodeURIComponent('[ZS Alexandra] '+subject)}&body=${encodeURIComponent('Od: '+(from||'Anonym')+'\n\n'+body)}`;
   window.open(mailto, '_blank');
   status.style.color = 'var(--success)';
@@ -2001,8 +2001,8 @@ function sendMessage() {
 function renderDisciplinary() {
   const db = dbGet();
   const disc = db.disciplinary || [];
-  const pozitive = disc.filter(d=>d.kind==='pochvala').length;
-  const negative = disc.filter(d=>d.kind!=='pochvala').length;
+  const pozitive = disc.filter(d=>d.kind==='pochvala'||d.kind==='pochvala-red').length;
+  const negative = disc.length - pozitive;
   const s = document.getElementById('disc-summary');
   if (s) s.textContent = `${disc.length} opatření celkem · ${pozitive} pochval · ${negative} napomenutí/důtek`;
 
@@ -2038,16 +2038,16 @@ var openSection='student';
 
 function renderAdmin() {
   const sections=[
-    {id:'student',   label:'Profil žáka',         icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',                                                                                                                                           fn:renderAdminStudent},
-    {id:'zaci',      label:'Žáci',                icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',                                                               fn:renderAdminZaci},
-    {id:'timetable', label:'Rozvrh hodin',         icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',                                                             fn:renderAdminTimetable},
-    {id:'subjects',  label:'Předměty',             icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>',                                                                                                      fn:renderAdminSubjects},
-    {id:'grades',    label:'Hodnocení / Známky',   icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>',                                                                                                           fn:renderAdminGrades},
-    {id:'homework',  label:'Domácí úkoly',         icon:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',                                                                                                                  fn:renderAdminHomework},
-    {id:'tests',     label:'Písemky a zkoušení',   icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',                                                                                                                    fn:renderAdminTests},
-    {id:'attendance',label:'Docházka',             icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',                                                                                                                                           fn:renderAdminAttendance},
-    {id:'notes',     label:'Poznámky',             icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>',                                       fn:renderAdminNotes},
-    {id:'disciplinary',label:'Výchovná opatření',  icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',                                       fn:renderAdminDisciplinary},
+    {id:'student',   label:'Profil žáka',         icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', fn:renderAdminStudent},
+    {id:'zaci',      label:'Žáci',                icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', fn:renderAdminZaci},
+    {id:'timetable', label:'Rozvrh hodin',         icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', fn:renderAdminTimetable},
+    {id:'subjects',  label:'Předměty',             icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>', fn:renderAdminSubjects},
+    {id:'grades',    label:'Hodnocení / Známky',   icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', fn:renderAdminGrades},
+    {id:'homework',  label:'Domácí úkoly',         icon:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>', fn:renderAdminHomework},
+    {id:'tests',     label:'Písemky a zkoušení',   icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', fn:renderAdminTests},
+    {id:'attendance',label:'Docházka',             icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', fn:renderAdminAttendance},
+    {id:'notes',     label:'Poznámky',             icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>', fn:renderAdminNotes},
+    {id:'disciplinary',label:'Výchovná opatření',  icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', fn:renderAdminDisciplinary},
   ];
   document.getElementById('admin-sections').innerHTML=sections.map(s=>`
     <div class="card" style="margin-bottom:10px;overflow:hidden">
@@ -2090,6 +2090,12 @@ function renderAdminTargetBar() {
   bar.style.display = 'flex';
 }
 
+function adminStudentSelect(id, selId) {
+  const students = dbGet().students || [];
+  const sel = selId || currentStudentId() || (students[0] && students[0].id);
+  return `<select class="form-select" id="${id}" style="max-width:260px;background:var(--primary-dim);border-color:var(--primary);font-weight:600" data-testid="${id}">${students.map(s=>`<option value="${s.id}"${s.id===sel?' selected':''}>${esc(s.name)}${s.class?' – '+esc(s.class):''}</option>`).join('')}</select>`;
+}
+
 function renderAdminStudent() {
   const s=dbGet().student;
   const meta=getSelectedStudentMeta();
@@ -2108,12 +2114,15 @@ function renderAdminStudent() {
     </div></div>`;
 }
 function saveAdminStudent() {
-  dbSet(db=>{db.student={name:document.getElementById('as-name').value,class:document.getElementById('as-class').value,school:document.getElementById('as-school').value,year:document.getElementById('as-year').value,classTeacher:document.getElementById('as-teacher').value};});
-  // Změny profilu se synchronizují i do seznamu žáků (meta)
   const sid=currentStudentId();
   const name=document.getElementById('as-name').value;
   const cls=document.getElementById('as-class').value;
-  dbSet(db=>{const st=(db.students||[]).find(x=>x.id===sid);if(st){st.name=name;st.class=cls;}});
+  dbSet(db=>{
+    db.student={name:name,class:cls,school:document.getElementById('as-school').value,year:document.getElementById('as-year').value,classTeacher:document.getElementById('as-teacher').value};
+    // Změny profilu se synchronizují i do seznamu žáků (meta)
+    const st=(db.students||[]).find(x=>x.id===sid);
+    if(st){st.name=name;st.class=cls;}
+  });
   const el=document.getElementById('as-saved');el.style.display='inline';setTimeout(()=>el.style.display='none',2000);
 }
 
@@ -2128,7 +2137,7 @@ function renderAdminZaci() {
       <td style="text-align:right;white-space:nowrap">
         <button class="btn btn-outline btn-xs" style="margin-right:4px;${s.id===currentStudentId()?'background:var(--primary-dim);border-color:var(--primary);color:var(--primary);':''}" onclick="adminSelectStudent('${s.id}',true)">${s.id===currentStudentId()?'Aktivní':'Upravit data'}</button>
         <button class="btn btn-outline btn-xs" style="margin-right:4px" onclick="editZakPin('${s.id}')">Změnit PIN</button>
-        ${students.length>1?`<button class="del-btn" style="opacity:1" onclick="deleteZak('${s.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>`:''}
+        ${students.length>1?`<button class="del-btn" style="opacity:1" onclick="deleteZak('${s.id}')">${svgIcon(TRASH_ICON,13)}</button>`:''}
       </td>
     </tr>`).join('');
   document.getElementById('sec-zaci').innerHTML=`<div style="padding:16px">
@@ -2159,7 +2168,7 @@ function saveNewZak() {
   if (pin === adminPin) { alert('Tento PIN je admin PIN. Zvolte jiný.'); return; }
   const id = uid();
   dbSet(db => { db.students.push({ id, name, class: cls, pin }); });
-  // Vytvořit čistá prázdná data žáka (předměty a rozvrh z šablony, žádné ukázkové známky ani poznámky)
+  // Čistá prázdná data žáka (předměty a rozvrh ze šablony, žádné ukázkové známky ani poznámky)
   const fresh = cleanStudentData(name, cls || '8.A');
   _zaciCache[id] = fresh;
   _zaciCache[id]._dirty = true;
@@ -2194,8 +2203,8 @@ function deleteZak(id) {
   try { ZACI_REF.doc(id).delete(); } catch(e) { console.error('Smazání žáka selhalo:', e); }
   delete _zaciCache[id];
   if (_zaciUnsubs[id]) { try { _zaciUnsubs[id](); } catch(e){} delete _zaciUnsubs[id]; }
-  if (_adminSelectedId === id) { _adminSelectedId = firstStudentId(); _loadContext(); }
-  renderAdminZaci();
+  if (_adminSelectedId === id) { _adminSelectedId = firstStudentId(); _keepPage = activePage; _loadContext(); }
+  else renderAdminZaci();
 }
 
 function renderAdminTimetable() {
@@ -2229,7 +2238,7 @@ function renderAdminSubjects() {
   const db=dbGet();const TL={lang:'Jazyk',sci:'Přírodověda',hum:'Humanitní',art:'Umění',tech:'Technika',sport:'Sport'};
   document.getElementById('sec-subjects').innerHTML=`<div style="padding:16px"><div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="addSubjectModal()">+ Přidat předmět</button></div>
     <table class="data-table"><thead><tr><th>Zkratka</th><th>Název</th><th>Učitel</th><th>Učebna</th><th>Typ</th><th></th></tr></thead>
-    <tbody>${db.subjects.map(s=>`<tr><td>${subjIcon(s.short)}</td><td style="font-weight:500">${esc(s.name)}</td><td style="color:var(--fg-muted);font-size:12px">${esc(s.teacher)}</td><td style="font-size:12px">${esc(s.room)}</td><td><span class="badge badge-gray">${TL[s.type]||s.type}</span></td><td><button class="del-btn" style="opacity:1" onclick="deleteSubject('${s.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></td></tr>`).join('')}</tbody></table></div>`;
+    <tbody>${db.subjects.map(s=>`<tr><td>${subjIcon(s.short)}</td><td style="font-weight:500">${esc(s.name)}</td><td style="color:var(--fg-muted);font-size:12px">${esc(s.teacher)}</td><td style="font-size:12px">${esc(s.room)}</td><td><span class="badge badge-gray">${TL[s.type]||s.type}</span></td><td><button class="del-btn" style="opacity:1" onclick="deleteSubject('${s.id}')">${svgIcon(TRASH_ICON,13)}</button></td></tr>`).join('')}</tbody></table></div>`;
 }
 function addSubjectModal() {
   const TL={lang:'Jazyk',sci:'Přírodověda',hum:'Humanitní',art:'Umění',tech:'Technika',sport:'Sport'};
@@ -2244,57 +2253,53 @@ function saveNewSubject() {
 }
 function deleteSubject(id) { if(!confirm('Smazat?'))return;dbSet(db=>{db.subjects=db.subjects.filter(s=>s.id!==id);});renderAdminSubjects(); }
 
-function adminStudentSelect(id, selId) {
-  const students = dbGet().students || [];
-  const sel = selId || currentStudentId() || (students[0] && students[0].id);
-  return `<select class="form-select" id="${id}" style="max-width:260px;background:var(--primary-dim);border-color:var(--primary);font-weight:600" data-testid="${id}">${students.map(s=>`<option value="${s.id}"${s.id===sel?' selected':''}>${esc(s.name)}${s.class?' – '+esc(s.class):''}</option>`).join('')}</select>`;
-}
-
+/* ── ADMIN: Známky ── */
 function renderAdminGrades() {
-  const db=dbGet();const opts=db.subjects.map(s=>`<option value="${s.id}">${s.short} – ${s.name}</option>`).join('');
-  document.getElementById('sec-grades').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat známku</span>${adminTargetChip()}</div>
-  document.getElementById('sec-grades').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:var(--primary-dim);border:1px solid var(--primary);border-radius:var(--radius)"><span style="font-weight:700;font-size:13px;color:var(--primary)">✎ Známka bude zapsána žáku:</span>${adminStudentSelect('ag-sid')}</div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Nová známka</span>${adminTargetChip()}</div>
+  const db=dbGet();
+  const opts=db.subjects.map(s=>`<option value="${s.id}">${esc(s.short)} – ${esc(s.name)}</option>`).join('');
+  document.getElementById('sec-grades').innerHTML=`<div style="padding:16px"><div class="add-form">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:var(--primary-dim);border:1px solid var(--primary);border-radius:var(--radius)"><span style="font-weight:700;font-size:13px;color:var(--primary)">✎ Známka bude zapsána žáku:</span>${adminStudentSelect('ag-sid')}</div>
     <div class="grid-2">
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="ag-subj"><option value="">Vyberte…</option>${opts}</select></div>
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="ag-date" placeholder="22.5.2026"></div>
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Typ</label><input class="form-input" id="ag-type" value="Písemka"></div>
+      <div class="form-group" style="margin-bottom:8px"><label class="form-label">Známka</label><select class="form-select" id="ag-val"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>
+      <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Poznámka</label><input class="form-input" id="ag-note"></div>
+    </div>
+    <button class="btn btn-primary btn-sm" onclick="addGrade()">Přidat</button></div>
     <table class="data-table"><thead><tr><th>Předmět</th><th>Typ</th><th>Hodnota</th><th>Datum</th><th>Poznámka</th><th></th></tr></thead>
-    <tbody>${db.grades.map(g=>{const subj=db.subjects.find(s=>s.id===g.subjectId);return`<tr><td>${subjIcon(subj?.short||g.subjectId)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.type)}</td><td>${gradeHtml(g.value)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.date)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.note||'')}</td><td><button class="del-btn" style="opacity:1" onclick="deleteGrade('${g.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></td></tr>`;}).join('')}</tbody></table></div>`;
+    <tbody>${db.grades.map(g=>{const subj=db.subjects.find(s=>s.id===g.subjectId);return`<tr><td>${subjIcon(subj?.short||g.subjectId)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.type)}</td><td>${gradeHtml(g.value)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.date)}</td><td style="font-size:12px;color:var(--fg-muted)">${esc(g.note||'')}</td><td><button class="del-btn" style="opacity:1" onclick="deleteGrade('${g.id}')">${svgIcon(TRASH_ICON,13)}</button></td></tr>`;}).join('')}</tbody></table></div>`;
 }
 function addGrade() {
   const sidSel=document.getElementById('ag-sid');
   const sid=sidSel?sidSel.value:currentStudentId();
-  const subj=document.getElementById('ag-subj').value;const date=document.getElementById('ag-date').value;
+  const subj=document.getElementById('ag-subj').value;
+  const date=document.getElementById('ag-date').value.trim();
   if(!sid){alert('Nejprve přidejte žáka v sekci Žáci');return;}
   if(!subj||!date){alert('Vyberte předmět a zadejte datum');return;}
-  dbSet(db=>{db.grades.push({id:uid(),subjectId:subj,date,value:Number(document.getElementById('ag-val').value),type:document.getElementById('ag-type').value,note:document.getElementById('ag-note').value});});
-  renderAdminGrades();if(activePage==='grades')renderGrades();if(activePage==='dashboard')renderDashboard();
   const grade={id:uid(),subjectId:subj,date,value:Number(document.getElementById('ag-val').value),type:document.getElementById('ag-type').value,note:document.getElementById('ag-note').value};
   // Zápis PŘÍMO do dat vybraného žáka – ostatní žáci zůstávají beze změny
   writeStudentData(sid, db=>{ db.grades.push(grade); });
   // Kontext adminu se přepne na tohoto žáka, aby byl vidět jeho aktualizovaný přehled
   targetAdmin(sid);
-  if(activePage==='grades')renderGrades();if(activePage==='dashboard')renderDashboard();
 }
-function deleteGrade(id) { dbSet(db=>{db.grades=db.grades.filter(g=>g.id!==id);});renderAdminGrades();if(activePage==='grades')renderGrades(); }
 function deleteGrade(id) {
   // Smaže známku přímo u žáka, kterému patří (bez ohledu na aktuální kontext)
   const sid = Object.keys(_zaciCache).find(k => (_zaciCache[k].grades||[]).some(g=>g.id===id)) || currentStudentId();
   writeStudentData(sid, db=>{ db.grades=db.grades.filter(g=>g.id!==id); });
-  renderAdminGrades();if(activePage==='grades')renderGrades();
+  targetAdmin(sid);
 }
 
 function renderAdminHomework() {
-  const db=dbGet();const opts=db.subjects.map(s=>`<option value="${s.short}">${s.short}</option>`).join('');
-  document.getElementById('sec-homework').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat domácí úkol</div>
+  const db=dbGet();const opts=db.subjects.map(s=>`<option value="${esc(s.short)}">${esc(s.short)}</option>`).join('');
+  document.getElementById('sec-homework').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat domácí úkol</span>${adminTargetChip()}</div>
     <div class="grid-2">
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="ahw-subj"><option value="">Vyberte…</option>${opts}</select></div>
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Termín</label><input class="form-input" id="ahw-due" placeholder="22.5.2026"></div>
       <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Název</label><input class="form-input" id="ahw-title"></div>
       <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Popis</label><input class="form-input" id="ahw-desc"></div>
     </div><button class="btn btn-primary btn-sm" onclick="addHomework()">Přidat</button></div>
-    <div>${db.homework.map(hw=>`<div class="row hw-row" style="padding:10px 8px"><button class="checkbox-btn ${hw.done?'checked':''}" onclick="adminToggleHw('${hw.id}')">${hw.done?svgIcon('<polyline points="20 6 9 17 4 12"/>',11):''}</button>${subjIcon(hw.subject)}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;${hw.done?'text-decoration:line-through;opacity:.5':''}">${esc(hw.title)}</div>${hw.description?`<div style="font-size:11px;color:var(--fg-muted)">${esc(hw.description)}</div>`:''}</div><span style="font-size:11px;color:var(--fg-muted)">${esc(hw.dueDate)}</span><button class="del-btn" style="opacity:1" onclick="adminDeleteHw('${hw.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></div>`).join('')||'<div class="empty-state"><p>Žádné úkoly</p></div>'}</div></div>`;
+    <div>${db.homework.map(hw=>`<div class="row hw-row" style="padding:10px 8px"><button class="checkbox-btn ${hw.done?'checked':''}" onclick="adminToggleHw('${hw.id}')">${hw.done?svgIcon('<polyline points="20 6 9 17 4 12"/>',11):''}</button>${subjIcon(hw.subject)}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;${hw.done?'text-decoration:line-through;opacity:.5':''}">${esc(hw.title)}</div>${hw.description?`<div style="font-size:11px;color:var(--fg-muted)">${esc(hw.description)}</div>`:''}</div><span style="font-size:11px;color:var(--fg-muted)">${esc(hw.dueDate)}</span><button class="del-btn" style="opacity:1" onclick="adminDeleteHw('${hw.id}')">${svgIcon(TRASH_ICON,13)}</button></div>`).join('')||'<div class="empty-state"><p>Žádné úkoly</p></div>'}</div></div>`;
 }
 function addHomework() {
   const subj=document.getElementById('ahw-subj').value;const title=document.getElementById('ahw-title').value.trim();const due=document.getElementById('ahw-due').value;
@@ -2306,15 +2311,15 @@ function adminToggleHw(id) { dbSet(db=>{const h=db.homework.find(x=>x.id===id);i
 function adminDeleteHw(id)  { dbSet(db=>{db.homework=db.homework.filter(h=>h.id!==id);});buildNav();renderAdminHomework();if(activePage==='homework')renderHomeworkList(); }
 
 function renderAdminTests() {
-  const db=dbGet();const opts=db.subjects.map(s=>`<option value="${s.short}">${s.short}</option>`).join('');
-  document.getElementById('sec-tests').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat písemku</div>
+  const db=dbGet();const opts=db.subjects.map(s=>`<option value="${esc(s.short)}">${esc(s.short)}</option>`).join('');
+  document.getElementById('sec-tests').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat písemku</span>${adminTargetChip()}</div>
     <div class="grid-2">
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="at-subj"><option value="">Vyberte…</option>${opts}</select></div>
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="at-date" placeholder="22.5.2026"></div>
       <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Téma</label><input class="form-input" id="at-topic"></div>
       <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Učitel</label><input class="form-input" id="at-teacher"></div>
     </div><button class="btn btn-primary btn-sm" onclick="addTest()">Přidat</button></div>
-    <div>${db.tests.map(t=>`<div class="row" style="padding:10px 8px">${subjIcon(t.subject)}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">${esc(t.topic)}</div>${t.teacher?`<div style="font-size:11px;color:var(--fg-muted)">${esc(t.teacher)}</div>`:''}</div><span style="font-size:12px;color:var(--fg-muted);font-weight:600">${esc(t.date)}</span><button class="del-btn" style="opacity:1" onclick="deleteTest('${t.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></div>`).join('')||'<div class="empty-state"><p>Žádné písemky</p></div>'}</div></div>`;
+    <div>${db.tests.map(t=>`<div class="row" style="padding:10px 8px">${subjIcon(t.subject)}<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">${esc(t.topic)}</div>${t.teacher?`<div style="font-size:11px;color:var(--fg-muted)">${esc(t.teacher)}</div>`:''}</div><span style="font-size:12px;color:var(--fg-muted);font-weight:600">${esc(t.date)}</span><button class="del-btn" style="opacity:1" onclick="deleteTest('${t.id}')">${svgIcon(TRASH_ICON,13)}</button></div>`).join('')||'<div class="empty-state"><p>Žádné písemky</p></div>'}</div></div>`;
 }
 function addTest() {
   const subj=document.getElementById('at-subj').value;const topic=document.getElementById('at-topic').value.trim();const date=document.getElementById('at-date').value;
@@ -2327,13 +2332,13 @@ function deleteTest(id) { dbSet(db=>{db.tests=db.tests.filter(t=>t.id!==id);});r
 function renderAdminAttendance() {
   const db=dbGet();
   const STATUS=[{value:'present',label:'Přítomen'},{value:'absent',label:'Nepřítomen'},{value:'excused',label:'Omluveno'},{value:'late',label:'Pozdní příchod'},{value:'school-event',label:'Školní akce'}];
-  document.getElementById('sec-attendance').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat záznam</div>
+  document.getElementById('sec-attendance').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat záznam</span>${adminTargetChip()}</div>
     <div class="grid-2">
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="aa-date" placeholder="22.5.2026"></div>
       <div class="form-group" style="margin-bottom:8px"><label class="form-label">Stav</label><select class="form-select" id="aa-status">${STATUS.map(o=>`<option value="${o.value}">${o.label}</option>`).join('')}</select></div>
       <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Poznámka</label><input class="form-input" id="aa-note"></div>
     </div><button class="btn btn-primary btn-sm" onclick="addAttendance()">Přidat</button></div>
-    <div>${db.attendance.map(a=>`<div class="row" style="padding:10px 8px"><span style="font-size:12px;color:var(--fg-muted);width:90px">${esc(a.date)}</span>${attBadge(a.status)}<span style="flex:1;font-size:12px;color:var(--fg-muted);margin-left:8px">${esc(a.note||'')}</span><button class="del-btn" style="opacity:1" onclick="deleteAttendance('${a.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></div>`).join('')||'<div class="empty-state"><p>Žádné záznamy</p></div>'}</div></div>`;
+    <div>${db.attendance.map(a=>`<div class="row" style="padding:10px 8px"><span style="font-size:12px;color:var(--fg-muted);width:90px">${esc(a.date)}</span>${attBadge(a.status)}<span style="flex:1;font-size:12px;color:var(--fg-muted);margin-left:8px">${esc(a.note||'')}</span><button class="del-btn" style="opacity:1" onclick="deleteAttendance('${a.id}')">${svgIcon(TRASH_ICON,13)}</button></div>`).join('')||'<div class="empty-state"><p>Žádné záznamy</p></div>'}</div></div>`;
 }
 function addAttendance() {
   const date=document.getElementById('aa-date').value;if(!date){alert('Zadejte datum');return;}
@@ -2342,36 +2347,36 @@ function addAttendance() {
 }
 function deleteAttendance(id) { dbSet(db=>{db.attendance=db.attendance.filter(a=>a.id!==id);});renderAdminAttendance();if(activePage==='attendance')renderAttendance(); }
 
+/* ── ADMIN: Poznámky ── */
 function renderAdminNotes() {
   const db=dbGet();
-  document.getElementById('sec-notes').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Nová poznámka</span>${adminTargetChip()}</div>
-  document.getElementById('sec-notes').innerHTML=`<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:var(--primary-dim);border:1px solid var(--primary);border-radius:var(--radius)"><span style="font-weight:700;font-size:13px;color:var(--primary)">✎ Poznámka bude zapsána žáku:</span>${adminStudentSelect('an-sid')}</div>
-    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Nová poznámka</span>${adminTargetChip()}</div>
+  document.getElementById('sec-notes').innerHTML=`<div style="padding:16px"><div class="add-form">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:var(--primary-dim);border:1px solid var(--primary);border-radius:var(--radius)"><span style="font-weight:700;font-size:13px;color:var(--primary)">✎ Poznámka bude zapsána žáku:</span>${adminStudentSelect('an-sid')}</div>
     <div class="form-group"><label class="form-label">Název</label><input class="form-input" id="an-title" placeholder="Název poznámky…"></div>
     <div class="form-group"><label class="form-label">Obsah</label><textarea class="form-textarea" id="an-content" placeholder="Text poznámky…"></textarea></div>
     <button class="btn btn-primary btn-sm" onclick="addNote()">Přidat</button></div>
-    <div>${db.notes.length===0?'<div class="empty-state"><p>Žádné poznámky</p></div>':db.notes.map(n=>`<div class="card" style="margin-bottom:8px"><div style="padding:12px 14px;display:flex;gap:10px;align-items:flex-start">${svgIcon('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',14)}<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${esc(n.title||'(bez názvu)')}</div><div style="font-size:12px;color:var(--fg-muted);margin-top:3px;white-space:pre-wrap">${esc(n.content)}</div><div style="font-size:10px;color:var(--fg-dim);margin-top:6px">${n.updatedAt||''}</div></div><button class="del-btn" style="opacity:1;flex-shrink:0" onclick="deleteNote('${n.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button></div></div>`).join('')}</div></div>`;
+    <div>${db.notes.length===0?'<div class="empty-state"><p>Žádné poznámky</p></div>':db.notes.map(n=>`<div class="card" style="margin-bottom:8px"><div style="padding:12px 14px;display:flex;gap:10px;align-items:flex-start">${svgIcon('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>',14)}<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">${esc(n.title||'(bez názvu)')}</div><div style="font-size:12px;color:var(--fg-muted);margin-top:3px;white-space:pre-wrap">${esc(n.content)}</div><div style="font-size:10px;color:var(--fg-dim);margin-top:6px">${esc(n.updatedAt||'')}</div></div><button class="del-btn" style="opacity:1;flex-shrink:0" onclick="deleteNote('${n.id}')">${svgIcon(TRASH_ICON,13)}</button></div></div>`).join('')}</div></div>`;
 }
 function addNote() {
   const sidSel=document.getElementById('an-sid');
   const sid=sidSel?sidSel.value:currentStudentId();
-  const title=document.getElementById('an-title').value.trim();const content=document.getElementById('an-content').value.trim();
+  const title=document.getElementById('an-title').value.trim();
+  const content=document.getElementById('an-content').value.trim();
   if(!sid){alert('Nejprve přidejte žáka v sekci Žáci');return;}
-  if(!title&&!content)return;const now=new Date().toLocaleDateString('cs-CZ');
-  dbSet(db=>{db.notes.unshift({id:uid(),title,content,createdAt:now,updatedAt:now});});renderAdminNotes();
+  if(!title&&!content)return;
+  const now=new Date().toLocaleDateString('cs-CZ');
   // Zápis PŘÍMO do dat vybraného žáka – ostatní žáci zůstávají beze změny
   writeStudentData(sid, db=>{db.notes.unshift({id:uid(),title,content,createdAt:now,updatedAt:now});});
-  // Kontext adminu se přepne na tohoto žáka, aby byl vidět jeho aktualizovaný přehled
   targetAdmin(sid);
 }
-function deleteNote(id) { dbSet(db=>{db.notes=db.notes.filter(n=>n.id!==id);});renderAdminNotes(); }
 function deleteNote(id) {
   // Smaže poznámku přímo u žáka, kterému patří
   const sid = Object.keys(_zaciCache).find(k => (_zaciCache[k].notes||[]).some(n=>n.id===id)) || currentStudentId();
   writeStudentData(sid, db=>{db.notes=db.notes.filter(n=>n.id!==id);});
-  renderAdminNotes();
+  targetAdmin(sid);
 }
 
+/* ── ADMIN: Výchovná opatření ── */
 function renderAdminDisciplinary() {
   const db = dbGet();
   const disc = db.disciplinary || [];
@@ -2388,7 +2393,7 @@ function renderAdminDisciplinary() {
   document.getElementById('sec-disciplinary').innerHTML = `
     <div style="padding:16px">
       <div class="add-form">
-        <div style="font-weight:600;font-size:13px;margin-bottom:10px">Přidat opatření</div>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat opatření</span>${adminTargetChip()}</div>
         <div class="grid-2">
           <div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Typ opatření</label>
             <select class="form-select" id="ad-kind">${KINDS.map(k=>`<option value="${k.value}">${k.label}</option>`).join('')}</select></div>
@@ -2411,7 +2416,7 @@ function renderAdminDisciplinary() {
             ${d.teacher?`<div style="font-size:11px;color:var(--fg-muted)">${esc(d.teacher)}</div>`:''}
           </div>
           <span style="font-size:11px;color:var(--fg-muted);white-space:nowrap;margin-right:8px">${esc(d.date)}</span>
-          <button class="del-btn" style="opacity:1" onclick="deleteDisciplinary('${d.id}')">${svgIcon('<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',13)}</button>
+          <button class="del-btn" style="opacity:1" onclick="deleteDisciplinary('${d.id}')">${svgIcon(TRASH_ICON,13)}</button>
         </div>`;}).join('')}</div>
     </div>`;
 }
