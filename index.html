@@ -2048,6 +2048,7 @@ function renderAdmin() {
     {id:'attendance',label:'Docházka',             icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', fn:renderAdminAttendance},
     {id:'notes',     label:'Poznámky',             icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>', fn:renderAdminNotes},
     {id:'disciplinary',label:'Výchovná opatření',  icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', fn:renderAdminDisciplinary},
+    {id:'reset',      label:'Vynulování dat žáka', icon:'<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/>', fn:renderAdminReset},
   ];
   document.getElementById('admin-sections').innerHTML=sections.map(s=>`
     <div class="card" style="margin-bottom:10px;overflow:hidden">
@@ -2063,7 +2064,7 @@ function renderAdmin() {
 }
 
 function toggleSection(id) {
-  const fns={student:renderAdminStudent,zaci:renderAdminZaci,timetable:renderAdminTimetable,subjects:renderAdminSubjects,grades:renderAdminGrades,homework:renderAdminHomework,tests:renderAdminTests,attendance:renderAdminAttendance,notes:renderAdminNotes,disciplinary:renderAdminDisciplinary};
+  const fns={student:renderAdminStudent,zaci:renderAdminZaci,timetable:renderAdminTimetable,subjects:renderAdminSubjects,grades:renderAdminGrades,homework:renderAdminHomework,tests:renderAdminTests,attendance:renderAdminAttendance,notes:renderAdminNotes,disciplinary:renderAdminDisciplinary,reset:renderAdminReset};
   Object.keys(fns).forEach(sid=>{
     const btn=document.querySelector(`.section-header[onclick*="'${sid}'"]`);
     const body=document.getElementById('sec-'+sid);
@@ -2205,6 +2206,58 @@ function deleteZak(id) {
   if (_zaciUnsubs[id]) { try { _zaciUnsubs[id](); } catch(e){} delete _zaciUnsubs[id]; }
   if (_adminSelectedId === id) { _adminSelectedId = firstStudentId(); _keepPage = activePage; _loadContext(); }
   else renderAdminZaci();
+}
+
+/* ── ADMIN: cílené vynulování dat jednoho žáka ── */
+function renderAdminReset() {
+  const students = dbGet().students || [];
+  document.getElementById('sec-reset').innerHTML = `<div style="padding:18px">
+    <div class="alert alert-error" style="align-items:flex-start">
+      <span style="font-size:18px;line-height:1">⚠</span>
+      <div><strong>Nevratné smazání vybraných dat</strong><div style="font-weight:400;margin-top:3px">Vyberte konkrétního žáka a pouze oblasti, které chcete vymazat. PINy, hesla, seznam žáků a profil žáka se nemění.</div></div>
+    </div>
+    ${students.length ? `<div class="form-group"><label class="form-label">Žák, jehož data chcete vynulovat</label>${adminStudentSelect('reset-sid', currentStudentId())}</div>
+    <div style="font-weight:700;font-size:13px;margin:16px 0 8px">Vyberte data k vymazání</div>
+    <div class="grid-2" style="gap:8px">
+      ${[
+        ['grades','Známky'],['attendance','Docházka'],['homework','Domácí úkoly'],['tests','Písemky a zkoušení'],
+        ['notes','Poznámky'],['disciplinary','Výchovná opatření'],['timetable','Rozvrh hodin'],['subjects','Předměty']
+      ].map(([key,label])=>`<label style="display:flex;align-items:center;gap:9px;padding:11px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer"><input type="checkbox" class="reset-data-check" value="${key}" style="width:16px;height:16px;accent-color:var(--error)"><span style="font-size:13px">${label}</span></label>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px">
+      <button class="btn btn-danger" onclick="resetSelectedStudentData()">Vynulovat vybraná data</button>
+      <span style="font-size:11px;color:var(--fg-muted)">Hesla/PINy nejsou součástí této funkce.</span>
+    </div>` : '<div class="empty-state"><p>Nejprve přidejte žáka v sekci Žáci.</p></div>'}
+  </div>`;
+}
+
+function resetSelectedStudentData() {
+  if (currentRole !== 'admin') { alert('Tuto funkci může použít pouze administrátor.'); return; }
+  const sid = document.getElementById('reset-sid')?.value;
+  const student = (dbGet().students || []).find(s => s.id === sid);
+  if (!sid || !student) { alert('Vyberte žáka.'); return; }
+  const keys = Array.from(document.querySelectorAll('.reset-data-check:checked')).map(el => el.value);
+  const allowed = new Set(['grades','attendance','homework','tests','notes','disciplinary','timetable','subjects']);
+  const selected = keys.filter(k => allowed.has(k));
+  if (!selected.length) { alert('Nejprve zaškrtněte alespoň jednu oblast.'); return; }
+  const labels = {grades:'známky',attendance:'docházku',homework:'domácí úkoly',tests:'písemky a zkoušení',notes:'poznámky',disciplinary:'výchovná opatření',timetable:'rozvrh hodin',subjects:'předměty'};
+  const list = selected.map(k => labels[k]).join(', ');
+  if (!confirm(`Opravdu chcete vynulovat ${list} u žáka ${student.name}? Tuto změnu nelze automaticky vrátit. Profil žáka a jeho PIN zůstanou beze změny.`)) return;
+  const defaults = defaultDB();
+  const ok = writeStudentData(sid, data => {
+    selected.forEach(key => {
+      if (key === 'timetable' || key === 'subjects') data[key] = JSON.parse(JSON.stringify(defaults[key]));
+      else data[key] = [];
+    });
+  });
+  if (!ok) { alert('Data se nepodařilo změnit. Zkuste to prosím znovu.'); return; }
+  alert(`Hotovo. Vybraná data žáka ${student.name} byla vynulována. PINy a profil zůstaly zachovány.`);
+  if (sid === currentStudentId()) {
+    _keepPage = 'admin';
+    _loadContext();
+  } else {
+    renderAdminReset();
+  }
 }
 
 function renderAdminTimetable() {
