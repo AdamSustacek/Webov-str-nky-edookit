@@ -1,0 +1,28 @@
+/* ═══════════════════════════════════════════════════════════════
+   responsive.css – úpravy pro tablety a mobily
+═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  :root { --sidebar-w: 220px; }
+
+  /* Sidebar se na mobilu schová a vysouvá se zleva */
+  #sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+    transform: translateX(-100%);
+  }
+  #sidebar.mobile-open { transform: translateX(0); }
+  #sidebar-overlay { display: block; }
+  #mobile-header { display: flex; }
+
+  #content-scroll { padding: 16px; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+
+  .page-header { flex-wrap: wrap; }
+  .msg-date { margin-left: 0; width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .modal { padding: 18px; }
+}
