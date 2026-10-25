@@ -1,0 +1,3136 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ZS Alexandra – Žákovská knížka</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎓</text></svg>">
+
+<!-- Firebase MUSÍ být načten před našimi skripty -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+
+<!-- Fonty -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Styly -->
+<style>
+/* ═══════════════════════════════════════════════════════════════
+   style.css – hlavní styly aplikace (design tokeny, komponenty)
+   Responzivní úpravy jsou v css/responsive.css
+═══════════════════════════════════════════════════════════════ */
+
+/* ═══ DESIGN TOKENS ═══ */
+:root {
+  --bg:           hsl(225, 43%, 8%);
+  --sidebar-bg:   hsl(225, 43%, 9%);
+  --sidebar-b:    hsl(224, 22%, 17%);
+  --surface:      hsl(225, 30%, 13%);
+  --card:         hsl(225, 28%, 15%);
+  --card-hover:   hsl(225, 28%, 18%);
+  --border:       hsl(224, 22%, 20%);
+  --border-light: hsl(224, 22%, 25%);
+
+  --fg:           hsl(215, 25%, 92%);
+  --fg-muted:     hsl(215, 18%, 52%);
+  --fg-dim:       hsl(215, 18%, 35%);
+
+  --primary:      hsl(221, 88%, 60%);
+  --primary-dim:  hsla(221, 88%, 60%, 0.12);
+  --primary-glow: hsla(221, 88%, 60%, 0.25);
+
+  --success:      hsl(142, 70%, 48%);
+  --success-dim:  hsla(142, 70%, 48%, 0.12);
+  --warning:      hsl(38, 88%, 56%);
+  --warning-dim:  hsla(38, 88%, 56%, 0.12);
+  --error:        hsl(0, 72%, 58%);
+  --error-dim:    hsla(0, 72%, 58%, 0.12);
+
+  --radius-sm:    8px;
+  --radius:       12px;
+  --radius-lg:    16px;
+  --radius-xl:    20px;
+
+  --shadow-sm:    0 1px 3px rgba(0,0,0,0.4);
+  --shadow:       0 4px 16px rgba(0,0,0,0.4);
+  --shadow-lg:    0 12px 40px rgba(0,0,0,0.5);
+
+  --sidebar-w:    232px;
+  --font:         'DM Sans', sans-serif;
+  --mono:         'DM Mono', monospace;
+
+  /* Barvy známek */
+  --g1: hsl(142,70%,45%); --g1d: hsla(142,70%,45%,0.15);
+  --g2: hsl(180,60%,45%); --g2d: hsla(180,60%,45%,0.15);
+  --g3: hsl(38,88%,50%);  --g3d: hsla(38,88%,50%,0.15);
+  --g4: hsl(20,80%,55%);  --g4d: hsla(20,80%,55%,0.15);
+  --g5: hsl(0,72%,55%);   --g5d: hsla(0,72%,55%,0.15);
+}
+
+/* ═══ RESET & BASE ═══ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: var(--font);
+  background: var(--bg);
+  color: var(--fg);
+  font-size: 14px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+button { font-family: inherit; cursor: pointer; border: none; background: none; }
+input, select, textarea { font-family: inherit; }
+input:focus, select:focus, textarea:focus { outline: none; }
+ul { list-style: none; }
+a { color: inherit; text-decoration: none; }
+svg { display: block; }
+
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--border-light); }
+
+/* ═══ ANIMACE ═══ */
+@keyframes fadeIn   { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes shake    { 0%,100%{transform:translateX(0)} 20%{transform:translateX(-6px)} 40%{transform:translateX(6px)} 60%{transform:translateX(-4px)} 80%{transform:translateX(4px)} }
+@keyframes spin     { to { transform: rotate(360deg); } }
+@keyframes slideIn  { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+@keyframes pulse    { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+.fade-in   { animation: fadeIn  0.22s ease both; }
+.slide-in  { animation: slideIn 0.18s ease both; }
+.shake     { animation: shake   0.5s ease; }
+
+.stagger > * { animation: fadeIn 0.2s ease both; }
+.stagger > *:nth-child(1) { animation-delay: 0.03s; }
+.stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.stagger > *:nth-child(3) { animation-delay: 0.09s; }
+.stagger > *:nth-child(4) { animation-delay: 0.12s; }
+.stagger > *:nth-child(5) { animation-delay: 0.15s; }
+.stagger > *:nth-child(6) { animation-delay: 0.18s; }
+.stagger > *:nth-child(7) { animation-delay: 0.21s; }
+.stagger > *:nth-child(8) { animation-delay: 0.24s; }
+.stagger > *:nth-child(9) { animation-delay: 0.27s; }
+.stagger > *:nth-child(10) { animation-delay: 0.30s; }
+.stagger > *:nth-child(11) { animation-delay: 0.33s; }
+
+/* ═══ TUTORIÁL ═══ */
+#tutorial-overlay {
+  position: fixed; inset: 0; z-index: 1200;
+  background: hsla(225, 43%, 6%, 0.75);
+  backdrop-filter: blur(4px);
+  display: none; align-items: center; justify-content: center;
+  padding: 16px;
+}
+#tutorial-overlay.open { display: flex; }
+.tut-box {
+  width: 100%; max-width: 460px;
+  max-height: 92vh; overflow-y: auto;
+  background: var(--card);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.25s ease both;
+  position: relative;
+}
+.tut-box::before {
+  content: '';
+  position: absolute; inset: 0; border-radius: var(--radius-xl);
+  background: radial-gradient(ellipse 70% 50% at 50% 0%, hsla(221,88%,60%,0.06) 0%, transparent 70%);
+  pointer-events: none;
+}
+.tut-icon {
+  width: 48px; height: 48px; border-radius: 14px;
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-glow);
+  color: var(--primary);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 16px;
+}
+.tut-step { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--fg-dim); margin-bottom: 4px; }
+.tut-title { font-size: 18px; font-weight: 700; color: var(--fg); letter-spacing: -0.3px; }
+.tut-text { font-size: 13.5px; color: var(--fg-muted); line-height: 1.65; margin-top: 10px; }
+.tut-text strong, .tut-text b { color: var(--fg); font-weight: 600; }
+.tut-text code { font-family: var(--mono); font-size: 12px; background: var(--surface); padding: 2px 6px; border-radius: 6px; color: var(--primary); }
+.tut-dots { display: flex; gap: 6px; justify-content: center; margin: 20px 0 0; }
+.tut-dot { width: 6px; height: 6px; border-radius: 4px; background: var(--border); transition: all 0.2s ease; }
+.tut-dot.active { width: 20px; background: var(--primary); }
+.tut-actions { display: flex; align-items: center; justify-content: space-between; margin-top: 22px; gap: 8px; }
+.tut-actions-left { display: flex; gap: 8px; }
+.tut-close {
+  position: absolute; top: 14px; right: 14px; width: 30px; height: 30px;
+  border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  color: var(--fg-dim); transition: all 0.12s;
+}
+.tut-close:hover { background: hsla(0,0%,100%,0.06); color: var(--fg); }
+.tut-hint-link {
+  background: none; border: none; color: var(--primary);
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  text-decoration: underline; text-underline-offset: 3px;
+  padding: 2px 4px; border-radius: 6px;
+}
+.tut-hint-link:hover { color: var(--fg); }
+
+/* ═══ LOGIN ═══ */
+#login-screen {
+  position: fixed; inset: 0; z-index: 1000;
+  background: var(--sidebar-bg);
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+#login-screen::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 60% 50% at 50% 40%, hsla(221,88%,60%,0.07) 0%, transparent 70%);
+  pointer-events: none;
+}
+.login-box {
+  width: 100%; max-width: 320px;
+  display: flex; flex-direction: column; align-items: center; gap: 32px;
+  position: relative; z-index: 1;
+  max-height: 100vh; overflow-y: auto; padding: 8px 0;
+}
+.login-logo { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.login-logo-icon {
+  width: 64px; height: 64px; border-radius: 18px;
+  background: var(--primary-dim);
+  border: 1px solid var(--primary-glow);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 32px var(--primary-glow);
+}
+.login-logo-icon svg { color: var(--primary); }
+.login-logo h1 { color: var(--fg); font-size: 20px; font-weight: 700; letter-spacing: -0.3px; text-align: center; }
+.login-logo p  { color: var(--fg-muted); font-size: 13px; }
+.login-card {
+  width: 100%;
+  background: hsla(225,30%,13%,0.8);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  backdrop-filter: blur(12px);
+  display: flex; flex-direction: column; align-items: center; gap: 24px;
+}
+.login-hint { display: flex; align-items: center; gap: 6px; color: var(--fg-muted); font-size: 13px; }
+.pin-dots { display: flex; gap: 14px; }
+.pin-dot {
+  width: 16px; height: 16px; border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  transition: all 0.15s ease;
+}
+.pin-dot.filled {
+  background: var(--primary);
+  border-color: var(--primary);
+  transform: scale(1.1);
+  box-shadow: 0 0 10px var(--primary-glow);
+}
+.pin-error { font-size: 13px; font-weight: 500; color: var(--error); min-height: 20px; transition: opacity 0.2s; }
+.numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: 100%; }
+.numpad-btn {
+  height: 56px; border-radius: var(--radius);
+  background: hsla(0,0%,100%,0.06);
+  border: 1px solid var(--border);
+  color: var(--fg);
+  font-size: 20px; font-weight: 600;
+  transition: all 0.12s ease;
+  display: flex; align-items: center; justify-content: center;
+}
+.numpad-btn:hover:not(:disabled) { background: hsla(0,0%,100%,0.1); border-color: var(--border-light); }
+.numpad-btn:active:not(:disabled) { transform: scale(0.95); }
+.numpad-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+.numpad-btn.del { background: hsla(0,0%,100%,0.03); color: var(--fg-muted); font-size: 14px; }
+.numpad-empty { pointer-events: none; }
+.login-footer { color: hsla(215,18%,52%,0.5); font-size: 11px; text-align: center; }
+
+/* ═══ APP SHELL ═══ */
+#app { display: none; height: 100vh; overflow: hidden; }
+#app.visible { display: flex; }
+
+/* ═══ SIDEBAR ═══ */
+#sidebar {
+  width: var(--sidebar-w);
+  flex-shrink: 0;
+  height: 100%;
+  display: flex; flex-direction: column;
+  background: linear-gradient(180deg, hsl(225,43%,9%) 0%, hsl(225,43%,11%) 100%);
+  border-right: 1px solid var(--sidebar-b);
+  user-select: none;
+  overflow: hidden;
+  transition: transform 0.3s ease;
+}
+.sidebar-logo {
+  padding: 18px 16px;
+  border-bottom: 1px solid var(--sidebar-b);
+  display: flex; align-items: center; gap: 10px;
+}
+.sidebar-logo-icon {
+  width: 36px; height: 36px; border-radius: 10px; flex-shrink: 0;
+  background: linear-gradient(135deg, hsl(221,88%,58%) 0%, hsl(250,78%,63%) 100%);
+  box-shadow: 0 2px 12px hsla(221,88%,60%,0.35);
+  display: flex; align-items: center; justify-content: center;
+}
+.sidebar-logo-text .name { font-weight: 700; font-size: 13px; color: var(--fg); line-height: 1.2; }
+.sidebar-logo-text .sub  { font-size: 11px; color: var(--fg-muted); margin-top: 1px; }
+
+/* Přepínač dítěte pro rodiče */
+.child-switcher {
+  padding: 12px 12px 4px;
+}
+.child-switcher .cs-label {
+  font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--fg-dim); margin-bottom: 6px; padding-left: 2px;
+}
+.child-switcher select {
+  width: 100%; padding: 8px 10px;
+  background: var(--primary-dim); border: 1px solid var(--primary-glow);
+  border-radius: var(--radius-sm); color: var(--fg);
+  font-size: 13px; font-weight: 600;
+}
+.child-switcher select option { background: var(--card); }
+.child-switcher .cs-single {
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  background: var(--primary-dim); border: 1px solid var(--primary-glow);
+  font-size: 13px; font-weight: 600; color: var(--fg);
+}
+.child-switcher .cs-parent { font-size: 11px; color: var(--fg-muted); margin-top: 6px; padding-left: 2px; }
+
+.sidebar-nav { flex: 1; overflow-y: auto; padding: 10px 10px; display: flex; flex-direction: column; gap: 1px; }
+.nav-section-label {
+  padding: 10px 8px 5px;
+  font-size: 9.5px; font-weight: 700;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  color: var(--fg-dim);
+}
+.nav-section-label.admin-label { color: hsl(38,80%,40%); }
+
+.nav-btn {
+  width: 100%; text-align: left;
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: var(--radius-sm);
+  color: var(--fg-muted); font-size: 13px; font-weight: 500;
+  transition: all 0.12s ease; position: relative;
+}
+.nav-btn:hover { background: hsla(0,0%,100%,0.05); color: var(--fg); }
+.nav-btn.active { background: var(--primary-dim); color: var(--primary); font-weight: 600; }
+.nav-btn.active::before {
+  content: '';
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 3px; height: 60%; border-radius: 0 3px 3px 0;
+  background: var(--primary);
+}
+.nav-btn.admin-btn { color: hsl(38,80%,52%); }
+.nav-btn.admin-btn:hover { background: hsla(38,80%,52%,0.08); color: hsl(38,80%,62%); }
+.nav-btn.admin-btn.active { background: hsla(38,80%,52%,0.12); color: hsl(38,80%,62%); }
+.nav-btn svg { flex-shrink: 0; }
+.nav-btn .label { flex: 1; }
+.nav-badge {
+  font-size: 10px; font-weight: 700;
+  background: var(--primary);
+  color: #fff; border-radius: 20px; padding: 1px 6px; line-height: 1.6;
+}
+.nav-badge.red { background: var(--error); }
+.nav-btn.active .nav-badge { background: hsla(0,0%,100%,0.25); }
+
+.sidebar-bottom { border-top: 1px solid var(--sidebar-b); padding: 10px; }
+.sidebar-year {
+  width: 100%; display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 10px; border-radius: var(--radius-sm);
+  color: var(--fg-muted); font-size: 12px;
+  transition: background 0.12s;
+}
+.sidebar-year:hover { background: hsla(0,0%,100%,0.04); }
+.sidebar-logout {
+  width: 100%; display: flex; align-items: center; gap: 8px;
+  padding: 7px 10px; border-radius: var(--radius-sm);
+  color: var(--error); font-size: 12px; font-weight: 500;
+  transition: background 0.12s;
+}
+.sidebar-logout:hover { background: var(--error-dim); }
+
+/* ═══ MAIN CONTENT ═══ */
+#main { flex: 1; min-width: 0; display: flex; flex-direction: column; overflow: hidden; background: var(--bg); }
+#mobile-header {
+  display: none;
+  align-items: center; gap: 12px;
+  padding: 12px 16px;
+  background: var(--sidebar-bg);
+  border-bottom: 1px solid var(--sidebar-b);
+}
+#mobile-header .mobile-menu-btn {
+  width: 32px; height: 32px;
+  border-radius: var(--radius-sm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fg); transition: background 0.12s;
+}
+#mobile-header .mobile-menu-btn:hover { background: hsla(0,0%,100%,0.08); }
+#mobile-header .mobile-title { color: var(--fg); font-weight: 700; font-size: 14px; }
+
+#content-scroll { flex: 1; overflow-y: auto; padding: 28px 32px; }
+#content-inner  { max-width: 1100px; margin: 0 auto; }
+
+/* ═══ VIEWS ═══ */
+.view { display: none; }
+.view.active { display: block; animation: fadeIn 0.2s ease; }
+
+.page-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 24px; gap: 12px; }
+.page-header-left { display: flex; align-items: center; gap: 14px; }
+.page-icon { width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
+.page-icon.blue   { background: var(--primary-dim); color: var(--primary); }
+.page-icon.gold   { background: var(--warning-dim); color: var(--warning); }
+.page-icon.green  { background: var(--success-dim); color: var(--success); }
+.page-icon.red    { background: var(--error-dim);   color: var(--error);   }
+.page-title h1 { font-size: 22px; font-weight: 700; color: var(--fg); letter-spacing: -0.3px; }
+.page-title p  { font-size: 13px; color: var(--fg-muted); margin-top: 1px; }
+
+/* Karty */
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; }
+.card + .card { margin-top: 12px; }
+.card-body { padding: 20px; }
+.card-head {
+  padding: 14px 16px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; gap: 8px;
+  font-weight: 600; font-size: 13px;
+}
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+
+/* Statistiky */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 20px; }
+.stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+.stat-card .stat-label { font-size: 11px; color: var(--fg-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.06em; }
+.stat-card .stat-value { font-size: 26px; font-weight: 700; color: var(--fg); margin-top: 4px; line-height: 1; }
+.stat-card .stat-sub   { font-size: 11px; color: var(--fg-muted); margin-top: 4px; }
+
+/* Tlačítka */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600;
+  transition: all 0.12s ease; cursor: pointer; border: none;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: hsl(221,88%,55%); }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-ghost  { background: var(--primary-dim); color: var(--primary); border: 1px solid hsla(221,88%,60%,0.2); }
+.btn-ghost:hover { background: hsla(221,88%,60%,0.18); }
+.btn-outline { background: transparent; color: var(--fg-muted); border: 1px solid var(--border); }
+.btn-outline:hover { color: var(--fg); border-color: var(--border-light); background: var(--card-hover); }
+.btn-danger { background: var(--error-dim); color: var(--error); border: 1px solid hsla(0,72%,58%,0.2); }
+.btn-danger:hover { background: hsla(0,72%,58%,0.18); }
+.btn-sm { padding: 5px 12px; font-size: 12px; }
+.btn-xs { padding: 3px 8px; font-size: 11px; }
+
+/* Formuláře */
+.form-group { margin-bottom: 12px; }
+.form-label {
+  display: block; font-size: 11px; font-weight: 700;
+  color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.06em;
+  margin-bottom: 6px;
+}
+.form-input, .form-select, .form-textarea {
+  width: 100%; padding: 9px 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); color: var(--fg);
+  font-size: 13px; transition: border-color 0.12s;
+}
+.form-input:focus, .form-select:focus, .form-textarea:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-dim);
+}
+.form-textarea { resize: vertical; min-height: 80px; }
+.form-select option, .form-select optgroup { background: var(--card); }
+
+/* Tabulky */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  text-align: left; padding: 8px 12px;
+  font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em;
+  color: var(--fg-muted); border-bottom: 1px solid var(--border);
+}
+.data-table td { padding: 10px 12px; border-bottom: 1px solid hsla(224,22%,20%,0.5); font-size: 13px; }
+.data-table tbody tr:hover { background: var(--card-hover); }
+.data-table tbody tr:last-child td { border-bottom: none; }
+
+/* Odznaky */
+.badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+.badge-blue    { background: var(--primary-dim); color: var(--primary); }
+.badge-green   { background: var(--success-dim); color: var(--success); }
+.badge-yellow  { background: var(--warning-dim); color: var(--warning); }
+.badge-red     { background: var(--error-dim);   color: var(--error);   }
+.badge-gray    { background: hsla(215,18%,52%,0.15); color: var(--fg-muted); }
+
+.grade-badge {
+  width: 28px; height: 28px; border-radius: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; flex-shrink: 0;
+}
+.grade-1 { background: var(--g1d); color: var(--g1); }
+.grade-2 { background: var(--g2d); color: var(--g2); }
+.grade-3 { background: var(--g3d); color: var(--g3); }
+.grade-4 { background: var(--g4d); color: var(--g4); }
+.grade-5 { background: var(--g5d); color: var(--g5); }
+
+.subj-chip {
+  display: inline-flex; align-items: center;
+  padding: 2px 8px; border-radius: 6px;
+  font-size: 11px; font-weight: 700;
+  background: var(--primary-dim); color: var(--primary);
+}
+
+.checkbox-btn {
+  width: 20px; height: 20px; border-radius: 6px; flex-shrink: 0;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.12s ease; cursor: pointer; background: transparent;
+}
+.checkbox-btn:hover { border-color: var(--primary); }
+.checkbox-btn.checked { background: var(--success); border-color: var(--success); }
+.checkbox-btn.readonly { cursor: default; }
+.checkbox-btn.readonly:hover { border-color: var(--border); }
+.checkbox-btn.readonly.checked:hover { border-color: var(--success); }
+
+/* Upozornění */
+.alert {
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 14px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 600; margin-bottom: 12px;
+  animation: fadeIn 0.2s ease;
+}
+.alert-success { background: var(--success-dim); border: 1px solid hsla(142,70%,48%,0.25); color: var(--success); }
+.alert-error   { background: var(--error-dim);   border: 1px solid hsla(0,72%,58%,0.25);   color: var(--error);   }
+.alert-info    { background: var(--primary-dim);  border: 1px solid var(--primary-glow);    color: var(--primary); }
+
+/* Sbalitelné sekce (admin) */
+.section-header {
+  width: 100%; display: flex; align-items: center; gap: 12px;
+  padding: 16px 20px; cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.12s;
+  background: none; text-align: left; color: var(--fg);
+}
+.section-header:hover { background: hsla(0,0%,100%,0.02); }
+.section-header .sh-icon {
+  width: 32px; height: 32px; border-radius: 9px;
+  background: var(--primary-dim); color: var(--primary);
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.section-header .sh-title { flex: 1; font-weight: 600; font-size: 14px; }
+.section-header .sh-chevron { color: var(--fg-muted); transition: transform 0.2s ease; }
+.section-header.open .sh-chevron { transform: rotate(180deg); }
+.section-body { display: none; }
+.section-body.open { display: block; }
+
+.del-btn {
+  width: 28px; height: 28px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--fg-muted); opacity: 0;
+  transition: all 0.12s ease;
+}
+.del-btn:hover { background: var(--error-dim); color: var(--error); }
+tr:hover .del-btn, .row:hover .del-btn, .hw-row:hover .del-btn { opacity: 1; }
+
+.row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 12px; border-radius: var(--radius-sm);
+  transition: background 0.1s;
+}
+.row:hover { background: var(--card-hover); }
+
+.empty-state { text-align: center; padding: 36px 16px; color: var(--fg-muted); }
+.empty-state svg { margin: 0 auto 10px; opacity: 0.3; }
+.empty-state p { font-size: 13px; }
+
+.add-form {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 16px;
+  animation: fadeIn 0.18s ease;
+}
+
+.divider { height: 1px; background: var(--border); margin: 16px 0; }
+
+/* Admin – lišta s vybraným žákem */
+.admin-target-bar {
+  margin-bottom: 10px; align-items: center; gap: 10px; flex-wrap: wrap;
+  background: var(--primary-dim); border: 1px solid var(--primary-glow);
+  border-radius: var(--radius); padding: 10px 14px;
+}
+
+/* Rozvrh */
+.timetable-grid { overflow-x: auto; }
+.timetable-grid table { width: 100%; border-collapse: collapse; }
+.timetable-grid th { padding: 8px 4px; text-align: center; font-size: 11px; font-weight: 700; color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em; }
+.timetable-grid td { padding: 3px 3px; }
+.tt-cell {
+  min-height: 52px; border-radius: var(--radius-sm); padding: 5px 7px;
+  border: 1px solid var(--border); background: var(--surface);
+  cursor: pointer; transition: all 0.12s;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  text-align: center; font-size: 11px;
+}
+.tt-cell:hover { border-color: var(--primary); background: var(--primary-dim); }
+.tt-cell.filled { background: var(--primary-dim); border-color: hsla(221,88%,60%,0.3); }
+.tt-cell .tt-subj { font-weight: 700; color: var(--primary); font-size: 12px; }
+.tt-cell .tt-room { color: var(--fg-muted); font-size: 9px; margin-top: 1px; }
+.tt-cell .tt-empty { color: var(--fg-dim); font-size: 18px; font-weight: 300; }
+
+.dash-hw-row { display: flex; align-items: center; gap: 10px; padding: 9px 0; border-bottom: 1px solid hsla(224,22%,20%,0.5); }
+.dash-hw-row:last-child { border-bottom: none; }
+
+/* Docházka */
+.att-present    { background: var(--success-dim); color: var(--success); }
+.att-absent     { background: var(--error-dim);   color: var(--error);   }
+.att-excused    { background: var(--warning-dim);  color: var(--warning); }
+.att-late       { background: var(--warning-dim);  color: var(--warning); }
+.att-school-event { background: var(--primary-dim); color: var(--primary); }
+
+#sidebar-overlay {
+  display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  z-index: 90; backdrop-filter: blur(2px);
+}
+
+/* Modální okno */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.65);
+  z-index: 200; display: flex; align-items: center; justify-content: center;
+  padding: 16px; backdrop-filter: blur(4px);
+}
+.modal {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: var(--radius-xl); padding: 24px;
+  width: 100%; max-width: 420px; max-height: 92vh; overflow-y: auto;
+  box-shadow: var(--shadow-lg);
+  animation: fadeIn 0.18s ease;
+}
+.modal.wide { max-width: 580px; }
+.modal-title { font-size: 16px; font-weight: 700; margin-bottom: 16px; color: var(--fg); }
+.modal-actions { display: flex; gap: 8px; margin-top: 16px; justify-content: flex-end; flex-wrap: wrap; }
+
+/* ═══ ZPRÁVY ═══ */
+.msg-tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+.msg-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 16px; cursor: pointer;
+  border-bottom: 1px solid hsla(224,22%,20%,0.5);
+  transition: background 0.1s;
+}
+.msg-row:last-child { border-bottom: none; }
+.msg-row:hover { background: var(--card-hover); }
+.msg-dot { width: 8px; height: 8px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; background: transparent; }
+.msg-row.unread .msg-dot { background: var(--primary); box-shadow: 0 0 8px var(--primary-glow); }
+.msg-main { flex: 1; min-width: 0; }
+.msg-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.msg-who { font-size: 13px; font-weight: 600; color: var(--fg); }
+.msg-row:not(.unread) .msg-who { font-weight: 500; }
+.msg-date { margin-left: auto; font-size: 11px; color: var(--fg-muted); white-space: nowrap; }
+.msg-subj { font-size: 13px; color: var(--fg); margin-top: 2px; font-weight: 500; }
+.msg-row.unread .msg-subj { font-weight: 700; }
+.msg-prev { font-size: 12px; color: var(--fg-muted); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.msg-meta { font-size: 12px; color: var(--fg-muted); line-height: 1.8; padding-bottom: 12px; border-bottom: 1px solid var(--border); margin-bottom: 12px; }
+.msg-meta strong { color: var(--fg); font-weight: 600; }
+.msg-text { font-size: 13.5px; color: var(--fg); white-space: pre-wrap; word-break: break-word; line-height: 1.65; }
+.kid-chip {
+  display: inline-flex; align-items: center; padding: 1px 8px; border-radius: 20px;
+  font-size: 10.5px; font-weight: 700; background: var(--warning-dim); color: var(--warning);
+}
+
+/* Výběr dětí v modálu rodiče */
+.check-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+.check-item {
+  display: flex; align-items: center; gap: 9px; padding: 9px 12px;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); cursor: pointer; font-size: 13px;
+}
+.check-item input { width: 16px; height: 16px; accent-color: var(--primary); }
+.kids-list { display: flex; flex-wrap: wrap; gap: 4px; }
+
+/* ═══════════════════════════════════════════════════════════════
+   responsive.css – úpravy pro tablety a mobily
+═══════════════════════════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  :root { --sidebar-w: 220px; }
+
+  /* Sidebar se na mobilu schová a vysouvá se zleva */
+  #sidebar {
+    position: fixed; left: 0; top: 0; bottom: 0; z-index: 100;
+    transform: translateX(-100%);
+  }
+  #sidebar.mobile-open { transform: translateX(0); }
+  #sidebar-overlay { display: block; }
+  #mobile-header { display: flex; }
+
+  #content-scroll { padding: 16px; }
+  .stat-grid { grid-template-columns: 1fr 1fr; }
+  .grid-2 { grid-template-columns: 1fr; }
+
+  .page-header { flex-wrap: wrap; }
+  .msg-date { margin-left: 0; width: 100%; }
+}
+
+@media (max-width: 420px) {
+  .stat-grid { grid-template-columns: 1fr; }
+  .modal { padding: 18px; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════ LOGIN SCREEN ═══════════════════════════ -->
+<div id="login-screen">
+  <div class="login-box fade-in">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+      </div>
+      <h1>ZS Alexandra</h1>
+      <p>Žákovská knížka</p>
+    </div>
+
+    <div class="login-card" id="pin-card">
+      <div class="login-hint">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>Zadejte PIN</span>
+      </div>
+      <div class="pin-dots" id="pin-dots">
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+        <div class="pin-dot"></div>
+      </div>
+      <div class="pin-error" id="pin-error">&nbsp;</div>
+      <div class="numpad" id="numpad">
+        <button class="numpad-btn" onclick="pinKey('1')">1</button>
+        <button class="numpad-btn" onclick="pinKey('2')">2</button>
+        <button class="numpad-btn" onclick="pinKey('3')">3</button>
+        <button class="numpad-btn" onclick="pinKey('4')">4</button>
+        <button class="numpad-btn" onclick="pinKey('5')">5</button>
+        <button class="numpad-btn" onclick="pinKey('6')">6</button>
+        <button class="numpad-btn" onclick="pinKey('7')">7</button>
+        <button class="numpad-btn" onclick="pinKey('8')">8</button>
+        <button class="numpad-btn" onclick="pinKey('9')">9</button>
+        <div class="numpad-empty"></div>
+        <button class="numpad-btn" onclick="pinKey('0')">0</button>
+        <button class="numpad-btn del" onclick="pinDel()">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="login-footer">
+      ZS Alexandra · Žákovská knížka · 2025/2026
+      <br><button class="tut-hint-link" id="tut-open-btn" type="button">Jak aplikace funguje?</button>
+    </div>
+  </div>
+</div>
+
+<!-- Překryv pro mobilní menu -->
+<div id="sidebar-overlay"></div>
+
+<!-- ═══════════════════════════ APP ═══════════════════════════ -->
+<div id="app">
+
+  <!-- SIDEBAR -->
+  <aside id="sidebar">
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-icon">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/>
+        </svg>
+      </div>
+      <div class="sidebar-logo-text">
+        <div class="name">ZS Alexandra</div>
+        <div class="sub">Žákovská knížka</div>
+      </div>
+    </div>
+
+    <!-- Přepínač dítěte (zobrazí se jen rodiči) -->
+    <div id="child-switcher" class="child-switcher" style="display:none"></div>
+
+    <nav class="sidebar-nav" id="sidebar-nav"></nav>
+
+    <div class="sidebar-bottom">
+      <button class="sidebar-year">
+        <span>2025/2026</span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+      </button>
+      <button class="sidebar-logout" id="logout-btn">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        <span>Odhlásit se</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN -->
+  <div id="main">
+    <div id="mobile-header">
+      <button class="mobile-menu-btn" id="mobile-menu-btn">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+      <span class="mobile-title">ZS Alexandra</span>
+    </div>
+
+    <div id="content-scroll">
+      <div id="content-inner">
+
+        <!-- ─────────────── DASHBOARD ─────────────── -->
+        <div id="view-dashboard" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon blue">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+              </div>
+              <div class="page-title">
+                <h1>Hlavní panel</h1>
+                <p id="dash-greeting">Dobrý den</p>
+              </div>
+            </div>
+          </div>
+          <div class="stat-grid stagger" id="dash-stats"></div>
+          <div class="grid-2" style="gap:12px">
+            <div>
+              <div class="card">
+                <div class="card-head">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+                  <span>Nesplněné úkoly</span>
+                </div>
+                <div style="padding:8px 0" id="dash-hw"></div>
+              </div>
+            </div>
+            <div>
+              <div class="card">
+                <div class="card-head">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--warning)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                  <span>Nadcházející písemky</span>
+                </div>
+                <div style="padding:8px 0" id="dash-tests"></div>
+              </div>
+              <div class="card" style="margin-top:12px">
+                <div class="card-head">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                  <span>Poslední známky</span>
+                </div>
+                <div style="padding:8px 0" id="dash-grades"></div>
+              </div>
+              <div class="card" style="margin-top:12px">
+                <div class="card-head">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                  <span id="dash-tt-label">Rozvrh dnes</span>
+                </div>
+                <div style="padding:8px 0" id="dash-tt"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Týdenní rozvrh -->
+          <div class="card" style="margin-top:12px">
+            <div class="card-head">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--primary)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+              <span>Týdenní rozvrh</span>
+            </div>
+            <div style="padding:12px;overflow-x:auto" id="dash-weekly-tt"></div>
+          </div>
+        </div>
+
+        <!-- ─────────────── GRADES ─────────────── -->
+        <div id="view-grades" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg></div>
+              <div class="page-title"><h1>Hodnocení</h1><p>Přehled všech známek</p></div>
+            </div>
+          </div>
+          <div id="grades-content"></div>
+        </div>
+
+        <!-- ─────────────── SCHEDULE ─────────────── -->
+        <div id="view-schedule" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              <div class="page-title"><h1>Rozvrh hodin</h1><p>Týdenní rozvrh</p></div>
+            </div>
+          </div>
+          <div class="card"><div class="card-body timetable-grid"><div id="timetable-view"></div></div></div>
+        </div>
+
+        <!-- ─────────────── HOMEWORK ─────────────── -->
+        <div id="view-homework" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></div>
+              <div class="page-title"><h1>Domácí úkoly</h1><p id="hw-count-label">0 úkolů</p></div>
+            </div>
+          </div>
+          <div id="hw-filters" style="display:flex;gap:8px;margin-bottom:16px">
+            <button class="btn btn-primary btn-sm" id="hwf-all">Vše</button>
+            <button class="btn btn-outline btn-sm" id="hwf-pending">Nesplněné</button>
+            <button class="btn btn-outline btn-sm" id="hwf-done">Splněné</button>
+          </div>
+          <div class="card"><div id="hw-list" style="padding:4px 0"></div></div>
+        </div>
+
+        <!-- ─────────────── TESTS ─────────────── -->
+        <div id="view-tests" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+              <div class="page-title"><h1>Písemky</h1><p>Naplánované testy a zkoušení</p></div>
+            </div>
+          </div>
+          <div class="card"><div id="tests-list" style="padding:4px 0"></div></div>
+        </div>
+
+        <!-- ─────────────── ATTENDANCE ─────────────── -->
+        <div id="view-attendance" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon green"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg></div>
+              <div class="page-title"><h1>Docházka</h1><p id="att-summary">Přehled docházky</p></div>
+            </div>
+          </div>
+          <div class="card"><div id="att-list" style="padding:4px 0"></div></div>
+        </div>
+
+        <!-- ─────────────── INBOX (schránka zpráv) ─────────────── -->
+        <div id="view-inbox" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></div>
+              <div class="page-title"><h1>Schránka</h1><p id="inbox-subtitle">Zprávy a oznámení</p></div>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="composeNew()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              Nová zpráva
+            </button>
+          </div>
+          <div id="inbox-content"></div>
+        </div>
+
+        <!-- ─────────────── ACTIVITY ─────────────── -->
+        <div id="view-activity" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+              <div class="page-title"><h1>Aktivita</h1><p>Přehled aktivity</p></div>
+            </div>
+          </div>
+          <div class="card card-body">
+            <div class="empty-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              <p>Žádná data aktivity</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────── CURRICULUM ─────────────── -->
+        <div id="view-curriculum" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg></div>
+              <div class="page-title"><h1>Učivo</h1><p>Přehled probíraného učiva</p></div>
+            </div>
+          </div>
+          <div class="card card-body">
+            <div class="empty-state">
+              <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+              <p>Žádné učivo k zobrazení</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────── MESSAGES (psaní nové zprávy) ─────────────── -->
+        <div id="view-messages" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon blue"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>
+              <div class="page-title"><h1>Nová zpráva</h1><p>Napsat zprávu jinému účtu</p></div>
+            </div>
+          </div>
+          <div class="card card-body" id="compose-content"></div>
+        </div>
+
+        <!-- ─────────────── VÝCHOVNÁ OPATŘENÍ ─────────────── -->
+        <div id="view-disciplinary" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon red"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>
+              <div class="page-title"><h1>Výchovná opatření</h1><p id="disc-summary">Přehled opatření</p></div>
+            </div>
+          </div>
+          <div class="card"><div id="disc-list" style="padding:4px 0"></div></div>
+        </div>
+
+        <!-- ─────────────── SETTINGS (jen admin) ─────────────── -->
+        <div id="view-settings" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/></svg></div>
+              <div class="page-title"><h1>Nastavení</h1><p>Konfigurace systému</p></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div style="font-weight:600;margin-bottom:12px;font-size:14px">Změna PIN kódu</div>
+              <div class="grid-2" style="margin-bottom:10px">
+                <div class="form-group" style="margin-bottom:0">
+                  <label class="form-label">Nový admin PIN (4 číslice)</label>
+                  <input class="form-input" id="settings-admin-pin" type="password" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••">
+                </div>
+                <div class="form-group" style="margin-bottom:0">
+                  <label class="form-label">Nový žákovský PIN (starý společný, 4 číslice)</label>
+                  <input class="form-input" id="settings-student-pin" type="password" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••">
+                </div>
+              </div>
+              <button class="btn btn-primary btn-sm" id="save-pins-btn">Uložit PINy</button>
+              <div id="pin-saved-msg" style="display:none;margin-top:10px" class="alert alert-success">✓ PINy uloženy!</div>
+              <p style="font-size:12px;color:var(--fg-muted);margin-top:10px">PINy jednotlivých žáků a rodičů se spravují v Admin panelu (sekce Žáci a Rodiče).</p>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-body">
+              <div style="font-weight:600;margin-bottom:6px;font-size:14px">Jak aplikace funguje?</div>
+              <p style="font-size:12px;color:var(--fg-muted);margin-bottom:12px">Zobrazit znovu průvodce pro nové uživatele – přihlášení, žáci, rodiče, zprávy a ukládání dat.</p>
+              <button class="btn btn-ghost btn-sm" id="settings-tutorial-btn">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                Zobrazit tutoriál
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ─────────────── ADMIN ─────────────── -->
+        <div id="view-admin" class="view">
+          <div class="page-header">
+            <div class="page-header-left">
+              <div class="page-icon gold"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+              <div class="page-title"><h1>Admin panel</h1><p>Správa všech školních dat</p></div>
+            </div>
+          </div>
+          <div id="admin-target-bar" class="admin-target-bar" style="display:none">
+            <div style="font-size:13px;color:var(--fg);display:flex;align-items:center;gap:6px;white-space:nowrap">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              <span style="font-weight:600">Upravuji žáka:</span>
+            </div>
+            <select id="admin-target-select" class="form-select" style="max-width:240px;margin-bottom:0;font-size:13px" onchange="adminSelectStudent(this.value,true);this.blur()"></select>
+            <span style="font-size:12px;color:var(--fg-muted)">Vše níže (známky, poznámky, úkoly…) platí jen pro tohoto žáka.</span>
+          </div>
+          <div id="admin-sections" class="stagger"></div>
+        </div>
+
+      </div><!-- /content-inner -->
+    </div><!-- /content-scroll -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ═══════════════════════════ MODAL ═══════════════════════════ -->
+<div id="modal-overlay" class="modal-overlay" style="display:none">
+  <div class="modal" id="modal-box">
+    <div class="modal-title" id="modal-title">Dialog</div>
+    <div id="modal-body"></div>
+    <div class="modal-actions" id="modal-actions"></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════ TUTORIAL ═══════════════════════════ -->
+<div id="tutorial-overlay" role="dialog" aria-modal="true" aria-label="Nápověda – jak aplikace funguje">
+  <div class="tut-box">
+    <button class="tut-close" id="tut-close" aria-label="Zavřít nápovědu">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div class="tut-icon" id="tut-icon"></div>
+    <div class="tut-step" id="tut-step"></div>
+    <div class="tut-title" id="tut-title"></div>
+    <div class="tut-text" id="tut-text"></div>
+    <div class="tut-dots" id="tut-dots"></div>
+    <div class="tut-actions">
+      <div class="tut-actions-left">
+        <button class="btn btn-outline btn-sm" id="tut-prev" type="button">Zpět</button>
+        <button class="btn btn-outline btn-sm" id="tut-skip" type="button">Přeskočit</button>
+      </div>
+      <button class="btn btn-primary btn-sm" id="tut-next" type="button">Další</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ═══ config.js ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   config.js – konfigurace a konstanty aplikace
+═══════════════════════════════════════════════════════════════ */
+
+/* Firebase konfigurace (stejný projekt jako dosud – nic se nemění) */
+var firebaseConfig = {
+  apiKey:            "AIzaSyChLAQmzNz3tXtWWwpjwt8_P7fwdOwqvC8",
+  authDomain:        "test-stranky-94ae7.firebaseapp.com",
+  projectId:         "test-stranky-94ae7",
+  storageBucket:     "test-stranky-94ae7.firebasestorage.app",
+  messagingSenderId: "414055116493",
+  appId:             "1:414055116493:web:5bee467091a1680d428384"
+};
+
+/* Kolekce se zprávami (vznikne sama při odeslání první zprávy) */
+var MSG_COLLECTION = 'zpravy';
+
+/* Klíče pro sessionStorage / localStorage */
+var SESSION_KEY  = 'zs_alexandra_session';
+var SESSION_TTL  = 8 * 60 * 60 * 1000;      // 8 hodin
+var TUTORIAL_KEY = 'zs_alexandra_tutorial_v2';
+
+/* Jméno, pod kterým učitel (admin) píše zprávy */
+var TEACHER_NAME = 'Učitel / škola';
+
+/* Dny, hodiny a ikona koše */
+var DAYS    = ['Pondělí', 'Úterý', 'Středa', 'Čtvrtek', 'Pátek'];
+var PERIODS = [1, 2, 3, 4, 5, 6];
+var TRASH_ICON = '<polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>';
+
+/* Klíče dat, která patří jednomu žákovi (kolekce zaci/{id}) */
+var STUDENT_DATA_KEYS = ['student', 'subjects', 'grades', 'timetable', 'homework', 'tests', 'attendance', 'notes', 'disciplinary'];
+
+
+/* ═══ helpers.js ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   helpers.js – drobné pomocné funkce (bez závislosti na datech)
+═══════════════════════════════════════════════════════════════ */
+
+/* Náhodné ID */
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+/* Ochrana proti XSS – escapování textu vkládaného do HTML */
+function esc(s) {
+  return String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+/* Malé HTML komponenty */
+function subjIcon(s)  { return '<span class="subj-chip">' + esc(s) + '</span>'; }
+function gradeHtml(v) { return '<span class="grade-badge grade-' + v + '">' + v + '</span>'; }
+function svgIcon(path, size) {
+  size = size || 14;
+  return '<svg width="' + size + '" height="' + size + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + path + '</svg>';
+}
+function attBadge(status) {
+  var cls = {present:'badge-green', absent:'badge-red', excused:'badge-yellow', late:'badge-yellow', 'school-event':'badge-blue'};
+  var lbl = {present:'Přítomen', absent:'Nepřítomen', excused:'Omluveno', late:'Pozdní příchod', 'school-event':'Školní akce'};
+  return '<span class="badge ' + (cls[status] || 'badge-gray') + '">' + (lbl[status] || status) + '</span>';
+}
+
+/* Datum a čas z časové značky (ms) */
+function fmtDateTime(ts) {
+  if (!ts) return '';
+  var d = new Date(ts);
+  return d.toLocaleDateString('cs-CZ') + ' ' + d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+}
+
+/* Modální okno (wide = širší okno, např. pro čtení zprávy) */
+function openModal(title, bodyHTML, actionsHTML, wide) {
+  document.getElementById('modal-title').textContent = title;
+  document.getElementById('modal-body').innerHTML    = bodyHTML;
+  document.getElementById('modal-actions').innerHTML = actionsHTML;
+  document.getElementById('modal-box').classList.toggle('wide', !!wide);
+  document.getElementById('modal-overlay').style.display = 'flex';
+}
+function closeModal() { document.getElementById('modal-overlay').style.display = 'none'; }
+
+
+/* ═══ db.js ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   db.js – Firebase, cache dat a ukládání
+
+   Struktura ve Firestore (NIC se ručně nemění):
+     meta/hlavni       → { pins, students, parents }   (parents je nové pole,
+                         vznikne samo při prvním uložení adminem)
+     zaci/{studentId}  → data jednoho žáka (známky, úkoly, rozvrh…)
+     zpravy/{id}       → zprávy mezi účty (nová kolekce, vznikne sama)
+═══════════════════════════════════════════════════════════════ */
+
+firebase.initializeApp(firebaseConfig);
+var db_fs      = firebase.firestore();
+var META_REF   = db_fs.collection('meta').doc('hlavni');
+var LEGACY_REF = db_fs.collection('skola').doc('hlavni');
+var ZACI_REF   = db_fs.collection('zaci');
+var MSG_REF    = db_fs.collection(MSG_COLLECTION);
+
+/* ── Stav v paměti ── */
+var _cache       = null;   // data aktuálního kontextu + pins + students + parents
+var _metaStore   = null;   // {pins, students, parents} – společná nastavení z meta/hlavni
+var _zaciCache   = {};     // { studentId: data žáka }
+var _zaciTimer   = null;
+var _saveTimer   = null;
+var _ignoreNext  = false;
+var _ignoreZaci  = {};
+var _unsubscribe = null;
+var _zaciUnsubs  = {};     // real-time listenery jednotlivých žáků
+var _dataReady   = false;  // true po načtení dat z Firebase
+
+/* ═══ Loader ═══ */
+function showLoader(msg) {
+  var el = document.getElementById('fb-loader');
+  if (!el) {
+    el = document.createElement('div');
+    el.id = 'fb-loader';
+    el.style.cssText = 'position:fixed;inset:0;z-index:1100;background:hsl(225,43%,8%);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px';
+    el.innerHTML =
+      '<div style="width:36px;height:36px;border:3px solid hsla(221,88%,60%,0.2);border-top-color:hsl(221,88%,60%);border-radius:50%;animation:spin 0.8s linear infinite"></div>' +
+      '<div id="fb-loader-msg" style="color:hsl(215,18%,52%);font-size:13px;font-family:\'DM Sans\',sans-serif">' + msg + '</div>';
+    document.body.appendChild(el);
+  } else {
+    var m = document.getElementById('fb-loader-msg');
+    if (m) m.textContent = msg;
+  }
+}
+function hideLoader() {
+  var el = document.getElementById('fb-loader');
+  if (el) { el.style.transition = 'opacity 0.3s'; el.style.opacity = '0'; setTimeout(function () { el.remove(); }, 320); }
+}
+
+/* ═══ Převody dat ═══ */
+function firestoreToCache(data) {
+  try { return JSON.parse(data.json); } catch (e) { return null; }
+}
+function cacheToFirestore(cache) {
+  return { json: JSON.stringify(cache) };
+}
+
+/* Tolerantní čtení meta/hlavni – podporuje {json} i nativní pole {pins, students, parents} */
+function metaFromFirestore(data) {
+  if (!data) return null;
+  if (data.json) {
+    try {
+      var p = JSON.parse(data.json);
+      if (p && (p.students || p.pins)) return normMeta(p);
+    } catch (e) {}
+  }
+  if (data.students || data.pins || data.parents) return normMeta(data);
+  return null;
+}
+function normMeta(p) {
+  return {
+    pins:     p.pins || {},
+    students: Array.isArray(p.students) ? p.students : [],
+    parents:  Array.isArray(p.parents)  ? p.parents  : []
+  };
+}
+/* Dokument, který se zapisuje do meta/hlavni */
+function buildMetaDoc(c) {
+  return {
+    pins:     c.pins,
+    students: JSON.parse(JSON.stringify(c.students || [])),
+    parents:  JSON.parse(JSON.stringify(c.parents  || []))
+  };
+}
+function mergeWithDefaults(data) {
+  var def = defaultDB();
+  Object.keys(def).forEach(function (k) { if (data[k] === undefined) data[k] = def[k]; });
+  return data;
+}
+function loadFromLocalStorage() {
+  try { var r = localStorage.getItem('zs_alexandra_db'); if (r) return mergeWithDefaults(JSON.parse(r)); } catch (e) {}
+  return defaultDB();
+}
+
+/* ═══ Výchozí data ═══ */
+function defaultDB() {
+  return {
+    student: { name:'Jan Novák', class:'8.A', school:'ZS Alexandra', year:'2025/2026', classTeacher:'Mgr. Jana Horáčková' },
+    subjects: [
+      {id:'mat',name:'Matematika',     short:'MAT',teacher:'Mgr. Pavel Horák',      room:'21',type:'sci',  order:1},
+      {id:'csj',name:'Český jazyk',    short:'ČSJ',teacher:'Mgr. Jana Horáčková',  room:'15',type:'hum',  order:2},
+      {id:'ang',name:'Anglický jazyk', short:'ANG',teacher:'Mgr. Petra Dvořáčková',room:'12',type:'lang', order:3},
+      {id:'fyz',name:'Fyzika',         short:'FYZ',teacher:'Ing. Tomáš Novotný',    room:'18',type:'sci',  order:4},
+      {id:'che',name:'Chemie',         short:'CHE',teacher:'RNDr. Eva Součková',    room:'19',type:'sci',  order:5},
+      {id:'bio',name:'Biologie',       short:'BIO',teacher:'Mgr. Lucie Marková',    room:'14',type:'sci',  order:6},
+      {id:'dej',name:'Dějepis',        short:'DEJ',teacher:'Mgr. Radek Beneš',      room:'16',type:'hum',  order:7},
+      {id:'zsv',name:'Zeměpis',        short:'ZSV',teacher:'Mgr. Alena Říhová',     room:'13',type:'hum',  order:8},
+      {id:'inf',name:'Informatika',    short:'INF',teacher:'Ing. Marek Procházka',  room:'20',type:'tech', order:9},
+      {id:'tv', name:'Těl. výchova',   short:'TV', teacher:'Mgr. Petr Kratochvíl',  room:'TL',type:'sport',order:10}
+    ],
+    grades: [
+      {id:'g1',subjectId:'mat',value:2,type:'Písemka',date:'15.5.2026',note:'Kvadratické rovnice'},
+      {id:'g2',subjectId:'csj',value:1,type:'Sloh',   date:'12.5.2026',note:''},
+      {id:'g3',subjectId:'ang',value:2,type:'Test',   date:'8.5.2026', note:'Unit 7'},
+      {id:'g4',subjectId:'fyz',value:3,type:'Ústní',  date:'6.5.2026', note:'Optika'},
+      {id:'g5',subjectId:'mat',value:1,type:'Ústní',  date:'2.5.2026', note:''},
+      {id:'g6',subjectId:'bio',value:2,type:'Test',   date:'28.4.2026',note:'Evoluce'}
+    ],
+    timetable: [
+      {day:0,period:1,subject:'MAT',room:'21'},{day:0,period:2,subject:'ČSJ',room:'15'},{day:0,period:3,subject:'ANG',room:'12'},{day:0,period:4,subject:'FYZ',room:'18'},{day:0,period:5,subject:'TV',room:'TL'},
+      {day:1,period:1,subject:'ČSJ',room:'15'},{day:1,period:2,subject:'MAT',room:'21'},{day:1,period:3,subject:'CHE',room:'19'},{day:1,period:4,subject:'BIO',room:'14'},{day:1,period:5,subject:'INF',room:'20'},
+      {day:2,period:1,subject:'ANG',room:'12'},{day:2,period:2,subject:'DEJ',room:'16'},{day:2,period:3,subject:'MAT',room:'21'},{day:2,period:4,subject:'ZSV',room:'13'},{day:2,period:5,subject:'TV',room:'TL'},
+      {day:3,period:1,subject:'FYZ',room:'18'},{day:3,period:2,subject:'ANG',room:'12'},{day:3,period:3,subject:'ČSJ',room:'15'},{day:3,period:4,subject:'CHE',room:'19'},{day:3,period:5,subject:'BIO',room:'14'},
+      {day:4,period:1,subject:'MAT',room:'21'},{day:4,period:2,subject:'ZSV',room:'13'},{day:4,period:3,subject:'DEJ',room:'16'},{day:4,period:4,subject:'INF',room:'20'}
+    ],
+    homework: [
+      {id:'hw1',subject:'MAT',title:'Příklady str. 85, č.1–10',description:'Lineární nerovnice',dueDate:'26.5.2026',done:false},
+      {id:'hw2',subject:'ANG',title:'Přečíst Unit 8',           description:'Slovíčka + grammar', dueDate:'27.5.2026',done:false},
+      {id:'hw3',subject:'ČSJ',title:'Slohovka – popis osoby',   description:'Min. 200 slov',      dueDate:'28.5.2026',done:true},
+      {id:'hw4',subject:'BIO',title:'Referát o evoluci',         description:'Prezentace 5 min',   dueDate:'2.6.2026', done:false}
+    ],
+    tests: [
+      {id:'t1',subject:'MAT',topic:'Funkce a grafy',               date:'27.5.2026',teacher:'Mgr. Pavel Horák'},
+      {id:'t2',subject:'CHE',topic:'Organická chemie – opakování', date:'29.5.2026',teacher:'RNDr. Eva Součková'},
+      {id:'t3',subject:'FYZ',topic:'Elektřina a magnetismus',      date:'3.6.2026', teacher:'Ing. Tomáš Novotný'}
+    ],
+    attendance: [
+      {id:'a1',date:'24.5.2026',status:'present',note:''},
+      {id:'a2',date:'23.5.2026',status:'present',note:''},
+      {id:'a3',date:'22.5.2026',status:'excused',note:'Nemoc'},
+      {id:'a4',date:'21.5.2026',status:'present',note:''},
+      {id:'a5',date:'20.5.2026',status:'late',   note:'Zpoždění vlaku'}
+    ],
+    notes: [],
+    disciplinary: [],
+    pins: { admin:'8520', student:'0258' },
+    students: [],   // {id, name, class, pin} – data žáků jsou v kolekci zaci/{id}
+    parents:  []    // {id, name, pin, studentIds:[…]} – rodiče a jejich děti
+  };
+}
+
+/* Čistá šablona dat žáka – předměty a rozvrh z výchozích hodnot, bez ukázkových známek/úkolů */
+function cleanStudentData(name, cls) {
+  var d = defaultDB();
+  delete d.pins; delete d.students; delete d.parents;
+  d.student.name = name || '';
+  d.student.class = cls || '';
+  d.grades = []; d.homework = []; d.tests = [];
+  d.attendance = []; d.notes = []; d.disciplinary = [];
+  return d;
+}
+
+/* ═══ Inicializace z Firebase ═══ */
+async function firebaseInit() {
+  showLoader('Připojování k databázi…');
+  try {
+    showLoader('Načítám data…');
+    var snap = await META_REF.get();
+    if (snap.exists) {
+      var loaded = metaFromFirestore(snap.data());
+      _cache = loaded ? mergeWithDefaults(loaded) : defaultDB();
+      console.log('✅ Firebase: data načtena');
+
+      // meta bez žáků → zkusit doplnit migrací ze staré kolekce
+      if (!_cache.students || _cache.students.length === 0) {
+        try {
+          var legacy = await LEGACY_REF.get();
+          if (legacy.exists) {
+            var lm = mergeWithDefaults(firestoreToCache(legacy.data()) || {});
+            if (lm && lm.student && lm.student.name) {
+              _cache.students = [{ id:'zak1', name: lm.student.name, class: lm.student.class, pin: (lm.pins && lm.pins.student) || '0258' }];
+              if (lm.pins) _cache.pins = lm.pins;
+              var zakDoc = await ZACI_REF.doc('zak1').get();
+              if (!zakDoc.exists) {
+                var zd = Object.assign({}, lm); delete zd.pins; delete zd.students; delete zd.parents;
+                await ZACI_REF.doc('zak1').set(cacheToFirestore(zd));
+              }
+              await META_REF.set(buildMetaDoc(_cache));
+              console.log('🔁 Doplněna migrace žáka z kolekce skola');
+            }
+          }
+        } catch (e) { console.log('ℹ️ Migrace ze skola přeskočena:', e.code || e); }
+      }
+    } else {
+      // První spuštění – zkusit migraci starých dat ze skola/hlavni
+      var migrated = null;
+      try {
+        var leg = await LEGACY_REF.get();
+        if (leg.exists) migrated = firestoreToCache(leg.data());
+      } catch (e) { console.log('ℹ️ Stará kolekce skola nenalezena – čistý start'); }
+
+      if (migrated) {
+        console.log('🔁 Migrace starých dat (skola/hlavni → meta + zaci)…');
+        migrated = mergeWithDefaults(migrated);
+        var zakPin = (migrated.pins && migrated.pins.student) || '0258';
+        _cache = defaultDB();
+        _cache.pins = migrated.pins || _cache.pins;
+        _cache.students = [{ id:'zak1', name: migrated.student.name, class: migrated.student.class, pin: zakPin }];
+        await META_REF.set(buildMetaDoc(_cache));
+        var zakData = Object.assign({}, migrated);
+        delete zakData.pins; delete zakData.students; delete zakData.parents;
+        await ZACI_REF.doc('zak1').set(cacheToFirestore(zakData));
+      } else {
+        console.log('📝 Firebase: první spuštění, vytvářím dokument…');
+        _cache = defaultDB();
+        _cache.students = [{ id:'zak1', name: _cache.student.name, class: _cache.student.class, pin: _cache.pins.student }];
+        await META_REF.set(buildMetaDoc(_cache));
+        var zd2 = Object.assign({}, _cache);
+        delete zd2.pins; delete zd2.students; delete zd2.parents;
+        await ZACI_REF.doc('zak1').set(cacheToFirestore(zd2));
+      }
+    }
+    if (!_cache.parents) _cache.parents = [];
+
+    // Načíst žáky z kolekce zaci/{studentId}
+    var zaciSnap = await ZACI_REF.get();
+    _zaciCache = {};
+    zaciSnap.forEach(function (d) {
+      var parsed = firestoreToCache(d.data());
+      if (parsed) _zaciCache[d.id] = parsed;
+    });
+    // Žáci bez dat dostanou výchozí šablonu
+    (dbGet().students || []).forEach(function (s) {
+      if (!_zaciCache[s.id]) {
+        var fresh = defaultDB();
+        delete fresh.pins; delete fresh.students; delete fresh.parents;
+        fresh.student.name = s.name;
+        fresh.student.class = s.class || fresh.student.class;
+        _zaciCache[s.id] = fresh;
+        ZACI_REF.doc(s.id).set(cacheToFirestore(fresh)).catch(function (e) { console.error('❌ Vytvoření dat žáka:', e.code, e.message); });
+      }
+    });
+    _metaStore = buildMetaDoc(_cache);
+  } catch (e) {
+    console.error('❌ Firebase chyba:', e.code, e.message);
+    showLoader('⚠️ Firebase nedostupný – používám lokální data');
+    await new Promise(function (r) { setTimeout(r, 1500); });
+    _cache = loadFromLocalStorage();
+    if (!_cache.parents) _cache.parents = [];
+    _metaStore = buildMetaDoc(_cache);
+  }
+
+  hideLoader();
+  _dataReady = true;
+
+  // Real-time listener společných nastavení (meta/hlavni)
+  try {
+    _unsubscribe = META_REF.onSnapshot(function (snap) {
+      if (!snap.exists) return;
+      if (_ignoreNext) { _ignoreNext = false; return; }
+      var remote = metaFromFirestore(snap.data());
+      if (!remote || !_cache) return;
+      if (remote.pins)     { _cache.pins = remote.pins;         if (_metaStore) _metaStore.pins = remote.pins; }
+      if (remote.students) { _cache.students = remote.students; if (_metaStore) _metaStore.students = remote.students; }
+      if (remote.parents)  { _cache.parents = remote.parents;   if (_metaStore) _metaStore.parents = remote.parents; }
+      try { buildNav(); renderChildSwitcher(); renderView(activePage); } catch (e) {}
+    }, function (err) { console.error('❌ Firestore listener:', err.code, err.message); });
+  } catch (e) { console.error('❌ onSnapshot failed:', e); }
+
+  // Real-time listenery jednotlivých žáků
+  Object.keys(_zaciCache).forEach(ensureZaciListener);
+
+  // Obnovit přihlášení z session
+  var sess = sessionLoad();
+  if (sess && sess.role) restoreSession(sess);
+}
+
+/* ═══ Ukládání ═══ */
+function scheduleSave() {
+  if (currentRole === 'parent') return;          // rodič nic nezapisuje
+  if (_saveTimer) clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(function () {
+    if (_switching) return;                      // nepřepisovat data během přepínání žáka
+
+    // 1) Data žáka → zaci/{studentId}
+    var sid = currentStudentId();
+    if (sid) {
+      if (!_zaciCache[sid]) {
+        var one = (dbGet().students || []).find(function (s) { return s.id === sid; });
+        _zaciCache[sid] = cleanStudentData(one ? one.name : '', one ? one.class : '');
+      }
+      STUDENT_DATA_KEYS.forEach(function (k) { _zaciCache[sid][k] = JSON.parse(JSON.stringify(_cache[k])); });
+      _zaciCache[sid]._dirty = true;
+      scheduleZaciSave(sid);
+    }
+
+    // 2) Společná nastavení (PINy, žáci, rodiče) → meta/hlavni – jen admin
+    if (currentRole === 'admin') {
+      var metaDoc = buildMetaDoc(_cache);
+      _metaStore = buildMetaDoc(_cache);
+      _ignoreNext = true;
+      META_REF.set(metaDoc)
+        .then(function () {
+          console.log('✅ Uloženo do Firebase');
+          try { localStorage.setItem('zs_alexandra_db', JSON.stringify(_cache)); } catch (e) {}
+        })
+        .catch(function (e) {
+          console.error('❌ Firebase uložení selhalo:', e.code, e.message);
+          _ignoreNext = false;
+          try { localStorage.setItem('zs_alexandra_db', JSON.stringify(_cache)); } catch (le) {}
+        });
+    }
+  }, 700);
+}
+
+function scheduleZaciSave(studentId) {
+  if (_zaciTimer) clearTimeout(_zaciTimer);
+  _zaciTimer = setTimeout(function () {
+    Object.keys(_zaciCache).forEach(function (id) {
+      if (!_zaciCache[id]._dirty) return;
+      delete _zaciCache[id]._dirty;
+      _ignoreZaci[id] = true;
+      var data = Object.assign({}, _zaciCache[id]);
+      delete data._dirty;
+      ZACI_REF.doc(id).set(cacheToFirestore(data))
+        .then(function () { console.log('✅ Žák uložen:', id); })
+        .catch(function (e) { _ignoreZaci[id] = false; console.error('❌ Uložení žáka selhalo:', id, e.code, e.message); });
+    });
+  }, 700);
+}
+
+/* ═══ Přístup k datům ═══ */
+function dbGet() {
+  if (_cache) return _cache;
+  var def = defaultDB();
+  if (_metaStore) { def.pins = _metaStore.pins; def.students = _metaStore.students || []; def.parents = _metaStore.parents || []; }
+  return def;
+}
+function dbSet(fn) {
+  if (!_cache) _cache = defaultDB();
+  fn(_cache);
+  scheduleSave();
+}
+
+/* Aktualizace _cache z přišlých dat žáka (pro žáka a rodiče – živé zobrazení změn od učitele) */
+function refreshCacheFromZaci(sid, remote) {
+  if (!_cache) return;
+  var m = mergeWithDefaults(JSON.parse(JSON.stringify(remote)));
+  STUDENT_DATA_KEYS.forEach(function (k) { _cache[k] = m[k]; });
+  applyStudentMeta(sid);
+}
+/* Jméno a třída se vždy berou ze seznamu žáků (meta) */
+function applyStudentMeta(sid) {
+  var m = (_cache.students || []).find(function (s) { return s.id === sid; });
+  if (m && _cache.student) {
+    _cache.student.name = m.name;
+    if (m.class) _cache.student.class = m.class;
+  }
+}
+
+function ensureZaciListener(id) {
+  if (_zaciUnsubs[id]) return;
+  _zaciUnsubs[id] = ZACI_REF.doc(id).onSnapshot(function (snap) {
+    if (!snap.exists) return;
+    if (_ignoreZaci[id]) { _ignoreZaci[id] = false; return; }
+    // Lokální neuložené změny mají přednost
+    if (_zaciCache[id] && _zaciCache[id]._dirty) return;
+    var remote = firestoreToCache(snap.data());
+    if (!remote) return;
+    delete remote._dirty;
+    _zaciCache[id] = remote;
+    // Žák a rodič vidí změny učitele hned (admin pracuje s vlastní kopií)
+    if (currentRole && currentRole !== 'admin' && id === currentStudentId()) refreshCacheFromZaci(id, remote);
+    try { buildNav(); renderView(activePage); } catch (e) {}
+  }, function (err) { console.error('❌ Žák listener:', id, err.code, err.message); });
+}
+
+function zaciList() {
+  return (dbGet().students || []).map(function (s) { return Object.assign({}, s, { data: _zaciCache[s.id] || null }); });
+}
+
+function studentDataFor(id) {
+  var meta = (dbGet().students || []).find(function (s) { return s.id === id; });
+  if (!meta) return null;
+  var data = _zaciCache[id];
+  if (data) return mergeWithDefaults(JSON.parse(JSON.stringify(data)));
+  return cleanStudentData(meta.name, meta.class);
+}
+
+/* Přímý zápis do dat KONKRÉTNÍHO žáka (nezávisle na aktuálním kontextu) */
+function writeStudentData(sid, fn) {
+  if (!sid) return false;
+  var meta = (dbGet().students || []).find(function (s) { return s.id === sid; });
+  if (!meta) return false;
+  var data = _zaciCache[sid]
+    ? mergeWithDefaults(JSON.parse(JSON.stringify(_zaciCache[sid])))
+    : cleanStudentData(meta.name, meta.class);
+  delete data._dirty;
+  fn(data);
+  _zaciCache[sid] = data;
+  _zaciCache[sid]._dirty = true;
+  ensureZaciListener(sid);
+  scheduleZaciSave(sid);
+  return true;
+}
+
+/* Admin: přepne kontext na žáka sid a zůstane na aktuální stránce */
+function targetAdmin(sid) {
+  if (!sid) return;
+  _keepPage = activePage || 'admin';
+  _adminSelectedId = sid;
+  _loadContext();
+}
+
+
+/* ═══ auth.js ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   auth.js – přihlášení PINem, session, role (admin / žák / rodič)
+═══════════════════════════════════════════════════════════════ */
+
+/* ── Stav přihlášení ── */
+var currentRole       = null;   // 'admin' | 'student' | 'parent'
+var _currentStudentId = null;   // žák přihlášený PINem
+var _parentId         = null;   // rodič přihlášený PINem
+var _parentChildId    = null;   // dítě, které má rodič právě vybrané
+var _adminSelectedId  = null;   // žák vybraný v admin panelu
+var _keepPage         = null;   // stránka, na které zůstat po přepnutí kontextu
+var _switching        = false;  // probíhá přepnutí kontextu (blokuje mezilehlé ukládání)
+
+/* ── PIN klávesnice ── */
+var pinBuffer = '';
+var pinBusy   = false;
+
+function renderDots() {
+  document.querySelectorAll('.pin-dot').forEach(function (d, i) { d.classList.toggle('filled', i < pinBuffer.length); });
+}
+function setError(msg) {
+  var el = document.getElementById('pin-error');
+  if (el) el.textContent = msg || ' ';
+}
+function pinKey(d) {
+  if (pinBusy || pinBuffer.length >= 4) return;
+  pinBuffer += d; setError(''); renderDots();
+  if (pinBuffer.length === 4) verifyPin();
+}
+function pinDel() {
+  if (pinBusy) return;
+  pinBuffer = pinBuffer.slice(0, -1); setError(''); renderDots();
+}
+
+/* ── Session ── */
+function sessionLoad() {
+  try {
+    var s = JSON.parse(sessionStorage.getItem(SESSION_KEY) || 'null');
+    if (s && s.expires > Date.now()) return s;
+  } catch (e) {}
+  return null;
+}
+function sessionSave(role, studentId, parentId, childId) {
+  sessionStorage.setItem(SESSION_KEY, JSON.stringify({
+    role: role, studentId: studentId || null, parentId: parentId || null, childId: childId || null,
+    expires: Date.now() + SESSION_TTL
+  }));
+}
+function restoreSession(s) {
+  currentRole = s.role;
+  _currentStudentId = s.studentId || null;
+  _parentId = s.parentId || null;
+  _parentChildId = s.childId || null;
+  if (s.role === 'admin') _adminSelectedId = firstStudentId();
+  if (s.role === 'parent') {
+    if (!currentParent()) { logout(); return; }          // rodič mezitím zrušen
+    var kids = parentChildren();
+    if (!kids.some(function (k) { return k.id === _parentChildId; })) _parentChildId = kids.length ? kids[0].id : null;
+  }
+  _loadContext();
+}
+function logout() {
+  sessionStorage.removeItem(SESSION_KEY);
+  stopMessagesListener();
+  currentRole = null;
+  _currentStudentId = null; _parentId = null; _parentChildId = null;
+  _adminSelectedId = null; _keepPage = null;
+  _cache = null;
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display = 'flex';
+  pinBuffer = ''; pinBusy = false; renderDots();
+}
+
+/* ── Pomocné funkce pro role ── */
+function firstStudentId() {
+  var st = dbGet().students || [];
+  return st.length ? st[0].id : null;
+}
+function currentStudentId() {
+  if (currentRole === 'student') return _currentStudentId;
+  if (currentRole === 'admin')   return _adminSelectedId || firstStudentId();
+  if (currentRole === 'parent')  return _parentChildId;
+  return null;
+}
+function currentParent() {
+  return (dbGet().parents || []).find(function (p) { return p.id === _parentId; }) || null;
+}
+/* Děti přihlášeného rodiče (jen existující žáci) */
+function parentChildren() {
+  var p = currentParent();
+  if (!p) return [];
+  return (dbGet().students || []).filter(function (s) { return (p.studentIds || []).indexOf(s.id) >= 0; });
+}
+/* Rodiče daného žáka */
+function parentsOfStudent(sid) {
+  return (dbGet().parents || []).filter(function (p) { return (p.studentIds || []).indexOf(sid) >= 0; });
+}
+
+/* Kontrola, jestli PIN už nepoužívá někdo jiný. Vrací text chyby nebo null. */
+function pinConflict(pin, exceptType, exceptId) {
+  var d = dbGet();
+  if (exceptType !== 'admin' && d.pins.admin === pin) return 'Tento PIN je admin PIN. Zvolte jiný.';
+  if ((d.students || []).some(function (s) { return s.pin === pin && !(exceptType === 'student' && s.id === exceptId); }))
+    return 'Tento PIN už používá jiný žák. Zvolte jiný.';
+  if ((d.parents || []).some(function (p) { return p.pin === pin && !(exceptType === 'parent' && p.id === exceptId); }))
+    return 'Tento PIN už používá jiný rodič. Zvolte jiný.';
+  return null;
+}
+
+/* ── Ověření PINu ── */
+function verifyPin() {
+  pinBusy = true;
+  // Dokud nejsou načtena data z Firebase, počkat
+  if (!_dataReady) {
+    setError('Načítám data…');
+    var wait = setInterval(function () {
+      if (_dataReady) { clearInterval(wait); setError(''); verifyPin(); }
+    }, 100);
+    return;
+  }
+
+  var d = dbGet();
+  var pins = d.pins;
+  var role = null, studentId = null, parentId = null, childId = null;
+
+  if (pinBuffer === pins.admin) {
+    role = 'admin';
+  } else {
+    var sm = (d.students || []).find(function (s) { return s.pin === pinBuffer; });
+    var pm = (d.parents  || []).find(function (p) { return p.pin === pinBuffer; });
+    if (sm) { role = 'student'; studentId = sm.id; }
+    else if (pm) {
+      role = 'parent'; parentId = pm.id;
+      var kids = (d.students || []).filter(function (s) { return (pm.studentIds || []).indexOf(s.id) >= 0; });
+      childId = kids.length ? kids[0].id : null;
+    }
+    // zpětná kompatibilita: starý společný žákovský PIN
+    else if (pinBuffer === pins.student) { role = 'student'; studentId = firstStudentId(); }
+  }
+
+  if (role) {
+    currentRole = role;
+    _currentStudentId = studentId;
+    _parentId = parentId;
+    _parentChildId = childId;
+    if (role === 'admin') _adminSelectedId = firstStudentId();
+    sessionSave(role, studentId, parentId, childId);
+    _loadContext();
+  } else {
+    var card = document.getElementById('pin-card');
+    if (card) card.classList.add('shake');
+    setError('Nesprávný PIN');
+    setTimeout(function () {
+      if (card) card.classList.remove('shake');
+      pinBuffer = ''; renderDots(); setError(''); pinBusy = false;
+    }, 1200);
+  }
+}
+
+/* Přepne _cache na data aktuálního kontextu (admin = vybraný žák, rodič = vybrané dítě) */
+function _loadContext() {
+  _switching = true;
+  var sid = currentStudentId();
+  var keepPins     = (_metaStore && _metaStore.pins)     || (_cache && _cache.pins) || defaultDB().pins;
+  var keepStudents = (_metaStore && _metaStore.students) || (_cache && _cache.students) || [];
+  var keepParents  = (_metaStore && _metaStore.parents)  || (_cache && _cache.parents)  || [];
+
+  var data = sid ? studentDataFor(sid) : null;
+  _cache = mergeWithDefaults(JSON.parse(JSON.stringify(data || cleanStudentData('', ''))));
+  _cache.pins = keepPins;
+  _cache.students = keepStudents;
+  _cache.parents = keepParents;
+  if (sid) applyStudentMeta(sid);
+
+  setTimeout(function () {
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('app').classList.add('visible');
+    initApp();
+    startMessagesListener();
+    _switching = false;
+    pinBusy = false; pinBuffer = ''; renderDots();
+  }, 180);
+}
+
+/* Admin: přepnutí na jiného žáka */
+function adminSelectStudent(id, stay) {
+  if (!id) return;
+  _adminSelectedId = id;
+  _keepPage = stay ? (activePage || 'admin') : null;
+  _loadContext();
+}
+function getSelectedStudentMeta() {
+  var sid = _adminSelectedId || firstStudentId();
+  return (dbGet().students || []).find(function (s) { return s.id === sid; }) || null;
+}
+
+/* Rodič: přepnutí na jiné dítě */
+function parentSelectChild(id) {
+  if (!id || currentRole !== 'parent') return;
+  _parentChildId = id;
+  sessionSave('parent', null, _parentId, id);
+  _keepPage = activePage || 'dashboard';
+  _loadContext();
+}
+
+
+/* ═══ ui.js ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   ui.js – navigace, sidebar, přepínač dítěte, tutoriál
+═══════════════════════════════════════════════════════════════ */
+
+var NAV_ITEMS = [
+  {id:'dashboard',    label:'Hlavní panel',       section:'Přehled',      icon:'<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>'},
+  {id:'inbox',        label:'Schránka',           section:null,           icon:'<polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/>'},
+  {id:'grades',       label:'Hodnocení',          section:null,           icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>'},
+  {id:'homework',     label:'Domácí úkoly',       section:'Výuka',        icon:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>'},
+  {id:'tests',        label:'Písemky',            section:null,           icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>'},
+  {id:'curriculum',   label:'Učivo',              section:null,           icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>'},
+  {id:'activity',     label:'Aktivita',           section:null,           icon:'<polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>'},
+  {id:'schedule',     label:'Rozvrh',             section:'Správa',       icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>'},
+  {id:'attendance',   label:'Docházka',           section:null,           icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>'},
+  {id:'disciplinary', label:'Výchovná opatření',  section:null,           icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>'},
+  {id:'messages',     label:'Nová zpráva',        section:'Zprávy',       icon:'<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>'},
+  {id:'settings',     label:'Nastavení',          section:'Administrace', icon:'<circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2M12 20v2M20 12h2M2 12h2M19.07 19.07l-1.41-1.41M4.93 19.07l1.41-1.41"/>', adminOnly:true},
+  {id:'admin',        label:'Admin panel',        section:null,           icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>', adminOnly:true}
+];
+var activePage = 'dashboard';
+
+function buildNav() {
+  var nav = document.getElementById('sidebar-nav');
+  if (!nav) return;
+  nav.innerHTML = '';
+  var db = dbGet();
+  var pending = (db.homework || []).filter(function (h) { return !h.done; }).length;
+  var unread  = unreadCount();
+  var visible = NAV_ITEMS.filter(function (i) { return !i.adminOnly || currentRole === 'admin'; });
+  var lastSection = null;
+
+  visible.forEach(function (item) {
+    if (item.section && item.section !== lastSection) {
+      var lbl = document.createElement('div');
+      lbl.className = 'nav-section-label' + (item.adminOnly ? ' admin-label' : '');
+      lbl.textContent = item.section;
+      nav.appendChild(lbl);
+      lastSection = item.section;
+    }
+    var btn = document.createElement('button');
+    btn.className = 'nav-btn' + (item.adminOnly ? ' admin-btn' : '') + (activePage === item.id ? ' active' : '');
+    btn.id = 'nav-' + item.id;
+    btn.addEventListener('click', function () { navigate(item.id); });
+    var badge = '';
+    if (item.id === 'homework' && pending > 0) badge = '<span class="nav-badge">' + pending + '</span>';
+    if (item.id === 'inbox' && unread > 0)     badge = '<span class="nav-badge red">' + unread + '</span>';
+    btn.innerHTML = svgIcon(item.icon, 15) + '<span class="label">' + item.label + '</span>' + badge;
+    nav.appendChild(btn);
+  });
+}
+
+function navigate(page) {
+  if (['admin', 'settings'].indexOf(page) >= 0 && currentRole !== 'admin') return;
+  activePage = page;
+  document.querySelectorAll('.nav-btn').forEach(function (b) { b.classList.remove('active'); });
+  var btn = document.getElementById('nav-' + page);
+  if (btn) btn.classList.add('active');
+  document.querySelectorAll('.view').forEach(function (v) { v.classList.remove('active'); });
+  var view = document.getElementById('view-' + page);
+  if (view) view.classList.add('active');
+  closeSidebar();
+  renderView(page);
+}
+
+/* ── Přepínač dítěte (jen pro rodiče) ── */
+function renderChildSwitcher() {
+  var el = document.getElementById('child-switcher');
+  if (!el) return;
+  if (currentRole !== 'parent') { el.style.display = 'none'; el.innerHTML = ''; return; }
+  var kids = parentChildren();
+  var p = currentParent();
+  var html = '<div class="cs-label">Zobrazené dítě</div>';
+  if (kids.length === 0) {
+    html += '<div class="cs-single" style="color:var(--fg-muted)">Žádné přiřazené dítě</div>';
+  } else if (kids.length === 1) {
+    html += '<div class="cs-single">' + esc(kids[0].name) + (kids[0].class ? ' · ' + esc(kids[0].class) : '') + '</div>';
+  } else {
+    html += '<select onchange="parentSelectChild(this.value);this.blur()">' +
+      kids.map(function (k) {
+        return '<option value="' + k.id + '"' + (k.id === _parentChildId ? ' selected' : '') + '>' + esc(k.name) + (k.class ? ' – ' + esc(k.class) : '') + '</option>';
+      }).join('') + '</select>';
+  }
+  if (p) html += '<div class="cs-parent">Přihlášen: ' + esc(p.name) + '</div>';
+  el.innerHTML = html;
+  el.style.display = 'block';
+}
+
+/* ═══ Sidebar (mobil) ═══ */
+function openSidebar() {
+  var sb = document.getElementById('sidebar'); if (sb) sb.classList.add('mobile-open');
+  document.getElementById('sidebar-overlay').style.display = 'block';
+}
+function closeSidebar() {
+  var sb = document.getElementById('sidebar'); if (sb) sb.classList.remove('mobile-open');
+  document.getElementById('sidebar-overlay').style.display = 'none';
+}
+
+/* ═══ Tutoriál ═══ */
+var tutIndex = 0;
+var TUT_STEPS = [
+  {
+    icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
+    title: 'Vítejte ve Žákovské knížce',
+    text: 'Přihlašujete se <strong>4místným PINem</strong> pomocí klávesnice na obrazovce. Každý žák i každý rodič má <strong>svůj vlastní PIN</strong>.'
+  },
+  {
+    icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+    title: 'Tři typy účtů',
+    text: '<strong>Učitel (admin)</strong> spravuje vše. <strong>Žák</strong> vidí svá data a odškrtává úkoly. <strong>Rodič</strong> vidí data svého dítěte (jen pro čtení) – pokud má více dětí, vybere si je v levém menu.'
+  },
+  {
+    icon: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+    title: 'Žáci a rodiče',
+    text: 'V admin panelu otevřete sekci <strong>Žáci</strong> nebo <strong>Rodiče</strong> a klikněte na <strong>„+ Přidat“</strong>. Rodiči při vytvoření zaškrtnete jedno nebo více dětí. Jedno dítě může mít i více rodičů.'
+  },
+  {
+    icon: '<path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>',
+    title: 'Zprávy mezi účty',
+    text: '<strong>Učitel</strong> může psát jednomu rodiči či žákovi, všem rodičům, rodičům třídy nebo rodičům konkrétního žáka. <strong>Rodič a žák</strong> píší učiteli. Nové zprávy se ukazují v <strong>Schránce</strong> s červeným číslem.'
+  },
+  {
+    icon: '<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>',
+    title: 'Automatické ukládání',
+    text: 'Vše se ukládá do databáze <strong>automaticky v cloudu</strong> (Firestore) a změny se projeví na všech zařízeních. Tuto nápovědu znovu otevřete odkazem <strong>„Jak aplikace funguje?“</strong> pod přihlášením.'
+  }
+];
+
+function tutRender() {
+  var s = TUT_STEPS[tutIndex];
+  document.getElementById('tut-icon').innerHTML = svgIcon(s.icon, 22);
+  document.getElementById('tut-step').textContent = 'Krok ' + (tutIndex + 1) + ' z ' + TUT_STEPS.length;
+  document.getElementById('tut-title').textContent = s.title;
+  document.getElementById('tut-text').innerHTML = s.text;
+  document.getElementById('tut-prev').style.visibility = tutIndex === 0 ? 'hidden' : 'visible';
+  document.getElementById('tut-next').textContent = tutIndex === TUT_STEPS.length - 1 ? 'Hotovo' : 'Další';
+  document.getElementById('tut-skip').style.display = tutIndex === TUT_STEPS.length - 1 ? 'none' : 'inline-flex';
+  document.getElementById('tut-dots').innerHTML = TUT_STEPS.map(function (_, i) {
+    return '<span class="tut-dot ' + (i === tutIndex ? 'active' : '') + '"></span>';
+  }).join('');
+}
+function startTutorial() {
+  tutIndex = 0; tutRender();
+  document.getElementById('tutorial-overlay').classList.add('open');
+}
+function tutFinish() {
+  document.getElementById('tutorial-overlay').classList.remove('open');
+  try { localStorage.setItem(TUTORIAL_KEY, 'done'); } catch (e) {}
+}
+function tutNext() { if (tutIndex < TUT_STEPS.length - 1) { tutIndex++; tutRender(); } else { tutFinish(); } }
+function tutPrev() { if (tutIndex > 0) { tutIndex--; tutRender(); } }
+
+/* ═══ Spuštění aplikace po přihlášení ═══ */
+function initApp() {
+  buildNav();
+  renderChildSwitcher();
+  navigate(_keepPage || 'dashboard');
+  _keepPage = null;
+}
+
+
+/* ═══ messages.js ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   messages.js – zprávy mezi účty (učitel ↔ rodič ↔ žák)
+
+   Klíč účtu:  'admin' | 'parent:<id>' | 'student:<id>'
+   Zpráva (kolekce zpravy):
+     { from, fromName, to:[klíče], toLabel, participants:[klíče],
+       subject, body, studentId, studentName, ts, readBy:[klíče] }
+   Každý účet odebírá jen zprávy, kde je v `participants`
+   (dotaz array-contains – nepotřebuje žádný index).
+═══════════════════════════════════════════════════════════════ */
+
+var _msgs     = [];      // zprávy přihlášeného účtu (nejnovější první)
+var _msgUnsub = null;
+var _msgKey   = null;
+var _msgTab   = 'inbox'; // 'inbox' | 'sent'
+var _compose  = null;    // předvyplnění nové zprávy (odpověď)
+
+/* ── Identita přihlášeného účtu ── */
+function myKey() {
+  if (currentRole === 'admin')   return 'admin';
+  if (currentRole === 'student') return _currentStudentId ? 'student:' + _currentStudentId : null;
+  if (currentRole === 'parent')  return _parentId ? 'parent:' + _parentId : null;
+  return null;
+}
+function keyLabel(key) {
+  var d = dbGet();
+  if (key === 'admin') return TEACHER_NAME;
+  if (key.indexOf('parent:') === 0) {
+    var p = (d.parents || []).find(function (x) { return 'parent:' + x.id === key; });
+    return p ? p.name : 'Rodič';
+  }
+  if (key.indexOf('student:') === 0) {
+    var s = (d.students || []).find(function (x) { return 'student:' + x.id === key; });
+    return s ? s.name : 'Žák';
+  }
+  return key;
+}
+function myName() { return keyLabel(myKey() || ''); }
+
+/* ── Odběr zpráv ── */
+function startMessagesListener() {
+  var key = myKey();
+  if (!key) return;
+  if (_msgUnsub && _msgKey === key) return;      // už běží pro tento účet
+  stopMessagesListener();
+  _msgKey = key;
+  _msgUnsub = MSG_REF.where('participants', 'array-contains', key).onSnapshot(function (snap) {
+    _msgs = snap.docs.map(function (d) { return Object.assign({ id: d.id }, d.data()); })
+                     .sort(function (a, b) { return (b.ts || 0) - (a.ts || 0); });
+    buildNav();
+    if (activePage === 'inbox') renderInbox();
+  }, function (err) { console.error('❌ Zprávy listener:', err.code, err.message); });
+}
+function stopMessagesListener() {
+  if (_msgUnsub) { try { _msgUnsub(); } catch (e) {} }
+  _msgUnsub = null; _msgKey = null; _msgs = [];
+}
+
+function isReceived(m, key) { return m.from !== key && (m.to || []).indexOf(key) >= 0; }
+function isUnread(m, key)   { return isReceived(m, key) && (m.readBy || []).indexOf(key) < 0; }
+function unreadCount() {
+  var key = myKey();
+  if (!key) return 0;
+  return _msgs.filter(function (m) { return isUnread(m, key); }).length;
+}
+
+/* ── Schránka ── */
+function renderInbox() {
+  var el = document.getElementById('inbox-content');
+  var key = myKey();
+  if (!el || !key) return;
+
+  var received = _msgs.filter(function (m) { return isReceived(m, key); });
+  var sent     = _msgs.filter(function (m) { return m.from === key; });
+  var list     = _msgTab === 'sent' ? sent : received;
+  var unread   = unreadCount();
+
+  var sub = document.getElementById('inbox-subtitle');
+  if (sub) sub.textContent = unread > 0 ? unread + ' nepřečtených zpráv' : 'Zprávy a oznámení';
+
+  var html = '<div class="msg-tabs">' +
+    '<button class="btn btn-sm ' + (_msgTab === 'inbox' ? 'btn-primary' : 'btn-outline') + '" onclick="setMsgTab(\'inbox\')">Doručené (' + received.length + ')</button>' +
+    '<button class="btn btn-sm ' + (_msgTab === 'sent'  ? 'btn-primary' : 'btn-outline') + '" onclick="setMsgTab(\'sent\')">Odeslané (' + sent.length + ')</button>' +
+    '</div><div class="card">';
+
+  if (list.length === 0) {
+    html += '<div class="empty-state"><p>' + (_msgTab === 'sent' ? 'Zatím jste nic neodeslali' : 'Žádné zprávy') + '</p></div>';
+  } else {
+    html += list.map(function (m) {
+      var un = isUnread(m, key);
+      var who = _msgTab === 'sent' ? 'Komu: ' + (m.toLabel || (m.to || []).map(keyLabel).join(', ')) : (m.fromName || keyLabel(m.from));
+      var chip = m.studentName ? '<span class="kid-chip">' + esc(m.studentName) + '</span>' : '';
+      var prev = String(m.body || '').replace(/\s+/g, ' ').slice(0, 140);
+      return '<div class="msg-row' + (un ? ' unread' : '') + '" onclick="openMessage(\'' + m.id + '\')">' +
+        '<span class="msg-dot"></span>' +
+        '<div class="msg-main">' +
+          '<div class="msg-top"><span class="msg-who">' + esc(who) + '</span>' + chip + '<span class="msg-date">' + esc(fmtDateTime(m.ts)) + '</span></div>' +
+          '<div class="msg-subj">' + esc(m.subject || '(bez předmětu)') + '</div>' +
+          '<div class="msg-prev">' + esc(prev) + '</div>' +
+        '</div></div>';
+    }).join('');
+  }
+  el.innerHTML = html + '</div>';
+}
+function setMsgTab(t) { _msgTab = t; renderInbox(); }
+
+/* ── Detail zprávy ── */
+function openMessage(id) {
+  var m = _msgs.find(function (x) { return x.id === id; });
+  var key = myKey();
+  if (!m || !key) return;
+
+  // Označit jako přečtenou
+  if (isUnread(m, key)) {
+    MSG_REF.doc(id).update({ readBy: firebase.firestore.FieldValue.arrayUnion(key) })
+      .catch(function (e) { console.error('❌ Označení přečtené:', e.code, e.message); });
+  }
+
+  var meta =
+    '<div class="msg-meta">' +
+    '<div><strong>Od:</strong> ' + esc(m.fromName || keyLabel(m.from)) + '</div>' +
+    '<div><strong>Komu:</strong> ' + esc(m.toLabel || (m.to || []).map(keyLabel).join(', ')) + '</div>' +
+    (m.studentName ? '<div><strong>Týká se žáka:</strong> ' + esc(m.studentName) + '</div>' : '') +
+    '<div><strong>Datum:</strong> ' + esc(fmtDateTime(m.ts)) + '</div></div>';
+
+  var actions = '<button class="btn btn-outline btn-sm" onclick="closeModal()">Zavřít</button>';
+  if (isReceived(m, key)) actions += '<button class="btn btn-primary btn-sm" onclick="replyTo(\'' + m.id + '\')">Odpovědět</button>';
+  if (currentRole === 'admin') actions += '<button class="btn btn-danger btn-sm" onclick="deleteMessage(\'' + m.id + '\')">Smazat</button>';
+
+  openModal(m.subject || '(bez předmětu)', meta + '<div class="msg-text">' + esc(m.body) + '</div>', actions, true);
+}
+function replyTo(id) {
+  var m = _msgs.find(function (x) { return x.id === id; });
+  if (!m) return;
+  _compose = {
+    to: m.from,
+    subject: /^Re:/i.test(m.subject || '') ? m.subject : 'Re: ' + (m.subject || ''),
+    studentId: m.studentId || null
+  };
+  closeModal();
+  navigate('messages');
+}
+function deleteMessage(id) {
+  if (!confirm('Smazat zprávu? Zmizí všem příjemcům.')) return;
+  MSG_REF.doc(id).delete().catch(function (e) { alert('Smazání se nezdařilo: ' + e.message); });
+  closeModal();
+}
+function composeNew() { _compose = null; navigate('messages'); }
+
+/* ── Příjemci (pro admina) ── */
+function adminRecipientOptions(selected) {
+  var d = dbGet();
+  var students = d.students || [];
+  var parents  = d.parents  || [];
+  var classes  = [];
+  students.forEach(function (s) { if (s.class && classes.indexOf(s.class) < 0) classes.push(s.class); });
+  classes.sort();
+
+  function opt(v, label) { return '<option value="' + esc(v) + '"' + (v === selected ? ' selected' : '') + '>' + esc(label) + '</option>'; }
+
+  var html = '<optgroup label="Skupiny">' + opt('all-parents', 'Všichni rodiče') + opt('all-students', 'Všichni žáci');
+  classes.forEach(function (c) { html += opt('class:' + c, 'Rodiče třídy ' + c); });
+  html += '</optgroup>';
+
+  if (students.length) {
+    html += '<optgroup label="Rodiče konkrétního žáka">';
+    students.forEach(function (s) { html += opt('kids:' + s.id, 'Rodiče žáka ' + s.name + (s.class ? ' (' + s.class + ')' : '')); });
+    html += '</optgroup>';
+  }
+  if (parents.length) {
+    html += '<optgroup label="Rodiče">';
+    parents.forEach(function (p) {
+      var kids = students.filter(function (s) { return (p.studentIds || []).indexOf(s.id) >= 0; }).map(function (s) { return s.name; });
+      html += opt('parent:' + p.id, p.name + (kids.length ? ' – ' + kids.join(', ') : ''));
+    });
+    html += '</optgroup>';
+  }
+  if (students.length) {
+    html += '<optgroup label="Žáci">';
+    students.forEach(function (s) { html += opt('student:' + s.id, s.name + (s.class ? ' (' + s.class + ')' : '')); });
+    html += '</optgroup>';
+  }
+  return html;
+}
+
+/* Hodnota výběru příjemce → { keys, label, studentId } */
+function resolveRecipients(v) {
+  var d = dbGet();
+  var students = d.students || [];
+  var parents  = d.parents  || [];
+  var keys = [], label = '', studentId = null;
+
+  function pk(p) { return 'parent:' + p.id; }
+
+  if (v === 'all-parents')      { keys = parents.map(pk); label = 'Všichni rodiče'; }
+  else if (v === 'all-students'){ keys = students.map(function (s) { return 'student:' + s.id; }); label = 'Všichni žáci'; }
+  else if (v.indexOf('class:') === 0) {
+    var c = v.slice(6);
+    var ids = students.filter(function (s) { return s.class === c; }).map(function (s) { return s.id; });
+    keys = parents.filter(function (p) { return (p.studentIds || []).some(function (i) { return ids.indexOf(i) >= 0; }); }).map(pk);
+    label = 'Rodiče třídy ' + c;
+  }
+  else if (v.indexOf('kids:') === 0) {
+    var sid = v.slice(5);
+    var st = students.find(function (s) { return s.id === sid; });
+    keys = parents.filter(function (p) { return (p.studentIds || []).indexOf(sid) >= 0; }).map(pk);
+    label = 'Rodiče žáka ' + (st ? st.name : '');
+    studentId = sid;
+  }
+  else if (v.indexOf('parent:') === 0 || v.indexOf('student:') === 0) { keys = [v]; label = keyLabel(v); }
+  else if (v === 'admin') { keys = ['admin']; label = TEACHER_NAME; }
+
+  return { keys: keys, label: label, studentId: studentId };
+}
+
+/* ── Psaní nové zprávy ── */
+function renderMessages() {
+  var el = document.getElementById('compose-content');
+  if (!el) return;
+  var pre = _compose || {};
+  var html = '';
+
+  if (currentRole === 'admin') {
+    html += '<div class="form-group"><label class="form-label">Komu</label>' +
+      '<select class="form-select" id="msg-to">' + adminRecipientOptions(pre.to || '') + '</select></div>';
+  } else {
+    html += '<div class="alert alert-info"><span>Zpráva bude doručena: <strong>' + esc(TEACHER_NAME) + '</strong></span></div>';
+    if (currentRole === 'parent') {
+      var kids = parentChildren();
+      var selKid = pre.studentId || _parentChildId;
+      if (kids.length) {
+        html += '<div class="form-group"><label class="form-label">Týká se dítěte</label>' +
+          '<select class="form-select" id="msg-kid">' +
+          kids.map(function (k) { return '<option value="' + k.id + '"' + (k.id === selKid ? ' selected' : '') + '>' + esc(k.name) + (k.class ? ' – ' + esc(k.class) : '') + '</option>'; }).join('') +
+          '</select></div>';
+      }
+    }
+  }
+
+  html += '<div class="form-group"><label class="form-label">Předmět</label><input class="form-input" id="msg-subject" placeholder="Předmět zprávy…" value="' + esc(pre.subject || '') + '"></div>' +
+    '<div class="form-group"><label class="form-label">Zpráva</label><textarea class="form-textarea" id="msg-body" placeholder="Text zprávy…" style="min-height:140px"></textarea></div>' +
+    '<div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap">' +
+    '<button class="btn btn-primary" id="msg-send-btn" onclick="doSendMessage()">' +
+    svgIcon('<line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>', 14) + ' Odeslat zprávu</button>' +
+    '<span id="msg-status" style="font-size:13px"></span></div>';
+
+  el.innerHTML = html;
+  _compose = null;
+}
+
+function doSendMessage() {
+  var key = myKey();
+  if (!key) return;
+  var subject = document.getElementById('msg-subject').value.trim();
+  var body    = document.getElementById('msg-body').value.trim();
+  var status  = document.getElementById('msg-status');
+  var btn     = document.getElementById('msg-send-btn');
+  if (!subject || !body) { alert('Vyplňte předmět a text zprávy'); return; }
+
+  var keys, label, studentId = null;
+  if (currentRole === 'admin') {
+    var r = resolveRecipients(document.getElementById('msg-to').value);
+    if (!r.keys.length) { alert('Vybraný příjemce nemá žádný účet (např. žák zatím nemá přiřazeného rodiče).'); return; }
+    keys = r.keys; label = r.label; studentId = r.studentId;
+  } else {
+    keys = ['admin']; label = TEACHER_NAME;
+    if (currentRole === 'parent') { var ks = document.getElementById('msg-kid'); studentId = ks ? ks.value : _parentChildId; }
+    else studentId = _currentStudentId;
+  }
+  var stu = studentId ? (dbGet().students || []).find(function (s) { return s.id === studentId; }) : null;
+
+  var participants = [key];
+  keys.forEach(function (k) { if (participants.indexOf(k) < 0) participants.push(k); });
+
+  btn.disabled = true;
+  status.style.color = 'var(--fg-muted)';
+  status.textContent = 'Odesílám…';
+
+  MSG_REF.add({
+    from: key, fromName: myName(),
+    to: keys, toLabel: label, participants: participants,
+    subject: subject, body: body,
+    studentId: studentId || null, studentName: stu ? stu.name : null,
+    ts: Date.now(), readBy: [key]
+  }).then(function () {
+    _msgTab = 'sent';
+    navigate('inbox');
+  }).catch(function (e) {
+    console.error('❌ Odeslání zprávy:', e.code, e.message);
+    btn.disabled = false;
+    status.style.color = 'var(--error)';
+    status.textContent = 'Chyba při odeslání: ' + (e.message || e.code);
+  });
+}
+
+
+/* ═══ views.js ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   views.js – vykreslení běžných stránek (žák / rodič / admin)
+═══════════════════════════════════════════════════════════════ */
+
+function renderView(page) {
+  var map = {
+    dashboard: renderDashboard, grades: renderGrades, schedule: renderSchedule,
+    homework: renderHomework, tests: renderTests, attendance: renderAttendance,
+    disciplinary: renderDisciplinary, inbox: renderInbox, messages: renderMessages,
+    settings: renderSettings, admin: renderAdmin
+  };
+  if (map[page]) map[page]();
+}
+
+/* ── DASHBOARD ── */
+function renderDashboard() {
+  var db = dbGet();
+  var h  = new Date().getHours();
+  var greet = h < 12 ? 'Dobré ráno' : h < 17 ? 'Dobré odpoledne' : 'Dobrý večer';
+  var greetEl = document.getElementById('dash-greeting');
+
+  if (currentRole === 'parent') {
+    var p = currentParent();
+    var first = p ? p.name.split(' ')[0] : '';
+    greetEl.textContent = greet + ', ' + first + '! Přehled žáka: ' + (db.student.name || '—') + (db.student.class ? ' (' + db.student.class + ')' : '');
+  } else {
+    greetEl.textContent = greet + ', ' + (db.student.name || '').split(' ')[0] + '!';
+  }
+
+  var pending = db.homework.filter(function (x) { return !x.done; }).length;
+  var avg = db.grades.length ? (db.grades.reduce(function (a, g) { return a + g.value; }, 0) / db.grades.length).toFixed(1) : '—';
+  var present = db.attendance.filter(function (a) { return a.status === 'present'; }).length;
+  var total = db.attendance.length;
+
+  document.getElementById('dash-stats').innerHTML =
+    '<div class="stat-card"><div class="stat-label">Průměr</div><div class="stat-value">' + avg + '</div><div class="stat-sub">ze všech předmětů</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Nesplněné úkoly</div><div class="stat-value" style="color:' + (pending > 0 ? 'var(--warning)' : 'var(--success)') + '">' + pending + '</div><div class="stat-sub">z ' + db.homework.length + ' celkem</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Docházka</div><div class="stat-value">' + (total ? Math.round(present / total * 100) : 100) + '<span style="font-size:16px">%</span></div><div class="stat-sub">' + present + '/' + total + ' dní</div></div>' +
+    '<div class="stat-card"><div class="stat-label">Písemky</div><div class="stat-value">' + db.tests.length + '</div><div class="stat-sub">naplánované</div></div>';
+
+  var phw = db.homework.filter(function (x) { return !x.done; });
+  document.getElementById('dash-hw').innerHTML = phw.length === 0
+    ? '<div class="empty-state" style="padding:20px"><p>Žádné nesplněné úkoly 🎉</p></div>'
+    : phw.slice(0, 4).map(function (hw) {
+        return '<div class="dash-hw-row" style="padding:9px 16px">' + subjIcon(hw.subject) + '<span style="flex:1;font-size:13px">' + esc(hw.title) + '</span><span style="font-size:11px;color:var(--fg-muted)">' + esc(hw.dueDate) + '</span></div>';
+      }).join('');
+
+  document.getElementById('dash-tests').innerHTML = db.tests.length === 0
+    ? '<div class="empty-state" style="padding:20px"><p>Žádné písemky</p></div>'
+    : db.tests.slice(0, 3).map(function (t) {
+        return '<div class="dash-hw-row" style="padding:9px 16px">' + subjIcon(t.subject) + '<span style="flex:1;font-size:13px">' + esc(t.topic) + '</span><span style="font-size:11px;color:var(--fg-muted)">' + esc(t.date) + '</span></div>';
+      }).join('');
+
+  document.getElementById('dash-grades').innerHTML = db.grades.length === 0
+    ? '<div class="empty-state" style="padding:20px"><p>Žádné známky</p></div>'
+    : db.grades.slice(-4).reverse().map(function (g) {
+        var subj = db.subjects.find(function (s) { return s.id === g.subjectId; });
+        return '<div class="dash-hw-row" style="padding:9px 16px">' + gradeHtml(g.value) + '<span style="flex:1;font-size:13px">' + esc(subj ? subj.short : g.subjectId) + ' <span style="color:var(--fg-muted);font-size:11px">' + esc(g.type) + '</span></span><span style="font-size:11px;color:var(--fg-muted)">' + esc(g.date) + '</span></div>';
+      }).join('');
+
+  // Rozvrh dnes
+  var dayIdx = new Date().getDay() - 1;   // 0=Po … 4=Pá, -1=Ne, 5=So
+  var ttLabel = document.getElementById('dash-tt-label');
+  var ttDiv   = document.getElementById('dash-tt');
+  if (dayIdx < 0 || dayIdx > 4) {
+    if (ttLabel) ttLabel.textContent = 'Rozvrh – víkend';
+    if (ttDiv)   ttDiv.innerHTML = '<div class="empty-state" style="padding:16px"><p>Dnes není školní den 🏖️</p></div>';
+  } else {
+    if (ttLabel) ttLabel.textContent = 'Rozvrh – ' + DAYS[dayIdx];
+    var slots = db.timetable.filter(function (c) { return c.day === dayIdx; }).sort(function (a, b) { return a.period - b.period; });
+    if (ttDiv) ttDiv.innerHTML = slots.length === 0
+      ? '<div class="empty-state" style="padding:16px"><p>Žádné hodiny v rozvrhu</p></div>'
+      : slots.map(function (c) {
+          return '<div class="dash-hw-row" style="padding:8px 16px"><span style="font-size:11px;color:var(--fg-muted);width:20px;font-weight:700">' + c.period + '.</span>' + subjIcon(c.subject) +
+            '<span style="flex:1;font-size:13px;font-weight:500">' + esc(c.subject) + '</span><span style="font-size:11px;color:var(--fg-muted)">' + esc(c.room) + '</span></div>';
+        }).join('');
+  }
+
+  // Týdenní rozvrh
+  var weeklyDiv = document.getElementById('dash-weekly-tt');
+  if (weeklyDiv) {
+    var wh = '<table style="width:100%;border-collapse:collapse;min-width:340px"><thead><tr><th style="width:28px;padding:5px 4px;font-size:10px;color:var(--fg-muted)">H.</th>';
+    DAYS.forEach(function (d, i) {
+      var today = i === dayIdx;
+      wh += '<th style="text-align:center;padding:5px 3px;font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:' + (today ? 'var(--primary)' : 'var(--fg-muted)') + ';font-weight:' + (today ? 700 : 600) + '">' + d.slice(0, 2) + '</th>';
+    });
+    wh += '</tr></thead><tbody>';
+    PERIODS.forEach(function (p) {
+      wh += '<tr><td style="text-align:center;font-weight:700;color:var(--fg-muted);font-size:11px;padding:2px 3px">' + p + '</td>';
+      DAYS.forEach(function (_, day) {
+        var c = db.timetable.find(function (x) { return x.day === day && x.period === p; });
+        var today = day === dayIdx;
+        wh += '<td style="padding:2px 2px"><div style="min-height:40px;border-radius:6px;padding:4px 5px;text-align:center;font-size:10px;border:1px solid ' + (today ? 'hsla(221,88%,60%,0.4)' : 'var(--border)') + ';background:' + (c ? (today ? 'hsla(221,88%,60%,0.15)' : 'var(--primary-dim)') : 'var(--surface)') + ';display:flex;flex-direction:column;align-items:center;justify-content:center">';
+        wh += c ? '<div style="font-weight:700;color:var(--primary);font-size:11px">' + esc(c.subject) + '</div><div style="color:var(--fg-muted);font-size:9px">' + esc(c.room) + '</div>'
+                : '<div style="color:var(--fg-dim);font-size:14px">·</div>';
+        wh += '</div></td>';
+      });
+      wh += '</tr>';
+    });
+    weeklyDiv.innerHTML = wh + '</tbody></table>';
+  }
+}
+
+/* ── GRADES ── */
+function renderGrades() {
+  var db = dbGet();
+  var html = '';
+  db.subjects.forEach(function (s) {
+    var gr = db.grades.filter(function (g) { return g.subjectId === s.id; });
+    if (gr.length === 0) return;
+    var avg = (gr.reduce(function (a, g) { return a + g.value; }, 0) / gr.length).toFixed(1);
+    html += '<div class="card" style="margin-bottom:10px">' +
+      '<div style="padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:10px">' +
+      subjIcon(s.short) + '<span style="font-weight:600;flex:1">' + esc(s.name) + '</span>' +
+      '<span style="font-size:12px;color:var(--fg-muted)">' + esc(s.teacher) + '</span>' +
+      '<span style="font-weight:700;background:var(--surface);padding:3px 10px;border-radius:8px;font-size:13px">∅ ' + avg + '</span></div>' +
+      '<div style="padding:4px 0">' +
+      gr.map(function (g) {
+        return '<div class="row">' + gradeHtml(g.value) + '<span style="flex:1;font-size:13px">' + esc(g.type) + '</span>' +
+          (g.note ? '<span style="font-size:11px;color:var(--fg-muted)">' + esc(g.note) + '</span>' : '') +
+          '<span style="font-size:11px;color:var(--fg-muted);width:80px;text-align:right">' + esc(g.date) + '</span></div>';
+      }).join('') + '</div></div>';
+  });
+  document.getElementById('grades-content').innerHTML = html || '<div class="card card-body"><div class="empty-state"><p>Žádné známky</p></div></div>';
+}
+
+/* ── SCHEDULE ── */
+function renderSchedule() {
+  var db = dbGet();
+  var html = '<table style="width:100%;border-collapse:collapse"><thead><tr><th style="width:36px;color:var(--fg-muted);font-size:11px;text-align:center;padding:8px 4px">H.</th>' +
+    DAYS.map(function (d) { return '<th style="color:var(--fg-muted);font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:8px 4px;text-align:center">' + d.slice(0, 2) + '</th>'; }).join('') +
+    '</tr></thead><tbody>';
+  PERIODS.forEach(function (p) {
+    html += '<tr><td style="text-align:center;font-weight:700;color:var(--fg-muted);font-size:12px;padding:3px 4px">' + p + '</td>';
+    DAYS.forEach(function (_, day) {
+      var c = db.timetable.find(function (x) { return x.day === day && x.period === p; });
+      html += '<td style="padding:3px 3px"><div class="tt-cell ' + (c ? 'filled' : '') + '">' +
+        (c ? '<div class="tt-subj">' + esc(c.subject) + '</div><div class="tt-room">' + esc(c.room) + '</div>' : '<div class="tt-empty">·</div>') + '</div></td>';
+    });
+    html += '</tr>';
+  });
+  document.getElementById('timetable-view').innerHTML = html + '</tbody></table>';
+}
+
+/* ── HOMEWORK (rodič má jen čtení) ── */
+var hwFilter = 'all';
+function setHwFilter(f) {
+  hwFilter = f;
+  ['all', 'pending', 'done'].forEach(function (x) {
+    var b = document.getElementById('hwf-' + x);
+    if (b) b.className = 'btn btn-sm ' + (x === f ? 'btn-primary' : 'btn-outline');
+  });
+  renderHomeworkList();
+}
+function renderHomework() { renderHomeworkList(); }
+function renderHomeworkList() {
+  var db = dbGet();
+  var ro = currentRole === 'parent';
+  var items = db.homework;
+  if (hwFilter === 'pending') items = items.filter(function (h) { return !h.done; });
+  if (hwFilter === 'done')    items = items.filter(function (h) { return h.done; });
+  var pending = db.homework.filter(function (h) { return !h.done; }).length;
+  var lbl = document.getElementById('hw-count-label');
+  if (lbl) lbl.textContent = pending + ' nesplněných z ' + db.homework.length + ' celkem';
+  var list = document.getElementById('hw-list');
+  if (!list) return;
+  var check = svgIcon('<polyline points="20 6 9 17 4 12"/>', 11);
+  list.innerHTML = items.length === 0 ? '<div class="empty-state"><p>Žádné úkoly</p></div>'
+    : items.map(function (hw) {
+        var box = ro
+          ? '<span class="checkbox-btn readonly ' + (hw.done ? 'checked' : '') + '">' + (hw.done ? check : '') + '</span>'
+          : '<button class="checkbox-btn ' + (hw.done ? 'checked' : '') + '" onclick="toggleHw(\'' + hw.id + '\')">' + (hw.done ? check : '') + '</button>';
+        var del = ro ? '' : '<button class="del-btn" onclick="deleteHw(\'' + hw.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button>';
+        return '<div class="row hw-row" style="padding:10px 12px">' + box + subjIcon(hw.subject) +
+          '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;' + (hw.done ? 'text-decoration:line-through;opacity:.5' : '') + '">' + esc(hw.title) + '</div>' +
+          (hw.description ? '<div style="font-size:11px;color:var(--fg-muted)">' + esc(hw.description) + '</div>' : '') + '</div>' +
+          '<span style="font-size:11px;color:var(--fg-muted);white-space:nowrap">' + esc(hw.dueDate) + '</span>' + del + '</div>';
+      }).join('');
+}
+function toggleHw(id) {
+  if (currentRole === 'parent') return;
+  dbSet(function (db) { var h = db.homework.find(function (x) { return x.id === id; }); if (h) h.done = !h.done; });
+  buildNav(); renderHomeworkList();
+}
+function deleteHw(id) {
+  if (currentRole === 'parent') return;
+  dbSet(function (db) { db.homework = db.homework.filter(function (h) { return h.id !== id; }); });
+  buildNav(); renderHomeworkList();
+}
+
+/* ── TESTS ── */
+function renderTests() {
+  var db = dbGet();
+  document.getElementById('tests-list').innerHTML = db.tests.length === 0
+    ? '<div class="empty-state"><p>Žádné naplánované písemky</p></div>'
+    : db.tests.map(function (t) {
+        return '<div class="row" style="padding:12px 16px">' + subjIcon(t.subject) +
+          '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">' + esc(t.topic) + '</div>' +
+          (t.teacher ? '<div style="font-size:11px;color:var(--fg-muted)">' + esc(t.teacher) + '</div>' : '') + '</div>' +
+          '<span style="font-size:12px;color:var(--fg-muted);font-weight:600;white-space:nowrap">' + esc(t.date) + '</span></div>';
+      }).join('');
+}
+
+/* ── ATTENDANCE ── */
+function renderAttendance() {
+  var db = dbGet();
+  var present = db.attendance.filter(function (a) { return a.status === 'present'; }).length;
+  var absent  = db.attendance.filter(function (a) { return a.status === 'absent'; }).length;
+  var excused = db.attendance.filter(function (a) { return a.status === 'excused'; }).length;
+  var s = document.getElementById('att-summary');
+  if (s) s.textContent = present + '/' + db.attendance.length + ' přítomen · ' + absent + ' absencí · ' + excused + ' omluveno';
+  document.getElementById('att-list').innerHTML = db.attendance.length === 0 ? '<div class="empty-state"><p>Žádné záznamy</p></div>'
+    : db.attendance.map(function (a) {
+        return '<div class="row" style="padding:10px 16px"><span style="font-size:12px;color:var(--fg-muted);width:90px">' + esc(a.date) + '</span>' + attBadge(a.status) +
+          '<span style="flex:1;font-size:12px;color:var(--fg-muted);margin-left:8px">' + esc(a.note || '') + '</span></div>';
+      }).join('');
+}
+
+/* ── VÝCHOVNÁ OPATŘENÍ ── */
+function renderDisciplinary() {
+  var db = dbGet();
+  var disc = db.disciplinary || [];
+  var pozitive = disc.filter(function (d) { return d.kind === 'pochvala' || d.kind === 'pochvala-red'; }).length;
+  var s = document.getElementById('disc-summary');
+  if (s) s.textContent = disc.length + ' opatření celkem · ' + pozitive + ' pochval · ' + (disc.length - pozitive) + ' napomenutí/důtek';
+
+  var KINDS = {
+    'pochvala':     {label:'Pochvala třídního učitele',   cls:'badge-green'},
+    'pochvala-red': {label:'Pochvala ředitele',           cls:'badge-green'},
+    'napomenuti':   {label:'Napomenutí třídního učitele', cls:'badge-yellow'},
+    'dttu':         {label:'Důtka třídního učitele',      cls:'badge-yellow'},
+    'dtred':        {label:'Důtka ředitele',              cls:'badge-red'},
+    'podminecne':   {label:'Podmínečné vyloučení',        cls:'badge-red'},
+    'vylouceni':    {label:'Vyloučení ze školy',          cls:'badge-red'}
+  };
+  document.getElementById('disc-list').innerHTML = disc.length === 0
+    ? '<div class="empty-state"><p>Žádná výchovná opatření</p></div>'
+    : disc.map(function (d) {
+        var k = KINDS[d.kind] || {label: d.kind, cls: 'badge-gray'};
+        return '<div class="row" style="padding:12px 16px"><span class="badge ' + k.cls + '" style="white-space:nowrap">' + k.label + '</span>' +
+          '<div style="flex:1;min-width:0;margin-left:10px"><div style="font-size:13px;font-weight:500">' + esc(d.reason) + '</div>' +
+          (d.teacher ? '<div style="font-size:11px;color:var(--fg-muted)">' + esc(d.teacher) + '</div>' : '') + '</div>' +
+          '<span style="font-size:11px;color:var(--fg-muted);white-space:nowrap">' + esc(d.date) + '</span></div>';
+      }).join('');
+}
+
+/* ── NASTAVENÍ (jen admin) ── */
+function renderSettings() {}
+function savePins() {
+  var ap = document.getElementById('settings-admin-pin').value.replace(/\D/g, '');
+  var sp = document.getElementById('settings-student-pin').value.replace(/\D/g, '');
+  if ((ap && ap.length !== 4) || (sp && sp.length !== 4)) { alert('PIN musí mít přesně 4 číslice'); return; }
+  if (ap) { var c = pinConflict(ap, 'admin'); if (c) { alert(c); return; } }
+  dbSet(function (db) { if (ap) db.pins.admin = ap; if (sp) db.pins.student = sp; });
+  var el = document.getElementById('pin-saved-msg');
+  if (el) { el.style.display = 'flex'; setTimeout(function () { el.style.display = 'none'; }, 2500); }
+  document.getElementById('settings-admin-pin').value = '';
+  document.getElementById('settings-student-pin').value = '';
+}
+
+
+/* ═══ admin.js ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   admin.js – admin panel (správa žáků, rodičů, známek, úkolů…)
+═══════════════════════════════════════════════════════════════ */
+
+var openSection = 'student';
+
+/* Seznam sekcí admin panelu (ikona + funkce, která sekci vykreslí) */
+var ADMIN_SECTIONS = [
+  {id:'student',      label:'Profil žáka',          icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', fn: function () { renderAdminStudent(); }},
+  {id:'zaci',         label:'Žáci',                 icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>', fn: function () { renderAdminZaci(); }},
+  {id:'parents',      label:'Rodiče',               icon:'<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>', fn: function () { renderAdminParents(); }},
+  {id:'timetable',    label:'Rozvrh hodin',         icon:'<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>', fn: function () { renderAdminTimetable(); }},
+  {id:'subjects',     label:'Předměty',             icon:'<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>', fn: function () { renderAdminSubjects(); }},
+  {id:'grades',       label:'Hodnocení / Známky',   icon:'<polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>', fn: function () { renderAdminGrades(); }},
+  {id:'homework',     label:'Domácí úkoly',         icon:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>', fn: function () { renderAdminHomework(); }},
+  {id:'tests',        label:'Písemky a zkoušení',   icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', fn: function () { renderAdminTests(); }},
+  {id:'attendance',   label:'Docházka',             icon:'<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>', fn: function () { renderAdminAttendance(); }},
+  {id:'notes',        label:'Poznámky',             icon:'<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>', fn: function () { renderAdminNotes(); }},
+  {id:'disciplinary', label:'Výchovná opatření',    icon:'<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>', fn: function () { renderAdminDisciplinary(); }},
+  {id:'reset',        label:'Vynulování dat žáka',  icon:'<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5M14 11v5"/>', fn: function () { renderAdminReset(); }}
+];
+
+function renderAdmin() {
+  document.getElementById('admin-sections').innerHTML = ADMIN_SECTIONS.map(function (s) {
+    return '<div class="card" style="margin-bottom:10px;overflow:hidden">' +
+      '<button class="section-header ' + (openSection === s.id ? 'open' : '') + '" onclick="toggleSection(\'' + s.id + '\')">' +
+      '<div class="sh-icon">' + svgIcon(s.icon, 15) + '</div><span class="sh-title">' + s.label + '</span>' +
+      '<span class="sh-chevron">' + svgIcon('<polyline points="6 9 12 15 18 9"/>', 15) + '</span></button>' +
+      '<div class="section-body ' + (openSection === s.id ? 'open' : '') + '" id="sec-' + s.id + '"></div></div>';
+  }).join('');
+  if (openSection) {
+    var s = ADMIN_SECTIONS.find(function (x) { return x.id === openSection; });
+    if (s) s.fn();
+  }
+  renderAdminTargetBar();
+}
+
+function toggleSection(id) {
+  ADMIN_SECTIONS.forEach(function (s) {
+    var btn  = document.querySelector('.section-header[onclick*="\'' + s.id + '\'"]');
+    var body = document.getElementById('sec-' + s.id);
+    if (s.id === id && openSection !== id) {
+      if (btn) btn.classList.add('open');
+      if (body) body.classList.add('open');
+      openSection = id; s.fn();
+    } else {
+      if (btn) btn.classList.remove('open');
+      if (body) body.classList.remove('open');
+      if (s.id === id) openSection = null;
+    }
+  });
+}
+
+/* ── Kontextový výběr žáka (komu se zapisuje) ── */
+function adminTargetChip() {
+  if (currentRole !== 'admin') return '';
+  var m = getSelectedStudentMeta();
+  if (!m) return '';
+  return '<div style="display:inline-flex;align-items:center;gap:5px;background:var(--primary-dim);border:1px solid var(--primary);color:var(--primary);font-size:11px;font-weight:600;padding:3px 10px;border-radius:999px;white-space:nowrap">Pro žáka: ' + esc(m.name) + (m.class ? ' (' + esc(m.class) + ')' : '') + '</div>';
+}
+function renderAdminTargetBar() {
+  var bar = document.getElementById('admin-target-bar');
+  if (!bar) return;
+  if (currentRole !== 'admin') { bar.style.display = 'none'; return; }
+  var students = dbGet().students || [];
+  var sel = currentStudentId();
+  var selEl = document.getElementById('admin-target-select');
+  if (selEl) selEl.innerHTML = students.map(function (s) {
+    return '<option value="' + s.id + '"' + (s.id === sel ? ' selected' : '') + '>' + esc(s.name) + (s.class ? ' – ' + esc(s.class) : '') + '</option>';
+  }).join('');
+  bar.style.display = 'flex';
+}
+function adminStudentSelect(id, selId) {
+  var students = dbGet().students || [];
+  var sel = selId || currentStudentId() || (students[0] && students[0].id);
+  return '<select class="form-select" id="' + id + '" style="max-width:260px;background:var(--primary-dim);border-color:var(--primary);font-weight:600">' +
+    students.map(function (s) { return '<option value="' + s.id + '"' + (s.id === sel ? ' selected' : '') + '>' + esc(s.name) + (s.class ? ' – ' + esc(s.class) : '') + '</option>'; }).join('') + '</select>';
+}
+
+/* ── Profil žáka ── */
+function renderAdminStudent() {
+  var s = dbGet().student;
+  var meta = getSelectedStudentMeta();
+  document.getElementById('sec-student').innerHTML = '<div style="padding:20px">' +
+    (meta ? '<div style="margin-bottom:12px;font-size:12px;color:var(--fg-muted)">Upravujete data žáka: <strong style="color:var(--fg)">' + esc(meta.name) + (meta.class ? ' (' + esc(meta.class) + ')' : '') + '</strong></div>' : '') +
+    '<div class="grid-2">' +
+    '<div class="form-group"><label class="form-label">Jméno</label><input class="form-input" id="as-name" value="' + esc(s.name) + '"></div>' +
+    '<div class="form-group"><label class="form-label">Třída</label><input class="form-input" id="as-class" value="' + esc(s.class) + '"></div>' +
+    '<div class="form-group"><label class="form-label">Škola</label><input class="form-input" id="as-school" value="' + esc(s.school) + '"></div>' +
+    '<div class="form-group"><label class="form-label">Školní rok</label><input class="form-input" id="as-year" value="' + esc(s.year) + '"></div>' +
+    '<div class="form-group" style="grid-column:1/-1"><label class="form-label">Třídní učitel/ka</label><input class="form-input" id="as-teacher" value="' + esc(s.classTeacher) + '"></div></div>' +
+    '<div style="display:flex;gap:8px;align-items:center"><button class="btn btn-primary btn-sm" onclick="saveAdminStudent()">Uložit</button>' +
+    '<span id="as-saved" style="display:none;color:var(--success);font-size:12px;font-weight:600">✓ Uloženo</span></div></div>';
+}
+function saveAdminStudent() {
+  var sid = currentStudentId();
+  var name = document.getElementById('as-name').value;
+  var cls  = document.getElementById('as-class').value;
+  dbSet(function (db) {
+    db.student = { name: name, class: cls, school: document.getElementById('as-school').value, year: document.getElementById('as-year').value, classTeacher: document.getElementById('as-teacher').value };
+    var st = (db.students || []).find(function (x) { return x.id === sid; });
+    if (st) { st.name = name; st.class = cls; }   // synchronizace do seznamu žáků
+  });
+  var el = document.getElementById('as-saved'); el.style.display = 'inline'; setTimeout(function () { el.style.display = 'none'; }, 2000);
+}
+
+/* ── Žáci ── */
+function renderAdminZaci() {
+  var students = dbGet().students || [];
+  var rows = students.map(function (s) {
+    var active = s.id === currentStudentId();
+    var pars = parentsOfStudent(s.id).map(function (p) { return '<span class="badge badge-gray">' + esc(p.name) + '</span>'; }).join('');
+    return '<tr><td style="font-weight:500">' + esc(s.name) + '</td>' +
+      '<td style="font-size:12px;color:var(--fg-muted)">' + esc(s.class || '') + '</td>' +
+      '<td><div class="kids-list">' + (pars || '<span style="font-size:12px;color:var(--fg-dim)">—</span>') + '</div></td>' +
+      '<td><span style="font-family:var(--mono);font-size:12px;background:var(--surface);padding:2px 8px;border-radius:6px">••••</span></td>' +
+      '<td style="text-align:right;white-space:nowrap">' +
+      '<button class="btn btn-outline btn-xs" style="margin-right:4px;' + (active ? 'background:var(--primary-dim);border-color:var(--primary);color:var(--primary);' : '') + '" onclick="adminSelectStudent(\'' + s.id + '\',true)">' + (active ? 'Aktivní' : 'Upravit data') + '</button>' +
+      '<button class="btn btn-outline btn-xs" style="margin-right:4px" onclick="editZakPin(\'' + s.id + '\')">Změnit PIN</button>' +
+      (students.length > 1 ? '<button class="del-btn" style="opacity:1" onclick="deleteZak(\'' + s.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button>' : '') +
+      '</td></tr>';
+  }).join('');
+  document.getElementById('sec-zaci').innerHTML = '<div style="padding:16px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">' +
+    '<div style="font-size:12px;color:var(--fg-muted)">Každý žák má vlastní PIN i vlastní data. Rodiče k žákům přiřadíte v sekci <strong>Rodiče</strong>.</div>' +
+    '<button class="btn btn-primary btn-sm" style="flex-shrink:0" onclick="addZakModal()">+ Přidat žáka</button></div>' +
+    '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Jméno</th><th>Třída</th><th>Rodiče</th><th>PIN</th><th></th></tr></thead><tbody>' +
+    (rows || '<tr><td colspan="5"><div class="empty-state"><p>Žádní žáci</p></div></td></tr>') + '</tbody></table></div></div>';
+  renderAdminTargetBar();
+}
+function addZakModal() {
+  openModal('Přidat žáka',
+    '<div class="form-group"><label class="form-label">Jméno</label><input class="form-input" id="nz-name" placeholder="Jan Novák"></div>' +
+    '<div class="form-group"><label class="form-label">Třída</label><input class="form-input" id="nz-class" placeholder="8.A"></div>' +
+    '<div class="form-group"><label class="form-label">PIN (4 číslice)</label><input class="form-input" id="nz-pin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••"></div>',
+    '<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveNewZak()">Přidat</button>');
+}
+function saveNewZak() {
+  var name = document.getElementById('nz-name').value.trim();
+  var cls  = document.getElementById('nz-class').value.trim();
+  var pin  = document.getElementById('nz-pin').value.replace(/\D/g, '');
+  if (!name) { alert('Zadejte jméno žáka'); return; }
+  if (pin.length !== 4) { alert('PIN musí mít přesně 4 číslice'); return; }
+  var c = pinConflict(pin); if (c) { alert(c); return; }
+  var id = uid();
+  dbSet(function (db) { db.students.push({ id: id, name: name, class: cls, pin: pin }); });
+  var fresh = cleanStudentData(name, cls || '8.A');
+  _zaciCache[id] = fresh;
+  _zaciCache[id]._dirty = true;
+  ensureZaciListener(id);
+  scheduleZaciSave(id);
+  closeModal();
+  renderAdminZaci();
+}
+function editZakPin(id) {
+  var s = (dbGet().students || []).find(function (x) { return x.id === id; });
+  if (!s) return;
+  openModal('Změnit PIN – ' + s.name,
+    '<div class="form-group"><label class="form-label">Nový PIN (4 číslice)</label><input class="form-input" id="ez-pin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••"></div>',
+    '<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveZakPin(\'' + id + '\')">Uložit</button>');
+}
+function saveZakPin(id) {
+  var pin = document.getElementById('ez-pin').value.replace(/\D/g, '');
+  if (pin.length !== 4) { alert('PIN musí mít přesně 4 číslice'); return; }
+  var c = pinConflict(pin, 'student', id); if (c) { alert(c); return; }
+  dbSet(function (db) { var s = (db.students || []).find(function (x) { return x.id === id; }); if (s) s.pin = pin; });
+  closeModal();
+  renderAdminZaci();
+}
+function deleteZak(id) {
+  var s = (dbGet().students || []).find(function (x) { return x.id === id; });
+  if (!s) return;
+  if (!confirm('Smazat žáka ' + s.name + '? Smazána budou i všechna jeho data (známky, úkoly, docházka…).')) return;
+  dbSet(function (db) {
+    db.students = (db.students || []).filter(function (x) { return x.id !== id; });
+    // odebrat žáka i ze seznamu dětí rodičů
+    (db.parents || []).forEach(function (p) { p.studentIds = (p.studentIds || []).filter(function (x) { return x !== id; }); });
+  });
+  try { ZACI_REF.doc(id).delete(); } catch (e) { console.error('Smazání žáka selhalo:', e); }
+  delete _zaciCache[id];
+  if (_zaciUnsubs[id]) { try { _zaciUnsubs[id](); } catch (e) {} delete _zaciUnsubs[id]; }
+  if (_adminSelectedId === id) { _adminSelectedId = firstStudentId(); _keepPage = activePage; _loadContext(); }
+  else renderAdminZaci();
+}
+
+/* ── Rodiče ── */
+function renderAdminParents() {
+  var d = dbGet();
+  var parents = d.parents || [];
+  var rows = parents.map(function (p) {
+    var kids = (d.students || []).filter(function (s) { return (p.studentIds || []).indexOf(s.id) >= 0; });
+    var chips = kids.map(function (k) { return '<span class="badge badge-blue">' + esc(k.name) + (k.class ? ' · ' + esc(k.class) : '') + '</span>'; }).join('');
+    return '<tr><td style="font-weight:500">' + esc(p.name) + '</td>' +
+      '<td><div class="kids-list">' + (chips || '<span style="font-size:12px;color:var(--fg-dim)">žádné dítě</span>') + '</div></td>' +
+      '<td><span style="font-family:var(--mono);font-size:12px;background:var(--surface);padding:2px 8px;border-radius:6px">••••</span></td>' +
+      '<td style="text-align:right;white-space:nowrap">' +
+      '<button class="btn btn-outline btn-xs" style="margin-right:4px" onclick="parentModal(\'' + p.id + '\')">Upravit</button>' +
+      '<button class="btn btn-outline btn-xs" style="margin-right:4px" onclick="editParentPin(\'' + p.id + '\')">Změnit PIN</button>' +
+      '<button class="del-btn" style="opacity:1" onclick="deleteParent(\'' + p.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button></td></tr>';
+  }).join('');
+  document.getElementById('sec-parents').innerHTML = '<div style="padding:16px">' +
+    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px">' +
+    '<div style="font-size:12px;color:var(--fg-muted)">Rodič se přihlašuje vlastním PINem a vidí data přiřazených dětí (jen pro čtení). Při více dětech si je přepíná v levém menu.</div>' +
+    '<button class="btn btn-primary btn-sm" style="flex-shrink:0" onclick="parentModal()">+ Přidat rodiče</button></div>' +
+    '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Jméno</th><th>Děti</th><th>PIN</th><th></th></tr></thead><tbody>' +
+    (rows || '<tr><td colspan="4"><div class="empty-state"><p>Zatím žádní rodiče</p></div></td></tr>') + '</tbody></table></div></div>';
+}
+/* Přidání (bez id) nebo úprava (s id) rodiče */
+function parentModal(id) {
+  var d = dbGet();
+  var p = id ? (d.parents || []).find(function (x) { return x.id === id; }) : null;
+  if (id && !p) return;
+  var students = d.students || [];
+  var checks = students.length
+    ? '<div class="check-list">' + students.map(function (s) {
+        var on = p && (p.studentIds || []).indexOf(s.id) >= 0;
+        return '<label class="check-item"><input type="checkbox" class="pm-kid" value="' + s.id + '"' + (on ? ' checked' : '') + '><span>' + esc(s.name) + (s.class ? ' – ' + esc(s.class) : '') + '</span></label>';
+      }).join('') + '</div>'
+    : '<div style="font-size:12px;color:var(--fg-muted)">Nejprve přidejte žáky v sekci Žáci.</div>';
+  openModal(p ? 'Upravit rodiče' : 'Přidat rodiče',
+    '<div class="form-group"><label class="form-label">Jméno rodiče</label><input class="form-input" id="pm-name" placeholder="Jana Nováková" value="' + esc(p ? p.name : '') + '"></div>' +
+    (p ? '' : '<div class="form-group"><label class="form-label">PIN (4 číslice)</label><input class="form-input" id="pm-pin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••"></div>') +
+    '<div class="form-group" style="margin-bottom:0"><label class="form-label">Děti (lze zaškrtnout více)</label>' + checks + '</div>',
+    '<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveParent(' + (p ? '\'' + p.id + '\'' : '') + ')">' + (p ? 'Uložit' : 'Přidat') + '</button>');
+}
+function saveParent(id) {
+  var name = document.getElementById('pm-name').value.trim();
+  var kids = Array.prototype.map.call(document.querySelectorAll('.pm-kid:checked'), function (el) { return el.value; });
+  if (!name) { alert('Zadejte jméno rodiče'); return; }
+  var pin = '';
+  if (!id) {
+    pin = document.getElementById('pm-pin').value.replace(/\D/g, '');
+    if (pin.length !== 4) { alert('PIN musí mít přesně 4 číslice'); return; }
+    var c = pinConflict(pin); if (c) { alert(c); return; }
+  }
+  dbSet(function (db) {
+    if (!db.parents) db.parents = [];
+    if (id) {
+      var p = db.parents.find(function (x) { return x.id === id; });
+      if (p) { p.name = name; p.studentIds = kids; }
+    } else {
+      db.parents.push({ id: uid(), name: name, pin: pin, studentIds: kids });
+    }
+  });
+  closeModal();
+  renderAdminParents();
+  if (openSection === 'zaci') renderAdminZaci();
+}
+function editParentPin(id) {
+  var p = (dbGet().parents || []).find(function (x) { return x.id === id; });
+  if (!p) return;
+  openModal('Změnit PIN – ' + p.name,
+    '<div class="form-group"><label class="form-label">Nový PIN (4 číslice)</label><input class="form-input" id="ep-pin" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••"></div>',
+    '<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveParentPin(\'' + id + '\')">Uložit</button>');
+}
+function saveParentPin(id) {
+  var pin = document.getElementById('ep-pin').value.replace(/\D/g, '');
+  if (pin.length !== 4) { alert('PIN musí mít přesně 4 číslice'); return; }
+  var c = pinConflict(pin, 'parent', id); if (c) { alert(c); return; }
+  dbSet(function (db) { var p = (db.parents || []).find(function (x) { return x.id === id; }); if (p) p.pin = pin; });
+  closeModal();
+  renderAdminParents();
+}
+function deleteParent(id) {
+  var p = (dbGet().parents || []).find(function (x) { return x.id === id; });
+  if (!p) return;
+  if (!confirm('Smazat rodiče ' + p.name + '? Jeho účet přestane fungovat (zprávy zůstanou uložené).')) return;
+  dbSet(function (db) { db.parents = (db.parents || []).filter(function (x) { return x.id !== id; }); });
+  renderAdminParents();
+}
+
+/* ── Vynulování dat jednoho žáka ── */
+function renderAdminReset() {
+  var students = dbGet().students || [];
+  var items = [['grades','Známky'],['attendance','Docházka'],['homework','Domácí úkoly'],['tests','Písemky a zkoušení'],['notes','Poznámky'],['disciplinary','Výchovná opatření'],['timetable','Rozvrh hodin'],['subjects','Předměty']];
+  document.getElementById('sec-reset').innerHTML = '<div style="padding:18px">' +
+    '<div class="alert alert-error" style="align-items:flex-start"><span style="font-size:18px;line-height:1">⚠</span>' +
+    '<div><strong>Nevratné smazání vybraných dat</strong><div style="font-weight:400;margin-top:3px">Vyberte konkrétního žáka a pouze oblasti, které chcete vymazat. PINy, seznam žáků, rodiče a profil žáka se nemění.</div></div></div>' +
+    (students.length
+      ? '<div class="form-group"><label class="form-label">Žák, jehož data chcete vynulovat</label>' + adminStudentSelect('reset-sid', currentStudentId()) + '</div>' +
+        '<div style="font-weight:700;font-size:13px;margin:16px 0 8px">Vyberte data k vymazání</div><div class="grid-2" style="gap:8px">' +
+        items.map(function (it) {
+          return '<label style="display:flex;align-items:center;gap:9px;padding:11px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);cursor:pointer"><input type="checkbox" class="reset-data-check" value="' + it[0] + '" style="width:16px;height:16px;accent-color:var(--error)"><span style="font-size:13px">' + it[1] + '</span></label>';
+        }).join('') + '</div>' +
+        '<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:16px"><button class="btn btn-danger" onclick="resetSelectedStudentData()">Vynulovat vybraná data</button><span style="font-size:11px;color:var(--fg-muted)">Hesla/PINy nejsou součástí této funkce.</span></div>'
+      : '<div class="empty-state"><p>Nejprve přidejte žáka v sekci Žáci.</p></div>') + '</div>';
+}
+function resetSelectedStudentData() {
+  if (currentRole !== 'admin') { alert('Tuto funkci může použít pouze administrátor.'); return; }
+  var sid = document.getElementById('reset-sid') ? document.getElementById('reset-sid').value : null;
+  var student = (dbGet().students || []).find(function (s) { return s.id === sid; });
+  if (!sid || !student) { alert('Vyberte žáka.'); return; }
+  var allowed = ['grades','attendance','homework','tests','notes','disciplinary','timetable','subjects'];
+  var selected = Array.prototype.map.call(document.querySelectorAll('.reset-data-check:checked'), function (el) { return el.value; })
+    .filter(function (k) { return allowed.indexOf(k) >= 0; });
+  if (!selected.length) { alert('Nejprve zaškrtněte alespoň jednu oblast.'); return; }
+  var labels = {grades:'známky',attendance:'docházku',homework:'domácí úkoly',tests:'písemky a zkoušení',notes:'poznámky',disciplinary:'výchovná opatření',timetable:'rozvrh hodin',subjects:'předměty'};
+  if (!confirm('Opravdu chcete vynulovat ' + selected.map(function (k) { return labels[k]; }).join(', ') + ' u žáka ' + student.name + '? Tuto změnu nelze automaticky vrátit. Profil žáka a jeho PIN zůstanou beze změny.')) return;
+  var defaults = defaultDB();
+  var ok = writeStudentData(sid, function (data) {
+    selected.forEach(function (key) {
+      if (key === 'timetable' || key === 'subjects') data[key] = JSON.parse(JSON.stringify(defaults[key]));
+      else data[key] = [];
+    });
+  });
+  if (!ok) { alert('Data se nepodařilo změnit. Zkuste to prosím znovu.'); return; }
+  alert('Hotovo. Vybraná data žáka ' + student.name + ' byla vynulována. PINy a profil zůstaly zachovány.');
+  if (sid === currentStudentId()) { _keepPage = 'admin'; _loadContext(); }
+  else renderAdminReset();
+}
+
+/* ── Rozvrh ── */
+function renderAdminTimetable() {
+  var db = dbGet();
+  var html = '<div style="padding:16px;overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:420px"><thead><tr><th style="width:32px;text-align:center;font-size:10px;color:var(--fg-muted);padding:6px 3px">H.</th>' +
+    DAYS.map(function (d) { return '<th style="text-align:center;font-size:10px;color:var(--fg-muted);text-transform:uppercase;letter-spacing:.05em;padding:6px 3px">' + d.slice(0, 2) + '</th>'; }).join('') + '</tr></thead><tbody>';
+  PERIODS.forEach(function (p) {
+    html += '<tr><td style="text-align:center;font-weight:700;color:var(--fg-muted);font-size:11px;padding:2px 3px">' + p + '</td>';
+    DAYS.forEach(function (_, day) {
+      var c = db.timetable.find(function (x) { return x.day === day && x.period === p; });
+      html += '<td style="padding:2px 2px"><button onclick="editTTCell(' + day + ',' + p + ')" class="tt-cell ' + (c ? 'filled' : '') + '" style="width:100%;cursor:pointer">' +
+        (c ? '<div class="tt-subj">' + esc(c.subject) + '</div><div class="tt-room">' + esc(c.room) + '</div>' : '<div class="tt-empty">+</div>') + '</button></td>';
+    });
+    html += '</tr>';
+  });
+  document.getElementById('sec-timetable').innerHTML = html + '</tbody></table><p style="font-size:11px;color:var(--fg-muted);margin-top:10px">Klikněte na buňku pro úpravu</p></div>';
+}
+function editTTCell(day, period) {
+  var db = dbGet();
+  var cell = db.timetable.find(function (c) { return c.day === day && c.period === period; });
+  var opts = [''].concat(db.subjects.map(function (s) { return s.short; })).map(function (s) {
+    return '<option value="' + esc(s) + '"' + (cell && cell.subject === s ? ' selected' : '') + '>' + (s || '– prázdné –') + '</option>';
+  }).join('');
+  openModal('Úprava ' + DAYS[day] + ' – hodina ' + period,
+    '<div class="form-group"><label class="form-label">Předmět</label><select class="form-select" id="tt-subj">' + opts + '</select></div>' +
+    '<div class="form-group"><label class="form-label">Učebna</label><input class="form-input" id="tt-room" value="' + esc(cell ? cell.room : '') + '"></div>',
+    '<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveTTCell(' + day + ',' + period + ')">Uložit</button>');
+}
+function saveTTCell(day, period) {
+  var subj = document.getElementById('tt-subj').value;
+  var room = document.getElementById('tt-room').value;
+  dbSet(function (db) {
+    var idx = db.timetable.findIndex(function (c) { return c.day === day && c.period === period; });
+    if (subj === '') { if (idx >= 0) db.timetable.splice(idx, 1); }
+    else if (idx >= 0) { db.timetable[idx].subject = subj; db.timetable[idx].room = room; }
+    else db.timetable.push({ day: day, period: period, subject: subj, room: room });
+  });
+  closeModal(); renderAdminTimetable();
+  if (activePage === 'schedule') renderSchedule();
+  if (activePage === 'dashboard') renderDashboard();
+}
+
+/* ── Předměty ── */
+var SUBJECT_TYPES = {lang:'Jazyk', sci:'Přírodověda', hum:'Humanitní', art:'Umění', tech:'Technika', sport:'Sport'};
+function renderAdminSubjects() {
+  var db = dbGet();
+  document.getElementById('sec-subjects').innerHTML = '<div style="padding:16px"><div style="display:flex;justify-content:flex-end;margin-bottom:12px"><button class="btn btn-primary btn-sm" onclick="addSubjectModal()">+ Přidat předmět</button></div>' +
+    '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Zkratka</th><th>Název</th><th>Učitel</th><th>Učebna</th><th>Typ</th><th></th></tr></thead><tbody>' +
+    db.subjects.map(function (s) {
+      return '<tr><td>' + subjIcon(s.short) + '</td><td style="font-weight:500">' + esc(s.name) + '</td><td style="color:var(--fg-muted);font-size:12px">' + esc(s.teacher) + '</td><td style="font-size:12px">' + esc(s.room) + '</td><td><span class="badge badge-gray">' + (SUBJECT_TYPES[s.type] || s.type) + '</span></td><td><button class="del-btn" style="opacity:1" onclick="deleteSubject(\'' + s.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button></td></tr>';
+    }).join('') + '</tbody></table></div></div>';
+}
+function addSubjectModal() {
+  openModal('Přidat předmět',
+    '<div class="grid-2"><div class="form-group"><label class="form-label">Zkratka</label><input class="form-input" id="ns-short" maxlength="4" style="text-transform:uppercase"></div>' +
+    '<div class="form-group"><label class="form-label">Název</label><input class="form-input" id="ns-name"></div>' +
+    '<div class="form-group"><label class="form-label">Učitel</label><input class="form-input" id="ns-teacher"></div>' +
+    '<div class="form-group"><label class="form-label">Učebna</label><input class="form-input" id="ns-room"></div>' +
+    '<div class="form-group" style="grid-column:1/-1"><label class="form-label">Typ</label><select class="form-select" id="ns-type">' +
+    Object.keys(SUBJECT_TYPES).map(function (v) { return '<option value="' + v + '">' + SUBJECT_TYPES[v] + '</option>'; }).join('') + '</select></div></div>',
+    '<button class="btn btn-outline btn-sm" onclick="closeModal()">Zrušit</button><button class="btn btn-primary btn-sm" onclick="saveNewSubject()">Přidat</button>');
+}
+function saveNewSubject() {
+  var short = document.getElementById('ns-short').value.trim().toUpperCase();
+  var name  = document.getElementById('ns-name').value.trim();
+  if (!short || !name) { alert('Zkratka a název jsou povinné'); return; }
+  dbSet(function (db) {
+    db.subjects.push({ id: uid(), name: name, short: short, teacher: document.getElementById('ns-teacher').value, room: document.getElementById('ns-room').value, type: document.getElementById('ns-type').value, order: db.subjects.length + 1 });
+  });
+  closeModal(); renderAdminSubjects();
+}
+function deleteSubject(id) {
+  if (!confirm('Smazat?')) return;
+  dbSet(function (db) { db.subjects = db.subjects.filter(function (s) { return s.id !== id; }); });
+  renderAdminSubjects();
+}
+
+/* ── Známky ── */
+function renderAdminGrades() {
+  var db = dbGet();
+  var opts = db.subjects.map(function (s) { return '<option value="' + s.id + '">' + esc(s.short) + ' – ' + esc(s.name) + '</option>'; }).join('');
+  document.getElementById('sec-grades').innerHTML = '<div style="padding:16px"><div class="add-form">' +
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:var(--primary-dim);border:1px solid var(--primary);border-radius:var(--radius)"><span style="font-weight:700;font-size:13px;color:var(--primary)">✎ Známka bude zapsána žáku:</span>' + adminStudentSelect('ag-sid') + '</div>' +
+    '<div class="grid-2">' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="ag-subj"><option value="">Vyberte…</option>' + opts + '</select></div>' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="ag-date" placeholder="22.5.2026"></div>' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Typ</label><input class="form-input" id="ag-type" value="Písemka"></div>' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Známka</label><select class="form-select" id="ag-val"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option></select></div>' +
+    '<div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Poznámka</label><input class="form-input" id="ag-note"></div></div>' +
+    '<button class="btn btn-primary btn-sm" onclick="addGrade()">Přidat</button></div>' +
+    '<div style="overflow-x:auto"><table class="data-table"><thead><tr><th>Předmět</th><th>Typ</th><th>Hodnota</th><th>Datum</th><th>Poznámka</th><th></th></tr></thead><tbody>' +
+    db.grades.map(function (g) {
+      var subj = db.subjects.find(function (s) { return s.id === g.subjectId; });
+      return '<tr><td>' + subjIcon(subj ? subj.short : g.subjectId) + '</td><td style="font-size:12px;color:var(--fg-muted)">' + esc(g.type) + '</td><td>' + gradeHtml(g.value) + '</td><td style="font-size:12px;color:var(--fg-muted)">' + esc(g.date) + '</td><td style="font-size:12px;color:var(--fg-muted)">' + esc(g.note || '') + '</td><td><button class="del-btn" style="opacity:1" onclick="deleteGrade(\'' + g.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button></td></tr>';
+    }).join('') + '</tbody></table></div></div>';
+}
+function addGrade() {
+  var sidSel = document.getElementById('ag-sid');
+  var sid = sidSel ? sidSel.value : currentStudentId();
+  var subj = document.getElementById('ag-subj').value;
+  var date = document.getElementById('ag-date').value.trim();
+  if (!sid) { alert('Nejprve přidejte žáka v sekci Žáci'); return; }
+  if (!subj || !date) { alert('Vyberte předmět a zadejte datum'); return; }
+  var grade = { id: uid(), subjectId: subj, date: date, value: Number(document.getElementById('ag-val').value), type: document.getElementById('ag-type').value, note: document.getElementById('ag-note').value };
+  writeStudentData(sid, function (db) { db.grades.push(grade); });   // zápis přímo žákovi
+  targetAdmin(sid);
+}
+function deleteGrade(id) {
+  var sid = Object.keys(_zaciCache).find(function (k) { return (_zaciCache[k].grades || []).some(function (g) { return g.id === id; }); }) || currentStudentId();
+  writeStudentData(sid, function (db) { db.grades = db.grades.filter(function (g) { return g.id !== id; }); });
+  targetAdmin(sid);
+}
+
+/* ── Domácí úkoly ── */
+function renderAdminHomework() {
+  var db = dbGet();
+  var opts = db.subjects.map(function (s) { return '<option value="' + esc(s.short) + '">' + esc(s.short) + '</option>'; }).join('');
+  var check = svgIcon('<polyline points="20 6 9 17 4 12"/>', 11);
+  document.getElementById('sec-homework').innerHTML = '<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat domácí úkol</span>' + adminTargetChip() + '</div>' +
+    '<div class="grid-2">' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="ahw-subj"><option value="">Vyberte…</option>' + opts + '</select></div>' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Termín</label><input class="form-input" id="ahw-due" placeholder="22.5.2026"></div>' +
+    '<div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Název</label><input class="form-input" id="ahw-title"></div>' +
+    '<div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Popis</label><input class="form-input" id="ahw-desc"></div></div>' +
+    '<button class="btn btn-primary btn-sm" onclick="addHomework()">Přidat</button></div><div>' +
+    (db.homework.map(function (hw) {
+      return '<div class="row hw-row" style="padding:10px 8px"><button class="checkbox-btn ' + (hw.done ? 'checked' : '') + '" onclick="adminToggleHw(\'' + hw.id + '\')">' + (hw.done ? check : '') + '</button>' + subjIcon(hw.subject) +
+        '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;' + (hw.done ? 'text-decoration:line-through;opacity:.5' : '') + '">' + esc(hw.title) + '</div>' + (hw.description ? '<div style="font-size:11px;color:var(--fg-muted)">' + esc(hw.description) + '</div>' : '') + '</div>' +
+        '<span style="font-size:11px;color:var(--fg-muted)">' + esc(hw.dueDate) + '</span><button class="del-btn" style="opacity:1" onclick="adminDeleteHw(\'' + hw.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button></div>';
+    }).join('') || '<div class="empty-state"><p>Žádné úkoly</p></div>') + '</div></div>';
+}
+function addHomework() {
+  var subj = document.getElementById('ahw-subj').value;
+  var title = document.getElementById('ahw-title').value.trim();
+  var due = document.getElementById('ahw-due').value;
+  if (!subj || !title || !due) { alert('Vyplňte předmět, název a termín'); return; }
+  dbSet(function (db) { db.homework.push({ id: uid(), subject: subj, title: title, description: document.getElementById('ahw-desc').value, dueDate: due, done: false }); });
+  buildNav(); renderAdminHomework(); if (activePage === 'homework') renderHomework();
+}
+function adminToggleHw(id) {
+  dbSet(function (db) { var h = db.homework.find(function (x) { return x.id === id; }); if (h) h.done = !h.done; });
+  buildNav(); renderAdminHomework(); if (activePage === 'homework') renderHomeworkList();
+}
+function adminDeleteHw(id) {
+  dbSet(function (db) { db.homework = db.homework.filter(function (h) { return h.id !== id; }); });
+  buildNav(); renderAdminHomework(); if (activePage === 'homework') renderHomeworkList();
+}
+
+/* ── Písemky ── */
+function renderAdminTests() {
+  var db = dbGet();
+  var opts = db.subjects.map(function (s) { return '<option value="' + esc(s.short) + '">' + esc(s.short) + '</option>'; }).join('');
+  document.getElementById('sec-tests').innerHTML = '<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat písemku</span>' + adminTargetChip() + '</div>' +
+    '<div class="grid-2">' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Předmět</label><select class="form-select" id="at-subj"><option value="">Vyberte…</option>' + opts + '</select></div>' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="at-date" placeholder="22.5.2026"></div>' +
+    '<div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Téma</label><input class="form-input" id="at-topic"></div>' +
+    '<div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Učitel</label><input class="form-input" id="at-teacher"></div></div>' +
+    '<button class="btn btn-primary btn-sm" onclick="addTest()">Přidat</button></div><div>' +
+    (db.tests.map(function (t) {
+      return '<div class="row" style="padding:10px 8px">' + subjIcon(t.subject) + '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500">' + esc(t.topic) + '</div>' + (t.teacher ? '<div style="font-size:11px;color:var(--fg-muted)">' + esc(t.teacher) + '</div>' : '') + '</div>' +
+        '<span style="font-size:12px;color:var(--fg-muted);font-weight:600">' + esc(t.date) + '</span><button class="del-btn" style="opacity:1" onclick="deleteTest(\'' + t.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button></div>';
+    }).join('') || '<div class="empty-state"><p>Žádné písemky</p></div>') + '</div></div>';
+}
+function addTest() {
+  var subj = document.getElementById('at-subj').value;
+  var topic = document.getElementById('at-topic').value.trim();
+  var date = document.getElementById('at-date').value;
+  if (!subj || !topic || !date) { alert('Vyplňte předmět, téma a datum'); return; }
+  dbSet(function (db) { db.tests.push({ id: uid(), subject: subj, topic: topic, date: date, teacher: document.getElementById('at-teacher').value }); });
+  renderAdminTests(); if (activePage === 'tests') renderTests();
+}
+function deleteTest(id) {
+  dbSet(function (db) { db.tests = db.tests.filter(function (t) { return t.id !== id; }); });
+  renderAdminTests(); if (activePage === 'tests') renderTests();
+}
+
+/* ── Docházka ── */
+function renderAdminAttendance() {
+  var db = dbGet();
+  var STATUS = [{value:'present',label:'Přítomen'},{value:'absent',label:'Nepřítomen'},{value:'excused',label:'Omluveno'},{value:'late',label:'Pozdní příchod'},{value:'school-event',label:'Školní akce'}];
+  document.getElementById('sec-attendance').innerHTML = '<div style="padding:16px"><div class="add-form"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat záznam</span>' + adminTargetChip() + '</div>' +
+    '<div class="grid-2">' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="aa-date" placeholder="22.5.2026"></div>' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Stav</label><select class="form-select" id="aa-status">' + STATUS.map(function (o) { return '<option value="' + o.value + '">' + o.label + '</option>'; }).join('') + '</select></div>' +
+    '<div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Poznámka</label><input class="form-input" id="aa-note"></div></div>' +
+    '<button class="btn btn-primary btn-sm" onclick="addAttendance()">Přidat</button></div><div>' +
+    (db.attendance.map(function (a) {
+      return '<div class="row" style="padding:10px 8px"><span style="font-size:12px;color:var(--fg-muted);width:90px">' + esc(a.date) + '</span>' + attBadge(a.status) + '<span style="flex:1;font-size:12px;color:var(--fg-muted);margin-left:8px">' + esc(a.note || '') + '</span><button class="del-btn" style="opacity:1" onclick="deleteAttendance(\'' + a.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button></div>';
+    }).join('') || '<div class="empty-state"><p>Žádné záznamy</p></div>') + '</div></div>';
+}
+function addAttendance() {
+  var date = document.getElementById('aa-date').value;
+  if (!date) { alert('Zadejte datum'); return; }
+  dbSet(function (db) { db.attendance.unshift({ id: uid(), date: date, status: document.getElementById('aa-status').value, note: document.getElementById('aa-note').value }); });
+  renderAdminAttendance(); if (activePage === 'attendance') renderAttendance();
+}
+function deleteAttendance(id) {
+  dbSet(function (db) { db.attendance = db.attendance.filter(function (a) { return a.id !== id; }); });
+  renderAdminAttendance(); if (activePage === 'attendance') renderAttendance();
+}
+
+/* ── Poznámky ── */
+function renderAdminNotes() {
+  var db = dbGet();
+  document.getElementById('sec-notes').innerHTML = '<div style="padding:16px"><div class="add-form">' +
+    '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;padding:10px 12px;background:var(--primary-dim);border:1px solid var(--primary);border-radius:var(--radius)"><span style="font-weight:700;font-size:13px;color:var(--primary)">✎ Poznámka bude zapsána žáku:</span>' + adminStudentSelect('an-sid') + '</div>' +
+    '<div class="form-group"><label class="form-label">Název</label><input class="form-input" id="an-title" placeholder="Název poznámky…"></div>' +
+    '<div class="form-group"><label class="form-label">Obsah</label><textarea class="form-textarea" id="an-content" placeholder="Text poznámky…"></textarea></div>' +
+    '<button class="btn btn-primary btn-sm" onclick="addNote()">Přidat</button></div><div>' +
+    (db.notes.length === 0 ? '<div class="empty-state"><p>Žádné poznámky</p></div>' : db.notes.map(function (n) {
+      return '<div class="card" style="margin-bottom:8px"><div style="padding:12px 14px;display:flex;gap:10px;align-items:flex-start">' +
+        svgIcon('<path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/>', 14) +
+        '<div style="flex:1;min-width:0"><div style="font-weight:600;font-size:13px">' + esc(n.title || '(bez názvu)') + '</div><div style="font-size:12px;color:var(--fg-muted);margin-top:3px;white-space:pre-wrap">' + esc(n.content) + '</div><div style="font-size:10px;color:var(--fg-dim);margin-top:6px">' + esc(n.updatedAt || '') + '</div></div>' +
+        '<button class="del-btn" style="opacity:1;flex-shrink:0" onclick="deleteNote(\'' + n.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button></div></div>';
+    }).join('')) + '</div></div>';
+}
+function addNote() {
+  var sidSel = document.getElementById('an-sid');
+  var sid = sidSel ? sidSel.value : currentStudentId();
+  var title = document.getElementById('an-title').value.trim();
+  var content = document.getElementById('an-content').value.trim();
+  if (!sid) { alert('Nejprve přidejte žáka v sekci Žáci'); return; }
+  if (!title && !content) return;
+  var now = new Date().toLocaleDateString('cs-CZ');
+  writeStudentData(sid, function (db) { db.notes.unshift({ id: uid(), title: title, content: content, createdAt: now, updatedAt: now }); });
+  targetAdmin(sid);
+}
+function deleteNote(id) {
+  var sid = Object.keys(_zaciCache).find(function (k) { return (_zaciCache[k].notes || []).some(function (n) { return n.id === id; }); }) || currentStudentId();
+  writeStudentData(sid, function (db) { db.notes = db.notes.filter(function (n) { return n.id !== id; }); });
+  targetAdmin(sid);
+}
+
+/* ── Výchovná opatření ── */
+function renderAdminDisciplinary() {
+  var db = dbGet();
+  var disc = db.disciplinary || [];
+  var KINDS = [
+    {value:'pochvala',     label:'Pochvala třídního učitele'},
+    {value:'pochvala-red', label:'Pochvala ředitele'},
+    {value:'napomenuti',   label:'Napomenutí třídního učitele'},
+    {value:'dttu',         label:'Důtka třídního učitele'},
+    {value:'dtred',        label:'Důtka ředitele'},
+    {value:'podminecne',   label:'Podmínečné vyloučení'},
+    {value:'vylouceni',    label:'Vyloučení ze školy'}
+  ];
+  var BADGE = {pochvala:'badge-green','pochvala-red':'badge-green',napomenuti:'badge-yellow',dttu:'badge-yellow',dtred:'badge-red',podminecne:'badge-red',vylouceni:'badge-red'};
+  document.getElementById('sec-disciplinary').innerHTML = '<div style="padding:16px"><div class="add-form">' +
+    '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px"><span style="font-weight:600;font-size:13px">Přidat opatření</span>' + adminTargetChip() + '</div>' +
+    '<div class="grid-2"><div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Typ opatření</label><select class="form-select" id="ad-kind">' + KINDS.map(function (k) { return '<option value="' + k.value + '">' + k.label + '</option>'; }).join('') + '</select></div>' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Datum</label><input class="form-input" id="ad-date" placeholder="22.5.2026"></div>' +
+    '<div class="form-group" style="margin-bottom:8px"><label class="form-label">Udělil</label><input class="form-input" id="ad-teacher" placeholder="Mgr. Jana Horáčková"></div>' +
+    '<div class="form-group" style="margin-bottom:8px;grid-column:1/-1"><label class="form-label">Důvod / popis</label><input class="form-input" id="ad-reason" placeholder="Popis důvodu…"></div></div>' +
+    '<button class="btn btn-primary btn-sm" onclick="addDisciplinary()">Přidat</button></div><div>' +
+    (disc.length === 0 ? '<div class="empty-state"><p>Žádná výchovná opatření</p></div>' : disc.map(function (d) {
+      var k = KINDS.find(function (x) { return x.value === d.kind; }) || {label: d.kind};
+      return '<div class="row" style="padding:12px 8px"><span class="badge ' + (BADGE[d.kind] || 'badge-gray') + '" style="white-space:nowrap;flex-shrink:0">' + k.label + '</span>' +
+        '<div style="flex:1;min-width:0;margin-left:10px"><div style="font-size:13px;font-weight:500">' + esc(d.reason) + '</div>' + (d.teacher ? '<div style="font-size:11px;color:var(--fg-muted)">' + esc(d.teacher) + '</div>' : '') + '</div>' +
+        '<span style="font-size:11px;color:var(--fg-muted);white-space:nowrap;margin-right:8px">' + esc(d.date) + '</span><button class="del-btn" style="opacity:1" onclick="deleteDisciplinary(\'' + d.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button></div>';
+    }).join('')) + '</div></div>';
+}
+function addDisciplinary() {
+  var kind = document.getElementById('ad-kind').value;
+  var date = document.getElementById('ad-date').value;
+  var reason = document.getElementById('ad-reason').value.trim();
+  if (!date || !reason) { alert('Vyplňte datum a důvod'); return; }
+  dbSet(function (db) {
+    if (!db.disciplinary) db.disciplinary = [];
+    db.disciplinary.unshift({ id: uid(), kind: kind, date: date, reason: reason, teacher: document.getElementById('ad-teacher').value });
+  });
+  renderAdminDisciplinary(); if (activePage === 'disciplinary') renderDisciplinary();
+}
+function deleteDisciplinary(id) {
+  dbSet(function (db) { db.disciplinary = (db.disciplinary || []).filter(function (d) { return d.id !== id; }); });
+  renderAdminDisciplinary(); if (activePage === 'disciplinary') renderDisciplinary();
+}
+
+
+/* ═══ main.js ═══ */
+/* ═══════════════════════════════════════════════════════════════
+   main.js – vstupní bod: události a spuštění aplikace
+   (načítá se jako poslední, až když jsou k dispozici všechny moduly)
+═══════════════════════════════════════════════════════════════ */
+
+window.addEventListener('DOMContentLoaded', function () {
+
+  // Klávesnice – zadávání PINu na přihlašovací obrazovce
+  document.addEventListener('keydown', function (e) {
+    var ls = document.getElementById('login-screen');
+    if (ls && ls.offsetParent !== null && ls.style.display !== 'none') {
+      var tut = document.getElementById('tutorial-overlay');
+      if (tut && tut.classList.contains('open')) return;   // při tutoriálu nepsat PIN
+      if (e.key >= '0' && e.key <= '9') { e.preventDefault(); pinKey(e.key); }
+      if (e.key === 'Backspace')        { e.preventDefault(); pinDel(); }
+    }
+  });
+
+  // Sidebar, odhlášení, modální okno
+  document.getElementById('sidebar-overlay').addEventListener('click', closeSidebar);
+  document.getElementById('logout-btn').addEventListener('click', logout);
+  document.getElementById('mobile-menu-btn').addEventListener('click', openSidebar);
+  document.getElementById('modal-overlay').addEventListener('click', function (e) {
+    if (e.target === this) closeModal();
+  });
+
+  // Filtry domácích úkolů
+  document.getElementById('hwf-all').addEventListener('click',     function () { setHwFilter('all'); });
+  document.getElementById('hwf-pending').addEventListener('click', function () { setHwFilter('pending'); });
+  document.getElementById('hwf-done').addEventListener('click',    function () { setHwFilter('done'); });
+
+  // Nastavení
+  document.getElementById('save-pins-btn').addEventListener('click', savePins);
+  document.getElementById('settings-tutorial-btn').addEventListener('click', startTutorial);
+
+  // Tutoriál
+  document.getElementById('tut-open-btn').addEventListener('click', startTutorial);
+  document.getElementById('tut-close').addEventListener('click', tutFinish);
+  document.getElementById('tut-skip').addEventListener('click', tutFinish);
+  document.getElementById('tut-next').addEventListener('click', tutNext);
+  document.getElementById('tut-prev').addEventListener('click', tutPrev);
+  document.getElementById('tutorial-overlay').addEventListener('click', function (e) {
+    if (e.target === this) tutFinish();
+  });
+  var tutShown = false;
+  try { tutShown = localStorage.getItem(TUTORIAL_KEY) === 'done'; } catch (e) {}
+  if (!tutShown) startTutorial();
+
+  // Připojení k Firebase a obnovení přihlášení
+  firebaseInit();
+});
+
+</script>
+</body>
+</html>
