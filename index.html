@@ -1324,17 +1324,14 @@ function cleanStudentData(name, cls) {
 }
 
 /* ═══ Firebase Authentication ═══
-   Každý návštěvník se po otevření stránky přihlásí anonymně (jen pro čtení).
+   Čtení je otevřené, přihlášení se používá jen pro učitele.
    Zapisovat do žáků, PINů a rodičů smí pouze učitel přihlášený e-mailem a heslem. */
 function initAuth() {
   return new Promise(function (resolve) {
     var off = auth.onAuthStateChanged(function (user) { off(); resolve(user); });
   }).then(function (user) {
     // Po načtení stránky nikdy nezůstává přihlášený učitel z minula
-    if (user && !user.isAnonymous) {
-      return auth.signOut().then(function () { return auth.signInAnonymously(); });
-    }
-    return user || auth.signInAnonymously();
+    if (user) return auth.signOut();
   });
 }
 
@@ -1363,7 +1360,7 @@ async function firebaseInit() {
     await initAuth();
   } catch (e) {
     console.error('❌ Firebase Authentication:', e.code, e.message);
-    showLoader('⚠️ Ve Firebase zapněte anonymní přihlášení (Authentication → Sign-in method)');
+    showLoader('⚠️ Chyba Firebase Authentication – zkontrolujte připojení');
     await new Promise(function (r) { setTimeout(r, 3500); });
   }
   try {
