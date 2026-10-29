@@ -9,6 +9,7 @@
 <!-- Firebase MUSÍ být načten před našimi skripty -->
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
 
 <!-- Fonty -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -726,9 +727,22 @@ tr:hover .del-btn, .row:hover .del-btn, .hw-row:hover .del-btn { opacity: 1; }
         </button>
       </div>
     </div>
+    <div class="login-card" id="teacher-card" style="display:none">
+      <div class="login-hint">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Přihlášení učitele</span>
+      </div>
+      <div style="width:100%">
+        <div class="form-group"><label class="form-label">E-mail</label><input class="form-input" id="teacher-email" type="email" autocomplete="username"></div>
+        <div class="form-group" style="margin-bottom:0"><label class="form-label">Heslo</label><input class="form-input" id="teacher-pass" type="password" autocomplete="current-password"></div>
+      </div>
+      <div class="pin-error" id="teacher-error">&nbsp;</div>
+      <button class="btn btn-primary" id="teacher-login-btn" type="button" style="width:100%;justify-content:center">Přihlásit se</button>
+      <button class="tut-hint-link" id="teacher-back-btn" type="button">Zpět na PIN</button>
+    </div>
     <div class="login-footer">
       ZS Alexandra · Žákovská knížka · 2025/2026
-      <br><button class="tut-hint-link" id="tut-open-btn" type="button">Jak aplikace funguje?</button>
+      <br><button class="tut-hint-link" id="tut-open-btn" type="button">Jak aplikace funguje?</button> · <button class="tut-hint-link" id="teacher-open-btn" type="button">Přihlášení učitele</button>
     </div>
   </div>
 </div>
@@ -983,10 +997,6 @@ tr:hover .del-btn, .row:hover .del-btn, .hw-row:hover .del-btn { opacity: 1; }
               <div style="font-weight:600;margin-bottom:12px;font-size:14px">Změna PIN kódu</div>
               <div class="grid-2" style="margin-bottom:10px">
                 <div class="form-group" style="margin-bottom:0">
-                  <label class="form-label">Nový admin PIN (4 číslice)</label>
-                  <input class="form-input" id="settings-admin-pin" type="password" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••">
-                </div>
-                <div class="form-group" style="margin-bottom:0">
                   <label class="form-label">Nový žákovský PIN (starý společný, 4 číslice)</label>
                   <input class="form-input" id="settings-student-pin" type="password" maxlength="4" pattern="[0-9]*" inputmode="numeric" placeholder="••••">
                 </div>
@@ -1080,6 +1090,8 @@ var firebaseConfig = {
 
 /* Kolekce se zprávami (vznikne sama při odeslání první zprávy) */
 var MSG_COLLECTION = 'zpravy';
+/* Splnění úkolů zapisují žáci sem (do zaci/ smí zapisovat jen učitel) */
+var STAV_COLLECTION = 'stav';
 
 /* Klíče pro sessionStorage / localStorage */
 var SESSION_KEY  = 'zs_alexandra_session';
@@ -1161,6 +1173,8 @@ var META_REF   = db_fs.collection('meta').doc('hlavni');
 var LEGACY_REF = db_fs.collection('skola').doc('hlavni');
 var ZACI_REF   = db_fs.collection('zaci');
 var MSG_REF    = db_fs.collection(MSG_COLLECTION);
+var STAV_REF   = db_fs.collection(STAV_COLLECTION);
+var auth       = firebase.auth();
 
 /* ── Stav v paměti ── */
 var _cache       = null;   // data aktuálního kontextu + pins + students + parents
@@ -1173,6 +1187,7 @@ var _ignoreZaci  = {};
 var _unsubscribe = null;
 var _zaciUnsubs  = {};     // real-time listenery jednotlivých žáků
 var _dataReady   = false;  // true po načtení dat z Firebase
+var _stavCache   = {};     // { studentId: { done: { hwId: true/false } } }
 
 /* ═══ Loader ═══ */
 function showLoader(msg) {
@@ -1308,9 +1323,49 @@ function cleanStudentData(name, cls) {
   return d;
 }
 
+/* ═══ Firebase Authentication ═══
+   Každý návštěvník se po otevření stránky přihlásí anonymně (jen pro čtení).
+   Zapisovat do žáků, PINů a rodičů smí pouze učitel přihlášený e-mailem a heslem. */
+function initAuth() {
+  return new Promise(function (resolve) {
+    var off = auth.onAuthStateChanged(function (user) { off(); resolve(user); });
+  }).then(function (user) {
+    // Po načtení stránky nikdy nezůstává přihlášený učitel z minula
+    if (user && !user.isAnonymous) {
+      return auth.signOut().then(function () { return auth.signInAnonymously(); });
+    }
+    return user || auth.signInAnonymously();
+  });
+}
+
+/* Splnění úkolů (žák smí zapsat jen tuto malou mapu) */
+function applyStav(sid) {
+  var st = _stavCache[sid];
+  if (!_cache || !st || !st.done) return;
+  (_cache.homework || []).forEach(function (h) {
+    if (typeof st.done[h.id] === 'boolean') h.done = st.done[h.id];
+  });
+}
+function setHwDone(sid, hwId, val) {
+  if (!sid) return;
+  if (!_stavCache[sid]) _stavCache[sid] = {};
+  if (!_stavCache[sid].done) _stavCache[sid].done = {};
+  _stavCache[sid].done[hwId] = val;
+  var upd = {}; upd[hwId] = val;
+  STAV_REF.doc(sid).set({ done: upd }, { merge: true })
+    .catch(function (e) { console.error('❌ Uložení stavu úkolu:', e.code, e.message); });
+}
+
 /* ═══ Inicializace z Firebase ═══ */
 async function firebaseInit() {
   showLoader('Připojování k databázi…');
+  try {
+    await initAuth();
+  } catch (e) {
+    console.error('❌ Firebase Authentication:', e.code, e.message);
+    showLoader('⚠️ Ve Firebase zapněte anonymní přihlášení (Authentication → Sign-in method)');
+    await new Promise(function (r) { setTimeout(r, 3500); });
+  }
   try {
     showLoader('Načítám data…');
     var snap = await META_REF.get();
@@ -1377,6 +1432,12 @@ async function firebaseInit() {
       var parsed = firestoreToCache(d.data());
       if (parsed) _zaciCache[d.id] = parsed;
     });
+    try {
+      var stSnap = await STAV_REF.get();
+      _stavCache = {};
+      stSnap.forEach(function (d) { _stavCache[d.id] = d.data(); });
+    } catch (e) { console.log('ℹ️ Stav úkolů nenačten:', e.code || e); }
+
     // Žáci bez dat dostanou výchozí šablonu
     (dbGet().students || []).forEach(function (s) {
       if (!_zaciCache[s.id]) {
@@ -1418,13 +1479,24 @@ async function firebaseInit() {
   // Real-time listenery jednotlivých žáků
   Object.keys(_zaciCache).forEach(ensureZaciListener);
 
+  // Real-time listener splnění úkolů
+  try {
+    STAV_REF.onSnapshot(function (snap) {
+      snap.forEach(function (d) { _stavCache[d.id] = d.data(); });
+      if (!currentRole || !_cache) return;
+      var sid = currentStudentId();
+      if (sid) applyStav(sid);
+      try { softRender(); } catch (e) {}
+    }, function (err) { console.error('❌ Stav listener:', err.code, err.message); });
+  } catch (e) { console.error('❌ Stav onSnapshot:', e); }
+
   // Po načtení stránky se nikdo nepřihlašuje automaticky – vždy se čeká na PIN
   try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
 }
 
 /* ═══ Ukládání ═══ */
 function scheduleSave() {
-  if (currentRole === 'parent') return;          // rodič nic nezapisuje
+  if (currentRole !== 'admin') return;           // zapisuje jen přihlášený učitel
   if (_saveTimer) clearTimeout(_saveTimer);
   _saveTimer = setTimeout(function () {
     if (_switching) return;                      // nepřepisovat data během přepínání žáka
@@ -1495,6 +1567,7 @@ function refreshCacheFromZaci(sid, remote) {
   var m = mergeWithDefaults(JSON.parse(JSON.stringify(remote)));
   STUDENT_DATA_KEYS.forEach(function (k) { _cache[k] = m[k]; });
   applyStudentMeta(sid);
+  applyStav(sid);
 }
 /* Jméno a třída se vždy berou ze seznamu žáků (meta) */
 function applyStudentMeta(sid) {
@@ -1623,15 +1696,45 @@ function restoreSession(s) {
   _loadContext();
 }
 function logout() {
-  sessionStorage.removeItem(SESSION_KEY);
+  try { sessionStorage.removeItem(SESSION_KEY); } catch (e) {}
   stopMessagesListener();
-  currentRole = null;
-  _currentStudentId = null; _parentId = null; _parentChildId = null;
-  _adminSelectedId = null; _keepPage = null;
-  _cache = null;
-  document.getElementById('app').classList.remove('visible');
-  document.getElementById('login-screen').style.display = 'flex';
-  pinBuffer = ''; pinBusy = false; renderDots();
+  var done = function () { location.reload(); };
+  if (auth.currentUser && !auth.currentUser.isAnonymous) auth.signOut().then(done, done);
+  else done();
+}
+
+/* ── Přihlášení učitele (e-mail + heslo, Firebase Authentication) ── */
+function showTeacherLogin(show) {
+  document.getElementById('pin-card').style.display     = show ? 'none' : '';
+  document.getElementById('teacher-card').style.display = show ? 'flex' : 'none';
+  var er = document.getElementById('teacher-error'); if (er) er.innerHTML = '&nbsp;';
+  if (show) { var em = document.getElementById('teacher-email'); if (em) em.focus(); }
+}
+function teacherLogin() {
+  var email = document.getElementById('teacher-email').value.trim();
+  var pass  = document.getElementById('teacher-pass').value;
+  var errEl = document.getElementById('teacher-error');
+  var btn   = document.getElementById('teacher-login-btn');
+  if (!email || !pass) { errEl.textContent = 'Zadejte e-mail i heslo'; return; }
+  if (!_dataReady)     { errEl.textContent = 'Načítám data, zkuste to za chvíli…'; return; }
+  btn.disabled = true; errEl.textContent = 'Přihlašuji…';
+  auth.signInWithEmailAndPassword(email, pass).then(function () {
+    currentRole = 'admin';
+    _currentStudentId = null; _parentId = null; _parentChildId = null;
+    _adminSelectedId = firstStudentId();
+    sessionSave('admin');
+    document.getElementById('teacher-pass').value = '';
+    btn.disabled = false;
+    showTeacherLogin(false);
+    _loadContext();
+  }).catch(function (e) {
+    btn.disabled = false;
+    var bad = ['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found', 'auth/invalid-email'];
+    errEl.textContent = bad.indexOf(e.code) >= 0 ? 'Nesprávný e-mail nebo heslo'
+      : e.code === 'auth/operation-not-allowed' ? 'Ve Firebase není zapnuté přihlášení e-mailem a heslem'
+      : e.code === 'auth/too-many-requests' ? 'Příliš mnoho pokusů, zkuste to později'
+      : 'Přihlášení se nezdařilo: ' + (e.code || e.message);
+  });
 }
 
 /* ── Pomocné funkce pro role ── */
@@ -1686,9 +1789,7 @@ function verifyPin() {
   var pins = d.pins;
   var role = null, studentId = null, parentId = null, childId = null;
 
-  if (pinBuffer === pins.admin) {
-    role = 'admin';
-  } else {
+  {
     var sm = (d.students || []).find(function (s) { return s.pin === pinBuffer; });
     var pm = (d.parents  || []).find(function (p) { return p.pin === pinBuffer; });
     if (sm) { role = 'student'; studentId = sm.id; }
@@ -1733,7 +1834,7 @@ function _loadContext() {
   _cache.pins = keepPins;
   _cache.students = keepStudents;
   _cache.parents = keepParents;
-  if (sid) applyStudentMeta(sid);
+  if (sid) { applyStudentMeta(sid); applyStav(sid); }
 
   setTimeout(function () {
     document.getElementById('login-screen').style.display = 'none';
@@ -1879,7 +1980,7 @@ var TUT_STEPS = [
   {
     icon: '<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
     title: 'Vítejte ve Žákovské knížce',
-    text: 'Přihlašujete se <strong>4místným PINem</strong> pomocí klávesnice na obrazovce. Každý žák i každý rodič má <strong>svůj vlastní PIN</strong>.'
+    text: 'Žák a rodič se přihlašují <strong>4místným PINem</strong> pomocí klávesnice na obrazovce, každý má <strong>svůj vlastní PIN</strong>. Učitel se přihlašuje <strong>e-mailem a heslem</strong> (odkaz „Přihlášení učitele“ pod klávesnicí).'
   },
   {
     icon: '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
@@ -2428,7 +2529,7 @@ function renderHomeworkList() {
         var box = ro
           ? '<span class="checkbox-btn readonly ' + (hw.done ? 'checked' : '') + '">' + (hw.done ? check : '') + '</span>'
           : '<button class="checkbox-btn ' + (hw.done ? 'checked' : '') + '" onclick="toggleHw(\'' + hw.id + '\')">' + (hw.done ? check : '') + '</button>';
-        var del = ro ? '' : '<button class="del-btn" onclick="deleteHw(\'' + hw.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button>';
+        var del = currentRole !== 'admin' ? '' : '<button class="del-btn" onclick="deleteHw(\'' + hw.id + '\')">' + svgIcon(TRASH_ICON, 13) + '</button>';
         return '<div class="row hw-row" style="padding:10px 12px">' + box + subjIcon(hw.subject) +
           '<div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;' + (hw.done ? 'text-decoration:line-through;opacity:.5' : '') + '">' + esc(hw.title) + '</div>' +
           (hw.description ? '<div style="font-size:11px;color:var(--fg-muted)">' + esc(hw.description) + '</div>' : '') + '</div>' +
@@ -2437,11 +2538,13 @@ function renderHomeworkList() {
 }
 function toggleHw(id) {
   if (currentRole === 'parent') return;
-  dbSet(function (db) { var h = db.homework.find(function (x) { return x.id === id; }); if (h) h.done = !h.done; });
+  var val = null;
+  dbSet(function (db) { var h = db.homework.find(function (x) { return x.id === id; }); if (h) { h.done = !h.done; val = h.done; } });
+  if (val !== null) setHwDone(currentStudentId(), id, val);
   buildNav(); renderHomeworkList();
 }
 function deleteHw(id) {
-  if (currentRole === 'parent') return;
+  if (currentRole !== 'admin') return;
   dbSet(function (db) { db.homework = db.homework.filter(function (h) { return h.id !== id; }); });
   buildNav(); renderHomeworkList();
 }
@@ -2505,14 +2608,13 @@ function renderDisciplinary() {
 /* ── NASTAVENÍ (jen admin) ── */
 function renderSettings() {}
 function savePins() {
-  var ap = document.getElementById('settings-admin-pin').value.replace(/\D/g, '');
+  var ap = '';   // učitel se přihlašuje e-mailem a heslem, admin PIN se nepoužívá
   var sp = document.getElementById('settings-student-pin').value.replace(/\D/g, '');
   if ((ap && ap.length !== 4) || (sp && sp.length !== 4)) { alert('PIN musí mít přesně 4 číslice'); return; }
   if (ap) { var c = pinConflict(ap, 'admin'); if (c) { alert(c); return; } }
   dbSet(function (db) { if (ap) db.pins.admin = ap; if (sp) db.pins.student = sp; });
   var el = document.getElementById('pin-saved-msg');
   if (el) { el.style.display = 'flex'; setTimeout(function () { el.style.display = 'none'; }, 2500); }
-  document.getElementById('settings-admin-pin').value = '';
   document.getElementById('settings-student-pin').value = '';
 }
 
@@ -2968,7 +3070,9 @@ function addHomework() {
   buildNav(); renderAdminHomework(); if (activePage === 'homework') renderHomework();
 }
 function adminToggleHw(id) {
-  dbSet(function (db) { var h = db.homework.find(function (x) { return x.id === id; }); if (h) h.done = !h.done; });
+  var val = null;
+  dbSet(function (db) { var h = db.homework.find(function (x) { return x.id === id; }); if (h) { h.done = !h.done; val = h.done; } });
+  if (val !== null) setHwDone(currentStudentId(), id, val);
   buildNav(); renderAdminHomework(); if (activePage === 'homework') renderHomeworkList();
 }
 function adminDeleteHw(id) {
@@ -3120,6 +3224,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
   // Klávesnice – zadávání PINu na přihlašovací obrazovce
   document.addEventListener('keydown', function (e) {
+    if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;   // psaní do formulářů
     var ls = document.getElementById('login-screen');
     if (ls && ls.offsetParent !== null && ls.style.display !== 'none') {
       var tut = document.getElementById('tutorial-overlay');
@@ -3159,7 +3264,13 @@ window.addEventListener('DOMContentLoaded', function () {
   try { tutShown = localStorage.getItem(TUTORIAL_KEY) === 'done'; } catch (e) {}
   if (!tutShown) startTutorial();
 
-  // Připojení k Firebase a obnovení přihlášení
+  // Přihlášení učitele
+  document.getElementById('teacher-open-btn').addEventListener('click', function () { showTeacherLogin(true); });
+  document.getElementById('teacher-back-btn').addEventListener('click', function () { showTeacherLogin(false); });
+  document.getElementById('teacher-login-btn').addEventListener('click', teacherLogin);
+  document.getElementById('teacher-pass').addEventListener('keydown', function (e) { if (e.key === 'Enter') teacherLogin(); });
+
+  // Připojení k Firebase
   firebaseInit();
 });
 
