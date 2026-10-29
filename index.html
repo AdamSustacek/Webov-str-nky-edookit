@@ -726,6 +726,7 @@ tr:hover .del-btn, .row:hover .del-btn, .hw-row:hover .del-btn { opacity: 1; }
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"/><line x1="18" y1="9" x2="12" y2="15"/><line x1="12" y1="9" x2="18" y2="15"/></svg>
         </button>
       </div>
+      <button class="btn btn-ghost" id="teacher-open-btn2" type="button" style="width:100%;justify-content:center">Přihlášení učitele (e-mail a heslo)</button>
     </div>
     <div class="login-card" id="teacher-card" style="display:none">
       <div class="login-hint">
@@ -741,7 +742,7 @@ tr:hover .del-btn, .row:hover .del-btn, .hw-row:hover .del-btn { opacity: 1; }
       <button class="tut-hint-link" id="teacher-back-btn" type="button">Zpět na PIN</button>
     </div>
     <div class="login-footer">
-      ZS Alexandra · Žákovská knížka · 2025/2026
+      ZS Alexandra · Žákovská knížka · 2025/2026 · verze s přihlášením učitele
       <br><button class="tut-hint-link" id="tut-open-btn" type="button">Jak aplikace funguje?</button> · <button class="tut-hint-link" id="teacher-open-btn" type="button">Přihlášení učitele</button>
     </div>
   </div>
@@ -3263,6 +3264,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
   // Přihlášení učitele
   document.getElementById('teacher-open-btn').addEventListener('click', function () { showTeacherLogin(true); });
+  document.getElementById('teacher-open-btn2').addEventListener('click', function () { showTeacherLogin(true); });
   document.getElementById('teacher-back-btn').addEventListener('click', function () { showTeacherLogin(false); });
   document.getElementById('teacher-login-btn').addEventListener('click', teacherLogin);
   document.getElementById('teacher-pass').addEventListener('keydown', function (e) { if (e.key === 'Enter') teacherLogin(); });
